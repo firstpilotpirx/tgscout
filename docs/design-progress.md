@@ -8,14 +8,16 @@ Board format: 6
 
 Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] … — gate` waiting for acceptance, `- [x]` accepted; its pages follow as links. Nested as the C4 tree.
 
-- [ ] L1 System Context — dialogue — [context](architecture/context.html)
-- [ ] L2 Container — dialogue — [overview](architecture/overview.html)
-- [ ] L3 Component — tgscout — dialogue — [tgscout](architecture/tgscout.html)
+- [ ] L1 System Context — gate — [context](architecture/context.html)
+- [ ] L2 Container — dialogue — [overview](architecture/overview.html), [store](architecture/store.html)
+- [ ] L3 Component — tgscout — dialogue — [tgscout](architecture/tgscout.html), [start](flows/start.html), [catch-up](flows/catch-up.html), [message path](flows/message-path.html)
 - [ ] Quality attributes — [quality attributes](architecture/quality-attributes.html)
 
 ## To discuss
 
-Nothing open.
+1. Proposal: store schema — chat_cursor, processed_message, decision ([store](architecture/store.html))
+2. Proposal: queue message and tgscout.yaml structure ([tgscout](architecture/tgscout.html) § Data structures)
+3. Proposal: UML activity of start, catch-up and message path ([start](flows/start.html), [catch-up](flows/catch-up.html), [message path](flows/message-path.html))
 
 ## Later, not now
 
@@ -49,6 +51,7 @@ Nothing open.
 2026-11-15 — Message path: collector checks the repository, puts the message into the queue; a matcher worker asks llm (which alone calls LM Studio) once per request of the chat, saves each decision, sends a «yes» to notifier, then marks the message processed and moves the cursor (L3 Component, [message path](flows/message-path.html))
 2026-11-15 — Delivery is at least once: no match is ever lost, a rare repeat after a crash is allowed. The matcher marks a message processed and moves the cursor only after the notifier confirmed the send; the cursor never passes an unprocessed message ([quality attributes](architecture/quality-attributes.html), [message path](flows/message-path.html))
 2026-11-15 — One component, not three: collection, matching and notification are steps of one pipeline (at-least-once ties them), not separate business capabilities; a component is a microservice inside the monolith
+2026-11-16 — Draw the store schema, the queue message, the tgscout.yaml structure and a UML activity per case (L2 Container, L3 Component — tgscout)
 
 ## Review
 
