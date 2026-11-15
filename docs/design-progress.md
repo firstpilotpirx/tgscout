@@ -47,6 +47,7 @@ Nothing open.
 2026-11-15 — L3 parts of tgscout: config, reader, queue, judge, llm, notifier, store (L3 Component — tgscout)
 2026-11-15 — L3 names: reader → collector (new messages and catch-up), judge → matcher (does a message match a request), store → repository (DDD, kit naming rules ban Store) (L3 Component — tgscout)
 2026-11-15 — Message path: collector checks the repository, puts the message into the queue; a matcher worker asks llm (which alone calls LM Studio) once per request of the chat, saves each decision, sends a «yes» to notifier, then marks the message processed and moves the cursor (L3 Component, [message path](flows/message-path.html))
+2026-11-15 — Delivery is at least once: no match is ever lost, a rare repeat after a crash is allowed. The matcher marks a message processed and moves the cursor only after the notifier confirmed the send; the cursor never passes an unprocessed message ([quality attributes](architecture/quality-attributes.html), [message path](flows/message-path.html))
 
 ## Review
 
