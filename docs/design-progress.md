@@ -38,6 +38,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — Requests: many standing requests, each bound to its own set of chats (1..N); every new message and every catch-up message of those chats goes to the LLM judge with that request; no text search, no embeddings in version 1 (L1 System Context)
 2026-11-15 — Config format: YAML, the usual Go config format and easy to read (L2 Container)
 2026-11-15 — Config tgscout.yaml holds requests with their chats, catch-up depth and LM Studio settings; settings are hierarchical: root, then request, then chat overrides; SQLite keeps only processed IDs and decisions (L2 Container)
+2026-11-15 — No matches.jsonl: found messages are the «yes» decisions in SQLite; the only storage is SQLite (L2 Container)
 
 ## Review
 
