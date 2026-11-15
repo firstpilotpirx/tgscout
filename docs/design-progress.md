@@ -10,11 +10,13 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 
 - [ ] L1 System Context — dialogue — [context](architecture/context.html)
 - [ ] L2 Container — [overview](architecture/overview.html)
+- [ ] Quality attributes — dialogue — [quality attributes](architecture/quality-attributes.html)
 
 ## To discuss
 
-1. How the owner gives 👍/👎 and commands without bot buttons (an ordinary account cannot send inline buttons)
-2. Image search in version 1: send previews to a vision model now, or in a later step
+1. Quality attributes — target numbers for load, latency, catch-up, restart, data and privacy
+2. How the owner gives 👍/👎 and commands without bot buttons (an ordinary account cannot send inline buttons)
+3. Image search in version 1: send previews to a vision model now, or in a later step
 
 ## Later, not now
 
