@@ -13,7 +13,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 
 ## To discuss
 
-1. L1 System Context — which external systems tgscout talks to
+1. L1 System Context — what tgscout does and does not do (scope and non-goals)
 
 ## Later, not now
 
@@ -24,6 +24,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — Design language: Go (board)
 2026-11-15 — L1 drawn question by question, not from a story first (L1 System Context)
 2026-11-15 — One actor in version 1: the owner; the bot answers only the owner (L1 System Context)
+2026-11-15 — Three external systems: Telegram over MTProto as a reader account, LM Studio as the local judge, Telegram Bot API for output (L1 System Context)
 
 ## Review
 
