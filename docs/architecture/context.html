@@ -222,7 +222,7 @@ links:
 <table>
 <tr><th>External system</th><th>Protocol</th><th>Direction</th><th>Owner</th></tr>
 <tr data-kr="t/l1-system-context/tr1" data-kr-hash="84bc9758c9" data-kr-kind="row" data-kr-label="Telegram | MTProto, as tgscout&#39;s own ordinary account (a second account, not th…"><td>Telegram</td><td>MTProto, as tgscout's own ordinary account (a second account, not the owner's)</td><td>tgscout reads chats it joined: new and edited messages pushed, recent history on start; writes matches to the owner in a private chat and reads the owner's replies there</td><td>Telegram</td></tr>
-<tr data-kr="t/l1-system-context/tr2" data-kr-hash="43c6b9452a" data-kr-kind="row" data-kr-label="LM Studio | HTTP, OpenAI-compatible API on the owner&#39;s Mac | tgscout asks, the …"><td>LM Studio</td><td>HTTP, OpenAI-compatible API on the owner's Mac</td><td>tgscout asks, the judge answers match or not</td><td>the owner (local)</td></tr>
+<tr data-kr="t/l1-system-context/tr2" data-kr-hash="6c22b24400" data-kr-kind="row" data-kr-label="LM Studio | HTTP, OpenAI-compatible API on the owner&#39;s Mac | tgscout asks, the …"><td>LM Studio</td><td>HTTP, OpenAI-compatible API on the owner's Mac</td><td>tgscout asks, the LLM answers match or not</td><td>the owner (local)</td></tr>
 </table>
 
 <table>
@@ -238,7 +238,7 @@ links:
 <tr><th>In scope (version 1)</th><th>Out of scope (who or when instead)</th></tr>
 <tr data-kr="t/about-the-system/tr1" data-kr-hash="57ad641e16" data-kr-kind="row" data-kr-label="Many standing requests; each request has its own set of chats (one or more); ne…"><td>Many standing requests; each request has its own set of chats (one or more); new and edited messages are watched in real time</td><td>Deep history search with a summary — version 2</td></tr>
 <tr data-kr="t/about-the-system/tr2" data-kr-hash="ed59f2c288" data-kr-kind="row" data-kr-label="On start, catches up history to a set depth (N days or N messages); history mat…"><td>On start, catches up history to a set depth (N days or N messages); history matches come as one summary message</td><td>Full-text search and embeddings — a filter cascade later, if the LLM gets too slow or costly</td></tr>
-<tr data-kr="t/about-the-system/tr3" data-kr-hash="1d674be2b5" data-kr-kind="row" data-kr-label="Only the LLM judge compares a message with a request: no text search, no embedd…"><td>Only the LLM judge compares a message with a request: no text search, no embeddings; a pre-filter drops only service, empty and duplicate messages</td><td>Writing to the watched chats or adding anyone: tgscout only reads there</td></tr>
+<tr data-kr="t/about-the-system/tr3" data-kr-hash="7db65afccb" data-kr-kind="row" data-kr-label="Only the LLM compares a message with a request: no text search, no embeddings; …"><td>Only the LLM compares a message with a request: no text search, no embeddings; a pre-filter drops only service, empty and duplicate messages</td><td>Writing to the watched chats or adding anyone: tgscout only reads there</td></tr>
 <tr data-kr="t/about-the-system/tr4" data-kr-hash="57a434f4fd" data-kr-kind="row" data-kr-label="Sends each match to the owner as a plain private message, and to the console; n…"><td>Sends each match to the owner as a plain private message, and to the console; no buttons, no feedback</td><td>Other users: a service for other people — later</td></tr>
 <tr data-kr="t/about-the-system/tr5" data-kr-hash="d9cad257a1" data-kr-kind="row" data-kr-label="No repeats: duplicates and restarts give no second notice | TUI and GUI — versi…"><td>No repeats: duplicates and restarts give no second notice</td><td>TUI and GUI — version 1.x and later</td></tr>
 <tr data-kr="t/about-the-system/tr6" data-kr-hash="935671d923" data-kr-kind="row" data-kr-label="Reads the text of a message (a photo&#39;s caption counts as text) | Images, video …"><td>Reads the text of a message (a photo's caption counts as text)</td><td>Images, video and audio; owner feedback (👍/👎) and commands — later</td></tr>
@@ -248,7 +248,7 @@ links:
 
 
 </main>
-<template id="kit-review-state">{"pages":{"architecture/context.html":[]},"counts":{"architecture/context.html":{"total":18,"reviewed":0,"edited":0},"architecture/overview.html":{"total":18,"reviewed":0,"edited":0},"architecture/quality-attributes.html":{"total":49,"reviewed":0,"edited":0},"index.html":{"total":13,"reviewed":0,"edited":0}}}</template>
+<template id="kit-review-state">{"pages":{"architecture/context.html":[]},"counts":{"architecture/context.html":{"total":18,"reviewed":0,"edited":0},"architecture/overview.html":{"total":19,"reviewed":0,"edited":0},"architecture/quality-attributes.html":{"total":49,"reviewed":0,"edited":0},"architecture/tgscout.html":{"total":42,"reviewed":0,"edited":0},"flows/message-path.html":{"total":22,"reviewed":0,"edited":0},"index.html":{"total":13,"reviewed":0,"edited":0}}}</template>
 <script id="kit-review-script">(() => {
   "use strict";
   const meta = document.querySelector('meta[name="kit-review"]');
