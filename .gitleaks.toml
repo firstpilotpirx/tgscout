@@ -1,0 +1,3 @@
+# Secret scan of the public repository (AGENTS.md § Open source and secrets): gitleaks default rules.
+[extend]
+useDefault = true
