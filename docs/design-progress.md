@@ -28,6 +28,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — Three external systems: Telegram over MTProto as a reader account, LM Studio as the local judge, Telegram Bot API for output (L1 System Context)
 2026-11-15 — No Telegram Bot API, by design: a bot joins a group only when an admin adds it, and tgscout must join chats where the owner is not an admin. tgscout uses one ordinary Telegram account of its own (a second account, not the owner's) over MTProto both to read chats and to write matches to the owner; supersedes the line above (L1 System Context)
 2026-11-15 — Every match also goes to the console, for debugging (L1 System Context)
+2026-11-15 — The owner talks to tgscout in Telegram from the owner's own account, and runs the tgscout CLI and watches its console; tgscout is in Telegram as an ordinary user (L1 System Context)
 
 ## Review
 
