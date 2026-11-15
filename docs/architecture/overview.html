@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en"><head><meta name="kit-review" content="architecture/overview.html"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L2 Container — tgscout</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#6b6a66;--card:#fff;--line:#e4e1da;
+--new:#1f8a55;--newbg:#e3f3ea;--newt:#1f7a4d;--chg:#c08000;--chgbg:#fbf0d9;--chgt:#8a5a00;
+--rem:#c0392b;--rembg:#fbe4e1;--remt:#a3261f;--err:#c0392b;--errbg:#fbe4e1;--errt:#a3261f;
+--old:#8f8d86;--oldbg:#f3f2ee;--oldt:#6b6a66;--focus:#2f5fb3;--focusbg:#e3ebfa;--focust:#2f5fb3;
+--client:#2563eb;--clientbg:#dbeafe;--clientt:#1d4ed8;--svc:#059669;--svcbg:#d1fae5;--svct:#047857;
+--store:#d97706;--storebg:#fef3c7;--storet:#b45309;--ext:#7c3aed;--extbg:#ede9fe;--extt:#6d28d9}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--card:#1f1f1d;--line:#34332f;
+--new:#4fbf85;--newbg:#17332a;--newt:#6fd19c;--chg:#e0a93a;--chgbg:#3a2e14;--chgt:#f0c46a;
+--rem:#e8645a;--rembg:#3d1d1a;--remt:#ff8a80;--err:#e8645a;--errbg:#3d1d1a;--errt:#ff8a80;
+--old:#6c6b66;--oldbg:#24241f;--oldt:#a09e98;--focus:#8fb3ff;--focusbg:#1c2740;--focust:#8fb3ff;
+--client:#6ea2ff;--clientbg:#172a4a;--clientt:#9cc0ff;--svc:#4fbf85;--svcbg:#17332a;--svct:#6fd19c;
+--store:#e0a93a;--storebg:#3a2e14;--storet:#f0c46a;--ext:#a78bfa;--extbg:#2a1f4a;--extt:#c4b5fd}}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1800px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:30px 0 8px}h3{font-size:16px;margin:20px 0 6px}
+.sub{color:var(--mut);font-size:14px;font-weight:400}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:10px 0}
+.verdict{font-size:22px;font-weight:700;border-width:2px}
+.v-new{border-color:var(--new);background:var(--newbg)}.v-rem,.v-err{border-color:var(--rem);background:var(--rembg)}
+.v-chg{border-color:var(--chg);background:var(--chgbg)}.v-focus{border-color:var(--focus);background:var(--focusbg)}
+.v-old{border-color:var(--old);background:var(--oldbg)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.pair{grid-template-columns:1fr}}
+figure{margin:10px 0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto}
+figcaption{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.pair figure:last-child figcaption{color:var(--newt)}
+.note{margin:6px 2px 0;color:var(--mut);font-size:14px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+.legend span::before{content:"";display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px;border:1.5px solid var(--k);background:var(--kb)}
+.l-new{--k:var(--new);--kb:var(--newbg)}.l-chg{--k:var(--chg);--kb:var(--chgbg)}.l-rem{--k:var(--rem);--kb:var(--rembg)}
+.l-old{--k:var(--old);--kb:var(--oldbg)}.l-focus{--k:var(--focus);--kb:var(--focusbg)}.l-err{--k:var(--err);--kb:var(--errbg)}
+.l-client{--k:var(--client);--kb:var(--clientbg)}.l-svc{--k:var(--svc);--kb:var(--svcbg)}
+.l-store{--k:var(--store);--kb:var(--storebg)}.l-ext{--k:var(--ext);--kb:var(--extbg)}
+.legend span.l-line::before{content:none}.l-line svg{vertical-align:middle;margin-right:6px}
+.verdict .chips{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:13px}
+.c-new{color:var(--newt);background:var(--newbg)}.c-chg{color:var(--chgt);background:var(--chgbg)}.c-rem{color:var(--remt);background:var(--rembg)}.c-old{color:var(--oldt);background:var(--oldbg)}.c-focus{color:var(--focust);background:var(--focusbg)}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:14px}
+code{font:14px ui-monospace,Menlo,monospace;background:color-mix(in srgb,var(--line) 50%,transparent);padding:1px 5px;border-radius:4px}
+.chip{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.ok{color:var(--newt);background:var(--newbg)}.warn{color:var(--chgt);background:var(--chgbg)}.fail{color:var(--remt);background:var(--rembg)}
+pre{font:13px/1.4 ui-monospace,Menlo,monospace;background:color-mix(in srgb,var(--line) 40%,transparent);padding:10px 12px;border-radius:8px;overflow:auto}
+.kit-render svg{max-width:100%;height:auto}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px}
+a{color:var(--focust)}
+</style><style id="kit-review-style">
+body.kr{--kr-ok:var(--new,#1f7a4d);--kr-okbg:var(--newbg,#e3f3ea);--kr-okt:var(--newt,#1f7a4d);--kr-chg:var(--chg,#9a5b00);--kr-chgbg:var(--chgbg,#fbf0d9);--kr-chgt:var(--chgt,#8a5a00);--kr-line:var(--line,#e4e1da);--kr-mut:var(--mut,#6b6a66);--kr-card:var(--card,#fff);--kr-fg:var(--fg,#1d1d1b);--kr-focus:var(--focus,#2f5fb3)}
+body.kr main{padding-left:34px}
+main{max-width:1800px}
+.kr-bar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;max-width:1834px;margin:-24px auto 14px;padding:10px 14px;background:color-mix(in srgb,var(--kr-card) 92%,transparent);backdrop-filter:blur(6px);border:1px solid var(--kr-line);border-top:0;border-radius:0 0 12px 12px;font-size:14px;box-sizing:border-box}
+.kr-pagecheck{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:2px dashed var(--kr-mut);font-weight:700;font-size:13px;color:#fff;box-sizing:border-box}
+.kr-pagecheck.kr-done{border:0;background:var(--kr-ok)}
+.kr-count{font-weight:600;font-variant-numeric:tabular-nums}
+.kr-prog{display:inline-block;flex:0 1 160px;min-width:60px;height:6px;border-radius:3px;background:var(--kr-line);overflow:hidden}
+.kr-prog i{display:block;height:100%;background:var(--kr-ok);transition:width .25s}
+.kr-chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;color:var(--kr-chgt);background:var(--kr-chgbg)}
+.kr-tbtn{font:inherit;font-size:13px;color:var(--kr-fg);background:var(--kr-card);border:1px solid var(--kr-line);border-radius:14px;padding:3px 11px;cursor:pointer}
+.kr-tbtn[aria-pressed="true"]{border-color:var(--kr-focus);color:var(--kr-focus)}
+.kr-tbtn:first-of-type{margin-left:auto}
+.kr-drawer{position:fixed;z-index:40;top:64px;right:max(16px,env(safe-area-inset-right,0px));width:min(360px,calc(100vw - 32px));max-height:calc(100vh - 88px);overflow:auto;background:var(--kr-card);border:1px solid var(--kr-line);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.18);font-size:14px;box-sizing:border-box}
+.kr-dh{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--kr-mut);margin:6px 0 8px}
+.kr-krow{display:grid;grid-template-columns:1fr 80px auto;align-items:center;gap:8px;margin:4px 0}
+.kr-knum{font-variant-numeric:tabular-nums;color:var(--kr-mut);font-size:13px}
+.kr-left{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.kr-lbtn{display:flex;gap:8px;width:100%;text-align:left;font:inherit;font-size:13px;color:var(--kr-fg);background:none;border:1px solid var(--kr-line);border-radius:8px;padding:5px 8px;cursor:pointer}
+.kr-lbtn.kr-chg{border-color:var(--kr-chg);background:var(--kr-chgbg)}
+.kr-lkind{flex:0 0 52px;color:var(--kr-mut);font-size:12px}
+.kr-lbtn.kr-chg .kr-lkind{color:var(--kr-chgt);font-weight:600}
+.kr-ltext{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kr-host{position:relative}
+.kr-btn{position:absolute;left:-30px;top:.15em;width:20px;height:20px;padding:0;border-radius:50%;border:1.5px dashed var(--kr-mut);background:var(--kr-card);cursor:pointer;display:grid;place-items:center}
+li>.kr-btn{left:-52px}
+td>.kr-btn,th>.kr-btn{left:-34px;top:.55em}
+.kr-btn::after{content:"";width:8px;height:4px;border:solid transparent;border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg)}
+.kr-btn.kr-ok{border:0;background:var(--kr-ok)}
+.kr-btn.kr-ok::after{border-color:#fff}
+.kr-btn.kr-chg{border:1.5px solid var(--kr-chg);background:var(--kr-chgbg)}
+.kr-btn.kr-chg::after{border-color:var(--kr-chg)}
+.kr-btn:focus-visible,.kr-svgbtn:focus-visible,.kr-tbtn:focus-visible,.kr-lbtn:focus-visible{outline:2px solid var(--kr-focus);outline-offset:2px}
+p.kr-chg,li.kr-chg,tr.kr-chg>td{background:var(--kr-chgbg)}
+p.kr-chg,li.kr-chg{border-radius:6px;box-shadow:0 0 0 4px var(--kr-chgbg)}
+p.kr-chg::after,li.kr-chg::after{content:" Edited after your review";display:block;font-size:12px;font-weight:600;color:var(--kr-chgt)}
+.kr-block{position:relative}
+.kr-drow{flex:1 0 100%;display:flex;justify-content:flex-end;margin:4px 4px -4px}
+.kit-render .kr-drow{order:1;flex:1 0 auto;margin:4px 0}
+.kr-dbadge{font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;color:var(--kr-mut);background:var(--kr-card);border:1px dashed var(--kr-mut)}
+.kr-dbadge.kr-chgd{color:var(--kr-chgt);border:1px solid var(--kr-chg);background:var(--kr-chgbg)}
+.kr-dbadge.kr-done{color:#fff;background:var(--kr-ok);border:1px solid var(--kr-ok)}
+.kr-block svg{overflow:visible}
+.kr-ring{fill:none;stroke-width:1.6;pointer-events:none}
+.kr-ring.kr-todo{stroke:var(--kr-mut);stroke-dasharray:4 3;opacity:.55}
+.kr-ring.kr-ok{stroke:none}
+.kr-ring.kr-chg{stroke:var(--kr-chg);stroke-width:2.2}
+.kr-svgbtn{cursor:pointer}
+.kr-svgbtn circle{fill:var(--kr-card);stroke:var(--kr-mut);stroke-width:1.4;stroke-dasharray:3 2}
+.kr-svgbtn path{fill:none;stroke:transparent;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kr-svgbtn.kr-ok circle{fill:var(--kr-ok);stroke:var(--kr-ok);stroke-dasharray:none}
+.kr-svgbtn.kr-ok path{stroke:#fff}
+.kr-svgbtn.kr-chg circle{fill:var(--kr-chgbg);stroke:var(--kr-chg);stroke-dasharray:none}
+.kr-svgbtn.kr-chg path{stroke:var(--kr-chg)}
+g.kr-item.kr-chg>path.link{stroke:var(--kr-chg)}
+.kr-lbadge{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;padding:0 7px;border-radius:99px;vertical-align:1px;color:var(--kr-mut);border:1px dashed var(--kr-mut)}
+.kr-lbadge.kr-ok{color:var(--kr-okt);background:var(--kr-okbg);border:1px solid transparent}
+.kr-lbadge.kr-chg{color:var(--kr-chgt);background:var(--kr-chgbg);border:1px solid transparent}
+.kr-only .kr-item.kr-ok,.kr-only g.kr-ov .kr-ok{opacity:.3}
+.kr-off .kr-btn,.kr-off .kr-ov,.kr-off .kr-rings,.kr-off .kr-drow,.kr-off .kr-lbadge{display:none}
+.kr-off p.kr-chg::after,.kr-off li.kr-chg::after{display:none}
+.kr-flash{animation:kr-flash 1.6s ease-out}
+@keyframes kr-flash{0%,40%{outline:3px solid var(--kr-focus);outline-offset:4px}100%{outline:3px solid transparent;outline-offset:4px}}
+@media (max-width:600px){body.kr main{padding-left:30px}.kr-tbtn:first-of-type{margin-left:0}}
+@media (prefers-reduced-motion:reduce){.kr-flash{animation:none}.kr-prog i{transition:none}}
+.kr-note{font-size:12px;color:var(--kr-mut)}
+body.kr-ro .kr-btn,body.kr-ro .kr-svgbtn{cursor:default}
+</style>
+</head>
+<body><svg id="kit-defs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs><marker id="m-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fg)"/></marker><marker id="open-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--fg)" stroke-width="1.5"/></marker><marker id="tri-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--fg)" stroke-width="1.2"/></marker><marker id="dia-fg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--fg)" stroke-width="1.2"/></marker><marker id="diaf-fg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--fg)"/></marker><marker id="circle-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="m-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--old)"/></marker><marker id="open-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--old)" stroke-width="1.5"/></marker><marker id="tri-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--old)" stroke-width="1.2"/></marker><marker id="dia-old" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--old)" stroke-width="1.2"/></marker><marker id="diaf-old" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--old)"/></marker><marker id="circle-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--old)" stroke-width="1.3"/></marker><marker id="m-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--new)"/></marker><marker id="open-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--new)" stroke-width="1.5"/></marker><marker id="tri-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--new)" stroke-width="1.2"/></marker><marker id="dia-new" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--new)" stroke-width="1.2"/></marker><marker id="diaf-new" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--new)"/></marker><marker id="circle-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--new)" stroke-width="1.3"/></marker><marker id="m-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--chg)"/></marker><marker id="open-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--chg)" stroke-width="1.5"/></marker><marker id="tri-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--chg)" stroke-width="1.2"/></marker><marker id="dia-chg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--chg)" stroke-width="1.2"/></marker><marker id="diaf-chg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--chg)"/></marker><marker id="circle-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--chg)" stroke-width="1.3"/></marker><marker id="m-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--rem)"/></marker><marker id="open-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--rem)" stroke-width="1.5"/></marker><marker id="tri-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--rem)" stroke-width="1.2"/></marker><marker id="dia-rem" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--rem)" stroke-width="1.2"/></marker><marker id="diaf-rem" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--rem)"/></marker><marker id="circle-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--rem)" stroke-width="1.3"/></marker><marker id="m-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--err)"/></marker><marker id="open-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--err)" stroke-width="1.5"/></marker><marker id="tri-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--err)" stroke-width="1.2"/></marker><marker id="dia-err" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--err)" stroke-width="1.2"/></marker><marker id="diaf-err" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--err)"/></marker><marker id="circle-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--err)" stroke-width="1.3"/></marker><marker id="m-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--focus)"/></marker><marker id="open-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--focus)" stroke-width="1.5"/></marker><marker id="tri-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--focus)" stroke-width="1.2"/></marker><marker id="dia-focus" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--focus)" stroke-width="1.2"/></marker><marker id="diaf-focus" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--focus)"/></marker><marker id="circle-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--focus)" stroke-width="1.3"/></marker><marker id="m-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--client)"/></marker><marker id="open-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--client)" stroke-width="1.5"/></marker><marker id="tri-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--client)" stroke-width="1.2"/></marker><marker id="dia-client" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--client)" stroke-width="1.2"/></marker><marker id="diaf-client" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--client)"/></marker><marker id="circle-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--client)" stroke-width="1.3"/></marker><marker id="m-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--svc)"/></marker><marker id="open-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--svc)" stroke-width="1.5"/></marker><marker id="tri-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--svc)" stroke-width="1.2"/></marker><marker id="dia-svc" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--svc)" stroke-width="1.2"/></marker><marker id="diaf-svc" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--svc)"/></marker><marker id="circle-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--svc)" stroke-width="1.3"/></marker><marker id="m-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--store)"/></marker><marker id="open-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--store)" stroke-width="1.5"/></marker><marker id="tri-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--store)" stroke-width="1.2"/></marker><marker id="dia-store" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--store)" stroke-width="1.2"/></marker><marker id="diaf-store" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--store)"/></marker><marker id="circle-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--store)" stroke-width="1.3"/></marker><marker id="m-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ext)"/></marker><marker id="open-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--ext)" stroke-width="1.5"/></marker><marker id="tri-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--ext)" stroke-width="1.2"/></marker><marker id="dia-ext" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--ext)" stroke-width="1.2"/></marker><marker id="diaf-ext" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--ext)"/></marker><marker id="circle-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--ext)" stroke-width="1.3"/></marker><marker id="er-one" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M14 2V18M10 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="er-zero-one" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M14 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/><circle cx="7" cy="10" r="3.5" fill="none" stroke="var(--fg)" stroke-width="1.3" style="fill:var(--card)"/></marker><marker id="er-one-many" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M20 10L10 2M20 10L10 18M20 10H0M8 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="er-zero-many" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M20 10L12 2M20 10L12 18M20 10H0" fill="none" stroke="var(--fg)" stroke-width="1.3"/><circle cx="6" cy="10" r="3.5" fill="none" stroke="var(--fg)" stroke-width="1.3" style="fill:var(--card)"/></marker></defs></svg>
+<main>
+<h1>L2 Container — tgscout</h1>
+<p><a href="../index.html">Index</a> › L2 Container</p>
+
+<p class="no-picture" data-kr="t/top/p2" data-kr-hash="50f6d37fce" data-kr-kind="text" data-kr-label="Nothing agreed yet: the picture comes once the containers are agreed.">Nothing agreed yet: the picture comes once the containers are agreed.</p>
+
+
+</main>
+<template id="kit-review-state">{"pages":{"architecture/overview.html":[]},"counts":{"architecture/context.html":{"total":1,"reviewed":0,"edited":0},"architecture/overview.html":{"total":1,"reviewed":0,"edited":0},"index.html":{"total":9,"reviewed":0,"edited":0}}}</template>
+<script id="kit-review-script">(() => {
+  "use strict";
+  const meta = document.querySelector('meta[name="kit-review"]');
+  if (!meta) return;
+  const path = meta.content;
+  const kinds = { box: "Diagram boxes", arrow: "Diagram arrows", text: "Paragraphs and list items", row: "Table rows" };
+  const svgNS = "http://www.w3.org/2000/svg";
+  const items = [...document.querySelectorAll("[data-kr]")].map((el) => ({
+    el, key: el.dataset.kr, hash: el.dataset.krHash, kind: el.dataset.krKind,
+    label: el.dataset.krLabel || el.dataset.kr, block: el.closest(".kit-render"),
+  }));
+  let stored = new Map();
+  let live = false;
+  let pageCounts = {};
+  let writing = Promise.resolve();
+
+  const read = (key) => { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } };
+  const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage is optional */ } };
+  const setStored = (pairs) => { stored = new Map((pairs || []).filter((p) => Array.isArray(p) && p.length === 2)); };
+  const storedHashes = () => new Set(stored.values());
+
+  // The same rule as reviewState.status in Go: reviewed as it is now (even under another key), edited, or todo.
+  const status = (it, hashes) => {
+    if (stored.get(it.key) === it.hash || hashes.has(it.hash)) return "ok";
+    return stored.has(it.key) ? "chg" : "todo";
+  };
+
+  const counts = () => {
+    const hashes = storedHashes();
+    const out = { total: items.length, reviewed: 0, changed: 0, byKind: {} };
+    for (const it of items) {
+      it.state = status(it, hashes);
+      const k = (out.byKind[it.kind] = out.byKind[it.kind] || { total: 0, reviewed: 0 });
+      k.total++;
+      if (it.state === "ok") { out.reviewed++; k.reviewed++; }
+      if (it.state === "chg") out.changed++;
+    }
+    return out;
+  };
+
+  // The checks live in the repository's checks file: only the kit's local server takes a write.
+  const depth = path.split("/").length - 1;
+  const root = new URL("../".repeat(depth) || "./", location.href);
+  const endpoint = new URL(".kit-review", root);
+  const apply = (state) => {
+    if (!state) return;
+    setStored((state.pages || {})[path]);
+    pageCounts = state.counts || {};
+  };
+  // A template's text sits in its content, not its own children; the kit escapes <, > and & in it.
+  try { apply(JSON.parse((document.getElementById("kit-review-state") || {}).innerHTML || "null")); } catch (e) { /* no baked state */ }
+
+  const save = () => {
+    counts();
+    const pairs = [];
+    for (const it of items) {
+      if (it.state === "ok") pairs.push([it.key, it.hash]);
+      if (it.state === "chg") pairs.push([it.key, stored.get(it.key)]);
+    }
+    // Writes go one after another, and an answer only refreshes the other pages' counts, so a later check
+    // made while an earlier write is on its way is never undone.
+    const body = JSON.stringify({ path, items: pairs });
+    writing = writing
+      .then(() => fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body }))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((state) => { if (state) { pageCounts = state.counts || {}; badges(); } })
+      .catch(() => {});
+  };
+
+  const toggle = (it) => {
+    if (!live) return;
+    if (it.state === "ok") {
+      stored.delete(it.key);
+      for (const [key, hash] of [...stored]) if (hash === it.hash) stored.delete(key);
+    } else {
+      stored.set(it.key, it.hash);
+    }
+    save();
+    render();
+  };
+
+  const el = (tag, cls, text) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  };
+  const svgEl = (tag, attrs) => {
+    const node = document.createElementNS(svgNS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
+    return node;
+  };
+  const onActivate = (node, fn) => {
+    node.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
+    node.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); }
+    });
+  };
+
+  // Bar, drawer and per-item controls.
+  document.body.classList.add("kr");
+  const bar = el("div", "kr-bar");
+  bar.setAttribute("role", "region");
+  bar.setAttribute("aria-label", "Review progress");
+  const pageCheck = el("span", "kr-pagecheck");
+  pageCheck.setAttribute("aria-hidden", "true");
+  const countText = el("span", "kr-count");
+  const prog = el("span", "kr-prog");
+  const progFill = el("i");
+  prog.appendChild(progFill);
+  const chgChip = el("span", "kr-chip");
+  const onlyBtn = el("button", "kr-tbtn", "Only unreviewed");
+  const hideBtn = el("button", "kr-tbtn", "Hide checks");
+  const listBtn = el("button", "kr-tbtn", "Still to review");
+  for (const b of [onlyBtn, hideBtn, listBtn]) b.type = "button";
+  const note = el("span", "kr-note", "Read-only — open with kit report serve to check");
+  bar.append(pageCheck, countText, prog, chgChip, note, onlyBtn, hideBtn, listBtn);
+  const drawer = el("aside", "kr-drawer");
+  drawer.hidden = true;
+  document.body.insertBefore(drawer, document.body.firstChild);
+  document.body.insertBefore(bar, document.body.firstChild);
+  const pref = read("kit-review-view") || {};
+  const applyView = () => {
+    document.body.classList.toggle("kr-only", !!pref.only);
+    document.body.classList.toggle("kr-off", !!pref.off);
+    onlyBtn.setAttribute("aria-pressed", String(!!pref.only));
+    hideBtn.setAttribute("aria-pressed", String(!!pref.off));
+  };
+  onlyBtn.addEventListener("click", () => { pref.only = !pref.only; write("kit-review-view", pref); applyView(); });
+  hideBtn.addEventListener("click", () => { pref.off = !pref.off; write("kit-review-view", pref); applyView(); });
+  listBtn.addEventListener("click", () => { drawer.hidden = !drawer.hidden; listBtn.setAttribute("aria-pressed", String(!drawer.hidden)); });
+  applyView();
+
+  for (const it of items) {
+    if (it.kind === "text" || it.kind === "row") {
+      const host = it.kind === "row" ? it.el.querySelector("td,th") || it.el : it.el;
+      host.classList.add("kr-host");
+      it.el.classList.add("kr-item");
+      const btn = el("button", "kr-btn");
+      btn.type = "button";
+      it.btn = btn;
+      onActivate(btn, () => toggle(it));
+      host.insertBefore(btn, host.firstChild);
+      continue;
+    }
+    const svg = it.el.ownerSVGElement;
+    if (!svg) continue;
+    let layer = svg.querySelector(":scope > g.kr-ov");
+    if (!layer) { layer = svgEl("g", { class: "kr-ov" }); svg.appendChild(layer); }
+    // Rings sit under the drawing, so arrow heads stay on top of a checked box's ring.
+    let rings = svg.querySelector(":scope > g.kr-rings");
+    if (!rings) { rings = svgEl("g", { class: "kr-rings" }); svg.insertBefore(rings, svg.firstChild); }
+    it.el.classList.add("kr-item");
+    let box;
+    try { box = it.el.getBBox(); } catch (e) { continue; }
+    if (it.kind === "box") {
+      it.ring = svgEl("rect", { class: "kr-ring", x: box.x - 4, y: box.y - 4, width: box.width + 8, height: box.height + 8, rx: 10 });
+      rings.appendChild(it.ring);
+      it.btn = svgEl("g", { class: "kr-svgbtn", role: "button", tabindex: "0", transform: `translate(${box.x + box.width + 2} ${box.y - 2})` });
+      it.btn.append(svgEl("circle", { r: 8 }), svgEl("path", { d: "M-3.5 0.2l2.4 2.4l4.6-4.8" }));
+    } else {
+      let x = box.x + box.width / 2, y = box.y + box.height / 2;
+      const step = it.el.getAttribute("data-step");
+      const label = step && svg.querySelector(`text[data-step="${step}"]`);
+      if (label) {
+        try { const lb = label.getBBox(); x = lb.x - 9; y = lb.y + lb.height / 2; } catch (e) { /* keep the middle */ }
+      } else {
+        const line = it.el.querySelector("path");
+        try { const p = line.getPointAtLength(line.getTotalLength() / 2); x = p.x; y = p.y; } catch (e) { /* keep the middle */ }
+      }
+      it.btn = svgEl("g", { class: "kr-svgbtn kr-dot", role: "button", tabindex: "0", transform: `translate(${x} ${y})` });
+      it.btn.append(svgEl("circle", { r: 6 }), svgEl("path", { d: "M-2.6 0.1l1.8 1.8l3.4-3.6" }));
+    }
+    onActivate(it.btn, () => toggle(it));
+    layer.appendChild(it.btn);
+  }
+
+  const blocks = new Map();
+  for (const it of items) {
+    if (!it.block) continue;
+    if (!blocks.has(it.block)) {
+      const badge = el("span", "kr-dbadge");
+      const row = el("div", "kr-drow");
+      row.appendChild(badge);
+      it.block.classList.add("kr-block");
+      // The badge joins the toolbar right above the diagram, just left of «Full screen».
+      const fig = it.block.querySelector(".kit-full") || it.block.querySelector("figure");
+      if (fig) fig.parentNode.insertBefore(row, fig);
+      else it.block.insertBefore(row, it.block.firstChild);
+      blocks.set(it.block, { badge, items: [] });
+    }
+    blocks.get(it.block).items.push(it);
+  }
+
+  const flash = (it) => {
+    it.el.scrollIntoView({ block: "center", behavior: "smooth" });
+    it.el.classList.add("kr-flash");
+    setTimeout(() => it.el.classList.remove("kr-flash"), 1600);
+  };
+
+  const renderDrawer = (c) => {
+    drawer.replaceChildren();
+    drawer.append(el("h2", "kr-dh", "Review progress"));
+    for (const [kind, name] of Object.entries(kinds)) {
+      const k = c.byKind[kind];
+      if (!k) continue;
+      const row = el("div", "kr-krow");
+      const fill = el("i");
+      fill.style.width = (100 * k.reviewed / k.total) + "%";
+      const meter = el("span", "kr-prog");
+      meter.appendChild(fill);
+      row.append(el("span", "kr-kname", name), meter, el("span", "kr-knum", `${k.reviewed} / ${k.total}`));
+      drawer.appendChild(row);
+    }
+    const left = items.filter((it) => it.state !== "ok").sort((a, b) => (a.state === "chg" ? 0 : 1) - (b.state === "chg" ? 0 : 1));
+    drawer.append(el("h2", "kr-dh", left.length ? `Still to review — ${left.length}` : "Everything on this page is reviewed"));
+    const list = el("ol", "kr-left");
+    for (const it of left) {
+      const li = el("li");
+      const b = el("button", "kr-lbtn " + (it.state === "chg" ? "kr-chg" : "kr-todo"));
+      b.type = "button";
+      b.append(el("span", "kr-lkind", it.state === "chg" ? "edited" : it.kind), el("span", "kr-ltext", it.label));
+      b.addEventListener("click", () => flash(it));
+      li.appendChild(b);
+      list.appendChild(li);
+    }
+    drawer.appendChild(list);
+  };
+
+  const render = () => {
+    const c = counts();
+    for (const it of items) {
+      for (const node of [it.el, it.ring, it.btn]) {
+        if (!node) continue;
+        node.classList.remove("kr-ok", "kr-chg", "kr-todo");
+        node.classList.add("kr-" + it.state);
+      }
+      if (it.btn) {
+        const verb = !live ? (it.state === "ok" ? "Reviewed" : "Not reviewed") : it.state === "ok" ? "Unmark" : "Mark reviewed";
+        it.btn.setAttribute("aria-label", `${verb}: ${it.label}`);
+        it.btn.setAttribute("title", it.state === "chg" ? "Edited after review" : verb);
+        it.btn.setAttribute("aria-disabled", String(!live));
+        if ("disabled" in it.btn) it.btn.disabled = !live;
+      }
+    }
+    for (const { badge, items: own } of blocks.values()) {
+      const done = own.filter((it) => it.state === "ok").length;
+      const all = done === own.length;
+      badge.className = "kr-dbadge" + (all ? " kr-done" : own.some((it) => it.state === "chg") ? " kr-chgd" : "");
+      badge.textContent = all ? "✓ Diagram reviewed" : `${done} / ${own.length} reviewed`;
+    }
+    const all = c.total > 0 && c.reviewed === c.total;
+    pageCheck.className = "kr-pagecheck" + (all ? " kr-done" : "");
+    pageCheck.textContent = all ? "✓" : "";
+    countText.textContent = all ? `Page reviewed · ${c.total} items` : `Reviewed ${c.reviewed} / ${c.total}`;
+    progFill.style.width = (c.total ? 100 * c.reviewed / c.total : 0) + "%";
+    chgChip.textContent = `${c.changed} edited`;
+    chgChip.hidden = c.changed === 0;
+    note.hidden = live;
+    document.body.classList.toggle("kr-ro", !live);
+    renderDrawer(c);
+    return c;
+  };
+
+  // A badge with the state of every review page this page links to.
+  const targetOf = (a) => {
+    try {
+      const u = new URL(a.getAttribute("href"), location.href);
+      if (u.origin !== root.origin || !u.pathname.startsWith(root.pathname)) return null;
+      const p = decodeURIComponent(u.pathname.slice(root.pathname.length));
+      return p.endsWith(".html") && p !== path ? p : null;
+    } catch (e) { return null; }
+  };
+  const badges = () => {
+    for (const a of document.querySelectorAll("main [data-kr] a[href]")) {
+      const target = targetOf(a);
+      if (!target) continue;
+      const s = pageCounts[target];
+      let badge = a.nextElementSibling && a.nextElementSibling.classList.contains("kr-lbadge") ? a.nextElementSibling : null;
+      if (!badge) { badge = el("span", "kr-lbadge"); a.after(badge); }
+      if (!s || !s.total) { badge.className = "kr-lbadge kr-todo"; badge.textContent = "not reviewed"; continue; }
+      const left = s.total - s.reviewed;
+      badge.className = "kr-lbadge " + (left === 0 ? "kr-ok" : s.edited ? "kr-chg" : "kr-todo");
+      badge.textContent = left === 0 ? "✓ reviewed" : `${left} left` + (s.edited ? `, ${s.edited} edited` : "");
+    }
+  };
+
+  render();
+  badges();
+
+  fetch(endpoint, { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((state) => {
+      if (!state || typeof state.pages !== "object") return;
+      live = true;
+      apply(state);
+      render();
+      badges();
+    })
+    .catch(() => { /* read-only away from kit report serve */ });
+})();
+</script>
+</body></html>
