@@ -1,0 +1,40 @@
+# Secrets and local settings: never commit them (AGENTS.md § Open source and secrets)
+.env
+.env.*
+!.env.example
+*.session
+*.session-journal
+session*.json
+*.pem
+*.key
+
+# Local data: chat messages, judge decisions, databases, media
+/data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.jsonl
+!**/testdata/**/*.jsonl
+
+# Go build and test output
+/bin/
+/dist/
+*.test
+*.out
+coverage.*
+cover.out
+
+# Agent worktrees and local agent files
+.worktrees/
+.claude/worktrees/
+.claude/settings.local.json
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# macOS
+.DS_Store
