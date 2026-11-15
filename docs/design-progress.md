@@ -35,6 +35,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — Version 1 scope and non-goals as on the context page § About the system (L1 System Context)
 2026-11-15 — Targets: ≤ 100 chats, 5,000+ messages/day, peak 10 msg/s, p95 ≤ 10 s to the owner, catch-up 500 messages or 3 days per chat by default (config) in ≤ 15 min, 0 missed and 0 repeated after restart, ≤ 10 GB/year, texts stay local, LLM cost 0 € (Quality attributes)
 2026-11-15 — Containers: one Go CLI process, a SQLite store file and a matches.jsonl file; no broker, no separate services (L2 Container)
+2026-11-15 — Requests: many standing requests, each bound to its own set of chats (1..N); every new message and every catch-up message of those chats goes to the LLM judge with that request; no text search, no embeddings in version 1 (L1 System Context)
 
 ## Review
 
