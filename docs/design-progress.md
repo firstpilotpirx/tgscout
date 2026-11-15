@@ -10,17 +10,17 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 
 - [ ] L1 System Context — dialogue — [context](architecture/context.html)
 - [ ] L2 Container — dialogue — [overview](architecture/overview.html)
+- [ ] L3 Component — tgscout — dialogue — [tgscout](architecture/tgscout.html)
 - [ ] Quality attributes — [quality attributes](architecture/quality-attributes.html)
 
 ## To discuss
 
-1. Peak 10 msg/s vs a judge of 1–3 s per message: one-by-one gives a growing queue at peak; batch several messages per request, run requests in parallel, or accept the lag at peak
+Nothing open.
 
 ## Later, not now
 
 1. Images: check how well a local vision model reads a listing photo, then add photo search (video and audio stay out)
-2. L3 Component of tgscout
-3. Owner feedback (👍/👎, commands) on found messages
+2. Owner feedback (👍/👎, commands) on found messages
 
 ## Decisions
 
@@ -39,6 +39,11 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — Config tgscout.yaml holds requests with their chats, catch-up depth and LM Studio settings; settings are hierarchical: root, then request, then chat overrides; SQLite keeps only processed IDs and decisions (L2 Container)
 2026-11-15 — No matches.jsonl: found messages are the «yes» decisions in SQLite; the only storage is SQLite (L2 Container)
 
+2026-11-15 — Version 1 matches text only; images are later, after a check of a local vision model (L1 System Context)
+2026-11-15 — Version 1 has no owner feedback and no commands: every found message goes to the owner as a plain private message (L1 System Context)
+2026-11-15 — SQLite driver: mattn/go-sqlite3, the most used Go SQLite driver (9.3k GitHub stars) and the kit tech matrix choice; needs cgo (L2 Container)
+2026-11-15 — Peak load: messages wait in an in-memory queue (a Go channel) for the judge; after a restart, catch-up rereads from Telegram from the cursor (the last processed message ID per chat) and skips IDs already in SQLite, so nothing is lost (L2 Container)
+
 ## Review
 
 ## Plan
@@ -47,6 +52,3 @@ The slice order is drawn in `docs/index.html` § Plan as a `gantt` or `pipeline`
 
 | Slice | Change | Release | Depends on |
 |---|---|---|---|
-2026-11-15 — Version 1 matches text only; images are later, after a check of a local vision model (L1 System Context)
-2026-11-15 — Version 1 has no owner feedback and no commands: every found message goes to the owner as a plain private message (L1 System Context)
-2026-11-15 — SQLite driver: mattn/go-sqlite3, the most used Go SQLite driver (9.3k GitHub stars) and the kit tech matrix choice; needs cgo (L2 Container)
