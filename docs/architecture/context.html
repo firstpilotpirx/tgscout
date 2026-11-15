@@ -230,9 +230,24 @@ links:
 <tr data-kr="t/l1-system-context/tr3" data-kr-hash="abe786d596" data-kr-kind="row" data-kr-label="Owner | person | set standing requests and get matches from the owner&#39;s own Tel…"><td>Owner</td><td>person</td><td>set standing requests and get matches from the owner's own Telegram account in a private chat with tgscout's account, and in the console; tgscout answers only the owner's user ID</td></tr>
 </table>
 
+<h2>About the system</h2>
+
+<p data-kr="t/about-the-system/p1" data-kr-hash="135290ea90" data-kr-kind="text" data-kr-label="Finds what the owner needs in Telegram chats and tells the owner at once. Versi…">Finds what the owner needs in Telegram chats and tells the owner at once. Version 1: real time plus a short catch-up of history.</p>
+
+<table>
+<tr><th>In scope (version 1)</th><th>Out of scope (who or when instead)</th></tr>
+<tr data-kr="t/about-the-system/tr1" data-kr-hash="626b0a09c6" data-kr-kind="row" data-kr-label="Watches new and edited messages of 1–2 chats in real time | Deep history search…"><td>Watches new and edited messages of 1–2 chats in real time</td><td>Deep history search with a summary — version 2</td></tr>
+<tr data-kr="t/about-the-system/tr2" data-kr-hash="ed59f2c288" data-kr-kind="row" data-kr-label="On start, catches up history to a set depth (N days or N messages); history mat…"><td>On start, catches up history to a set depth (N days or N messages); history matches come as one summary message</td><td>Full-text search and embeddings — a filter cascade later, if the LLM gets too slow or costly</td></tr>
+<tr data-kr="t/about-the-system/tr3" data-kr-hash="3ccc0dc404" data-kr-kind="row" data-kr-label="The LLM judge checks every message after a simple pre-filter (service, empty, d…"><td>The LLM judge checks every message after a simple pre-filter (service, empty, duplicate)</td><td>Writing to the watched chats or adding anyone: tgscout only reads there</td></tr>
+<tr data-kr="t/about-the-system/tr4" data-kr-hash="f659dcae78" data-kr-kind="row" data-kr-label="Sends each match to the owner in a private chat, to the console and to a JSONL …"><td>Sends each match to the owner in a private chat, to the console and to a JSONL file</td><td>Other users: a service for other people — later</td></tr>
+<tr data-kr="t/about-the-system/tr5" data-kr-hash="d9cad257a1" data-kr-kind="row" data-kr-label="No repeats: duplicates and restarts give no second notice | TUI and GUI — versi…"><td>No repeats: duplicates and restarts give no second notice</td><td>TUI and GUI — version 1.x and later</td></tr>
+</table>
+
+
+
 
 </main>
-<template id="kit-review-state">{"pages":{"architecture/context.html":[]},"counts":{"architecture/context.html":{"total":11,"reviewed":0,"edited":0},"architecture/overview.html":{"total":1,"reviewed":0,"edited":0},"index.html":{"total":10,"reviewed":0,"edited":0}}}</template>
+<template id="kit-review-state">{"pages":{"architecture/context.html":[]},"counts":{"architecture/context.html":{"total":17,"reviewed":0,"edited":0},"architecture/overview.html":{"total":1,"reviewed":0,"edited":0},"index.html":{"total":10,"reviewed":0,"edited":0}}}</template>
 <script id="kit-review-script">(() => {
   "use strict";
   const meta = document.querySelector('meta[name="kit-review"]');

@@ -13,8 +13,8 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 
 ## To discuss
 
-1. L1 System Context — what tgscout does and does not do (scope and non-goals)
-2. How the owner gives 👍/👎 and commands without bot buttons (an ordinary account cannot send inline buttons)
+1. How the owner gives 👍/👎 and commands without bot buttons (an ordinary account cannot send inline buttons)
+2. Image search in version 1: send previews to a vision model now, or in a later step
 
 ## Later, not now
 
@@ -29,6 +29,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — No Telegram Bot API, by design: a bot joins a group only when an admin adds it, and tgscout must join chats where the owner is not an admin. tgscout uses one ordinary Telegram account of its own (a second account, not the owner's) over MTProto both to read chats and to write matches to the owner; supersedes the line above (L1 System Context)
 2026-11-15 — Every match also goes to the console, for debugging (L1 System Context)
 2026-11-15 — The owner talks to tgscout in Telegram from the owner's own account, and runs the tgscout CLI and watches its console; tgscout is in Telegram as an ordinary user (L1 System Context)
+2026-11-15 — Version 1 scope and non-goals as on the context page § About the system (L1 System Context)
 
 ## Review
 
