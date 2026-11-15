@@ -9,7 +9,7 @@ Board format: 6
 Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] … — gate` waiting for acceptance, `- [x]` accepted; its pages follow as links. Nested as the C4 tree.
 
 - [ ] L1 System Context — dialogue — [context](architecture/context.html)
-- [ ] L2 Container — [overview](architecture/overview.html)
+- [ ] L2 Container — dialogue — [overview](architecture/overview.html)
 - [ ] Quality attributes — [quality attributes](architecture/quality-attributes.html)
 
 ## To discuss
@@ -17,6 +17,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 1. Peak 10 msg/s vs a judge of 1–3 s per message: one-by-one gives a growing queue at peak; batch several messages per request, run requests in parallel, or accept the lag at peak
 2. How the owner gives 👍/👎 and commands without bot buttons (an ordinary account cannot send inline buttons)
 3. Image search in version 1: send previews to a vision model now, or in a later step
+4. SQLite driver: modernc.org/sqlite (pure Go, no cgo) as in the notes, or mattn/go-sqlite3 (cgo) as the kit tech matrix says
 
 ## Later, not now
 
@@ -33,6 +34,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — The owner talks to tgscout in Telegram from the owner's own account, and runs the tgscout CLI and watches its console; tgscout is in Telegram as an ordinary user (L1 System Context)
 2026-11-15 — Version 1 scope and non-goals as on the context page § About the system (L1 System Context)
 2026-11-15 — Targets: ≤ 100 chats, 5,000+ messages/day, peak 10 msg/s, p95 ≤ 10 s to the owner, catch-up 500 messages or 3 days per chat by default (config) in ≤ 15 min, 0 missed and 0 repeated after restart, ≤ 10 GB/year, texts stay local, LLM cost 0 € (Quality attributes)
+2026-11-15 — Containers: one Go CLI process, a SQLite store file and a matches.jsonl file; no broker, no separate services (L2 Container)
 
 ## Review
 

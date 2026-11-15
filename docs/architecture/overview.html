@@ -122,11 +122,132 @@ body.kr-ro .kr-btn,body.kr-ro .kr-svgbtn{cursor:default}
 <h1>L2 Container — tgscout</h1>
 <p><a href="../index.html">Index</a> › L2 Container</p>
 
-<p class="no-picture" data-kr="t/top/p2" data-kr-hash="50f6d37fce" data-kr-kind="text" data-kr-label="Nothing agreed yet: the picture comes once the containers are agreed.">Nothing agreed yet: the picture comes once the containers are agreed.</p>
+<h2>L2 Container</h2>
+
+<pre class="kit" data-kind="c4" data-kit-hash="3cc8d0546b08" hidden>title: L2 Container
+caption: &#34;One Go process and two local files: 100 chats and 5,000 messages a day need no broker&#34;
+level: container
+nodes:
+  - {id: owner, at: [0, 2], type: person, name: Owner}
+  - {id: llm, at: [1, 0], type: external, name: LM Studio, tech: &#34;local LLM&#34;}
+  - {id: app, at: [1, 2], type: container, name: tgscout, tech: &#34;Go, CLI&#34;}
+  - {id: tg, at: [1, 4], type: external, name: Telegram, tech: MTProto}
+  - {id: store, at: [2, 1], type: database, name: store, tech: SQLite}
+  - {id: jsonl, at: [2, 3], type: database, name: matches.jsonl, tech: JSONL file}
+groups:
+  - {id: system, title: tgscout, members: [app, store, jsonl]}
+links:
+  - {from: owner, to: app, text: &#34;runs, watches console&#34;}
+  - {from: owner, to: tg, text: &#34;own account&#34;, via: hv}
+  - {from: app, to: tg, text: &#34;reads chats, sends matches&#34;, stream: true}
+  - {from: app, to: llm, text: &#34;HTTP: does it match?&#34;}
+  - {from: app, to: store, text: &#34;IDs, requests, decisions&#34;, via: vh}
+  - {from: app, to: jsonl, text: &#34;appends matches&#34;, via: vh}</pre>
+<div class="kit-render" id="kit-b1"><div class="kit-anim" style="--cycle:6.3s"><style>.kit-anim{position:relative;display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-anim>*{order:2;flex:0 0 100%}
+.kit-anim>h3{order:0}
+.kit-play,.kit-speed-in{position:absolute;opacity:0;width:1px;height:1px}
+.kit-play-btn{order:1;flex:0 0 auto;display:inline-block;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;margin:4px 0;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-play-btn::before{content:"\25B6  Play"}
+.kit-play:checked+.kit-play-btn::before{content:"\25A0  Stop"}
+.kit-play:focus-visible+.kit-play-btn{outline:2px solid var(--focus)}
+.kit-speed{order:1;flex:0 0 auto;display:inline-flex;margin:4px 0;font-size:11px;color:var(--mut);user-select:none;background:linear-gradient(var(--line),var(--line)) no-repeat 50% 6px/calc(100% - 36px) 2px}
+.kit-speed label{display:inline-flex;flex-direction:column;align-items:center;gap:2px;min-width:36px;cursor:pointer}
+.kit-speed label::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--card)}
+.kit-speed-in:focus-visible~.kit-speed{outline:2px solid var(--focus);outline-offset:2px}
+.kit-dot,.kit-later{opacity:0}
+.kit-anim [data-stream] path{animation:kit-stream .8s linear infinite}
+@keyframes kit-stream{to{stroke-dashoffset:16}}
+.kit-grow{transform-box:fill-box;transform-origin:left center}
+@keyframes kit-blink{to{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.kit-anim *{animation-name:none!important}}
+@keyframes kit-b1-e1-dot{0%{offset-distance:0%;opacity:1}14.29%{offset-distance:100%;opacity:1}14.3%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e1-dash{0%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}14.29%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}14.3%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e1-dot{animation:kit-b1-e1-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e1 path{animation:kit-b1-e1-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e2-dot{0%,14.29%{offset-distance:0%;opacity:0}14.3%{offset-distance:0%;opacity:1}28.57%{offset-distance:100%;opacity:1}28.58%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e2-dash{0%,14.29%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}14.3%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}28.57%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}28.58%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e2-dot{animation:kit-b1-e2-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e2 path{animation:kit-b1-e2-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e3-dot{0%,28.56%{offset-distance:100%;opacity:0}28.57%{offset-distance:100%;opacity:1}35.72%{offset-distance:0%;opacity:1}35.73%,100%{offset-distance:0%;opacity:0}}
+#kit-b1-play:checked ~ * #kit-b1-e3-dot{animation:kit-b1-e3-dot var(--cycle) linear infinite}
+@keyframes kit-b1-e3-dot2{0%,32.13%{offset-distance:100%;opacity:0}32.14%{offset-distance:100%;opacity:1}39.28%{offset-distance:0%;opacity:1}39.29%,100%{offset-distance:0%;opacity:0}}
+#kit-b1-play:checked ~ * #kit-b1-e3-dot2{animation:kit-b1-e3-dot2 var(--cycle) linear infinite}
+@keyframes kit-b1-e3-dot3{0%,35.71%{offset-distance:100%;opacity:0}35.72%{offset-distance:100%;opacity:1}42.86%{offset-distance:0%;opacity:1}42.87%,100%{offset-distance:0%;opacity:0}}
+#kit-b1-play:checked ~ * #kit-b1-e3-dot3{animation:kit-b1-e3-dot3 var(--cycle) linear infinite}
+@keyframes kit-b1-e4-dot{0%,42.86%{offset-distance:0%;opacity:0}42.87%{offset-distance:0%;opacity:1}57.14%{offset-distance:100%;opacity:1}57.15%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e4-dash{0%,42.86%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}42.87%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}57.14%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}57.15%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e4-dot{animation:kit-b1-e4-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e4 path{animation:kit-b1-e4-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e5-dot{0%,57.14%{offset-distance:0%;opacity:0}57.15%{offset-distance:0%;opacity:1}71.43%{offset-distance:100%;opacity:1}71.44%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e5-dash{0%,57.14%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}57.15%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}71.43%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}71.44%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e5-dot{animation:kit-b1-e5-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e5 path{animation:kit-b1-e5-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e6-dot{0%,71.43%{offset-distance:0%;opacity:0}71.44%{offset-distance:0%;opacity:1}85.71%{offset-distance:100%;opacity:1}85.72%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e6-dash{0%,71.43%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}71.44%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}85.71%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}85.72%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e6-dot{animation:kit-b1-e6-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e6 path{animation:kit-b1-e6-dash var(--cycle) linear infinite}
+@keyframes kit-b1-n-app{0%{filter:none}7.15%{filter:none}14.29%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}21.43%{filter:none}35.72%{filter:none}42.86%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}50%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="app"]{animation:kit-b1-n-app var(--cycle) linear infinite}
+@keyframes kit-b1-n-jsonl{0%{filter:none}78.57%{filter:none}85.71%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}92.85%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="jsonl"]{animation:kit-b1-n-jsonl var(--cycle) linear infinite}
+@keyframes kit-b1-n-llm{0%{filter:none}50%{filter:none}57.14%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}64.28%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="llm"]{animation:kit-b1-n-llm var(--cycle) linear infinite}
+@keyframes kit-b1-n-store{0%{filter:none}64.29%{filter:none}71.43%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}78.57%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="store"]{animation:kit-b1-n-store var(--cycle) linear infinite}
+@keyframes kit-b1-n-tg{0%{filter:none}21.43%{filter:none}28.57%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}35.71%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="tg"]{animation:kit-b1-n-tg var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * .kit-blink{animation:kit-blink .45s ease-in-out infinite alternate}
+#kit-b1-x05:checked ~ *{--cycle:12.6s}
+#kit-b1-x05:checked ~ .kit-speed label[for="kit-b1-x05"]{color:var(--fg);font-weight:600}
+#kit-b1-x05:checked ~ .kit-speed label[for="kit-b1-x05"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x1:checked ~ *{--cycle:6.3s}
+#kit-b1-x1:checked ~ .kit-speed label[for="kit-b1-x1"]{color:var(--fg);font-weight:600}
+#kit-b1-x1:checked ~ .kit-speed label[for="kit-b1-x1"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x15:checked ~ *{--cycle:4.2s}
+#kit-b1-x15:checked ~ .kit-speed label[for="kit-b1-x15"]{color:var(--fg);font-weight:600}
+#kit-b1-x15:checked ~ .kit-speed label[for="kit-b1-x15"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x2:checked ~ *{--cycle:3.15s}
+#kit-b1-x2:checked ~ .kit-speed label[for="kit-b1-x2"]{color:var(--fg);font-weight:600}
+#kit-b1-x2:checked ~ .kit-speed label[for="kit-b1-x2"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x3:checked ~ *{--cycle:2.1s}
+#kit-b1-x3:checked ~ .kit-speed label[for="kit-b1-x3"]{color:var(--fg);font-weight:600}
+#kit-b1-x3:checked ~ .kit-speed label[for="kit-b1-x3"]::before{background:var(--focus);border-color:var(--focus)}
+</style><input type="checkbox" class="kit-play" id="kit-b1-play" aria-label="play the animation"><label for="kit-b1-play" class="kit-play-btn"></label><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x05" aria-label="speed 0.5×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x1" checked aria-label="speed 1×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x15" aria-label="speed 1.5×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x2" aria-label="speed 2×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x3" aria-label="speed 3×"><span class="kit-speed" role="group" aria-label="playback speed"><label for="kit-b1-x05">0.5×</label><label for="kit-b1-x1">1×</label><label for="kit-b1-x15">1.5×</label><label for="kit-b1-x2">2×</label><label for="kit-b1-x3">3×</label></span><h3>L2 Container</h3><style>.kit-render{position:relative}
+.kit-render svg a,.kit-render svg a *{cursor:pointer;pointer-events:all}
+.kit-render{--link-hover:.94}
+@media (prefers-color-scheme:dark){.kit-render{--link-hover:1.35}}
+.kit-render svg a:hover :is(rect,path,ellipse,circle,polygon){filter:brightness(var(--link-hover));stroke-width:2.5}
+.kit-render:has(>.kit-full){display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-render:has(>.kit-full)>*{flex:0 0 100%}
+.kit-render:has(>.kit-full)>:not(h3,.kit-full-btn,.kit-view,.kr-drow,.kit-play-btn,.kit-speed){order:2}
+.kit-render:has(>.kit-full)>.kit-view{flex:0 0 auto}
+.kit-render .kit-view{order:1;flex:0 0 auto;margin:4px 0;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);text-decoration:none;white-space:nowrap}
+.kit-render .kit-view:hover{border-color:var(--focus)}
+.kit-render .kit-view::after{content:" \2197"}
+.kit-render:has(>.kit-full)>.kr-drow{flex:1 0 auto;text-align:right}
+.kit-render:has(.kit-full) h3{margin-bottom:2px}
+.kit-render:has(.kit-full) figure{margin-top:4px}
+.kit-full{position:absolute;opacity:0;width:1px;height:1px}
+.kit-render .kit-full-btn{order:1;flex:0 0 auto;margin:4px 0 4px auto;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-full-btn::before{content:"\2922  Full screen"}
+.kit-full:focus-visible+.kit-full-btn{outline:2px solid var(--focus)}
+.kit-render:has(.kit-full:checked){position:fixed;inset:0;z-index:1000;margin:0;overflow:auto;background:var(--bg);padding:44px 16px 16px}
+.kit-render .kit-full:checked+.kit-full-btn{position:fixed;top:8px;right:16px;z-index:2}
+.kit-full:checked+.kit-full-btn::before{content:"\2715  Close"}
+.kit-render:has(.kit-full:checked) svg{width:100%!important;max-width:none;height:calc(100vh - 140px)}</style><input type="checkbox" class="kit-full" id="kit-b1-full" aria-label="show the picture on the whole screen"><label for="kit-b1-full" class="kit-full-btn"></label><figure><svg viewBox="60 60 1247.3200000000002 410" width="1247.3200000000002" style="width:1870.9800000000002px" role="img" aria-label="L2 Container" font-family="system-ui,-apple-system,sans-serif"><rect x="358.64" y="216" width="662.8000000000001" height="234" rx="10" fill="none" stroke="var(--old)" stroke-width="1.2" stroke-dasharray="6 4"/><text x="368.64" y="232" font-size="12" fill="var(--mut)" text-anchor="start" font-weight="600">tgscout</text><g data-node="owner" data-kr="kit-b1/n/owner" data-kr-hash="a005ed36ef" data-kr-kind="box" data-kr-label="Owner"><circle cx="677.28" cy="88" r="6" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.5"/><path d="M677.28 94V106M667.28 98H687.28M669.28 116L677.28 106L685.28 116" fill="none" stroke="var(--client)" stroke-width="1.5" stroke-linecap="round"/><text x="677.28" y="140" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Owner</text><text x="677.28" y="156" font-size="11" fill="var(--clientt)" text-anchor="middle">[Person]</text></g><g data-node="llm" data-kr="kit-b1/n/llm" data-kr-hash="31c36208e7" data-kr-kind="box" data-kr-label="LM Studio"><rect x="80" y="250" width="210.64" height="54" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="185.32" y="274" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">LM Studio</text><text x="185.32" y="290" font-size="11" fill="var(--extt)" text-anchor="middle">[External System: local LLM]</text></g><g data-node="app" data-kr="kit-b1/n/app" data-kr-hash="dce738ef41" data-kr-kind="box" data-kr-label="tgscout"><rect x="597.48" y="250" width="159.6" height="54" rx="8" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="677.28" y="274" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">tgscout</text><text x="677.28" y="290" font-size="11" fill="var(--svct)" text-anchor="middle">[Container: Go, CLI]</text></g><g data-node="tg" data-kr="kit-b1/n/tg" data-kr-hash="ac208a67ab" data-kr-kind="box" data-kr-label="Telegram"><rect x="1089.44" y="250" width="197.88" height="54" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="1188.38" y="274" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Telegram</text><text x="1188.38" y="290" font-size="11" fill="var(--extt)" text-anchor="middle">[External System: MTProto]</text></g><g data-node="store" data-kr="kit-b1/n/store" data-kr-hash="e3dc118dca" data-kr-kind="box" data-kr-label="store"><path d="M370.64 392a73.41999999999999 8 0 0 0 146.83999999999997 0v38a73.41999999999999 8 0 0 1 -146.83999999999997 0z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><ellipse cx="444.05999999999995" cy="392" rx="73.41999999999999" ry="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="444.05999999999995" y="412" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">store</text><text x="444.05999999999995" y="428" font-size="11" fill="var(--storet)" text-anchor="middle">[Database: SQLite]</text></g><g data-node="jsonl" data-kr="kit-b1/n/jsonl" data-kr-hash="da8871caca" data-kr-kind="box" data-kr-label="matches.jsonl"><path d="M837.08 392a86.17999999999999 8 0 0 0 172.35999999999999 0v38a86.17999999999999 8 0 0 1 -172.35999999999999 0z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><ellipse cx="923.26" cy="392" rx="86.17999999999999" ry="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="923.26" y="412" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">matches.jsonl</text><text x="923.26" y="428" font-size="11" fill="var(--storet)" text-anchor="middle">[Database: JSONL file]</text></g><g id="kit-b1-e1" data-step="1" data-from="owner" data-to="app" data-kr="kit-b1/l/owner&gt;app" data-kr-hash="a18e637190" data-kr-kind="arrow" data-kr-label="Owner → tgscout: runs, watches console"><path class="link" d="M677.28 170V250" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e1-dot" r="4" fill="var(--fg)" style="offset-path:path('M677.28 170V250')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(677.28 170) rotate(90)"/><text data-step="1" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="698.28" y="197.025" font-size="11" fill="var(--fg)" text-anchor="start">runs, watches console</text><g id="kit-b1-e2" data-step="2" data-from="owner" data-to="tg" data-kr="kit-b1/l/owner&gt;tg" data-kr-hash="729978ea97" data-kr-kind="arrow" data-kr-label="Owner → Telegram: own account"><path class="link" d="M708.8 125H1188.38V250" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e2-dot" r="4" fill="var(--fg)" style="offset-path:path('M708.8 125H1188.38V250')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(708.8 125) rotate(0)"/><text data-step="2" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="948.59" y="117.25" font-size="11" fill="var(--fg)" text-anchor="middle">own account</text><g id="kit-b1-e3" data-step="3" data-from="app" data-to="tg" data-stream="1" data-kr="kit-b1/l/app&gt;tg" data-kr-hash="76bef55b3d" data-kr-kind="arrow" data-kr-label="tgscout → Telegram: reads chats, sends matches"><path class="link" d="M757.08 277H1089.44" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)" stroke-dasharray="5 3"/></g><circle class="kit-dot" id="kit-b1-e3-dot" r="4" fill="var(--fg)" style="offset-path:path('M757.08 277H1089.44')"/><circle class="kit-dot" id="kit-b1-e3-dot2" r="4" fill="var(--fg)" style="offset-path:path('M757.08 277H1089.44')"/><circle class="kit-dot" id="kit-b1-e3-dot3" r="4" fill="var(--fg)" style="offset-path:path('M757.08 277H1089.44')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(757.08 277) rotate(0)"/><text data-step="3" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="923.26" y="269.25" font-size="11" fill="var(--fg)" text-anchor="middle">reads chats, sends matches</text><g id="kit-b1-e4" data-step="4" data-from="app" data-to="llm" data-kr="kit-b1/l/app&gt;llm" data-kr-hash="57d63665d1" data-kr-kind="arrow" data-kr-label="tgscout → LM Studio: HTTP: does it match?"><path class="link" d="M597.48 277H290.64" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e4-dot" r="4" fill="var(--fg)" style="offset-path:path('M597.48 277H290.64')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(597.48 277) rotate(180)"/><text data-step="4" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="444.06" y="269.25" font-size="11" fill="var(--fg)" text-anchor="middle">HTTP: does it match?</text><g id="kit-b1-e5" data-step="5" data-from="app" data-to="store" data-kr="kit-b1/l/app&gt;store" data-kr-hash="d711d06c07" data-kr-kind="arrow" data-kr-label="tgscout → store: IDs, requests, decisions"><path class="link" d="M677.28 304V411H517.48" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e5-dot" r="4" fill="var(--fg)" style="offset-path:path('M677.28 304V411H517.48')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(677.28 304) rotate(90)"/><text data-step="5" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="629.34" y="424.8" font-size="11" fill="var(--fg)" text-anchor="middle">IDs, requests, decisions</text><g id="kit-b1-e6" data-step="6" data-from="app" data-to="jsonl" data-kr="kit-b1/l/app&gt;jsonl" data-kr-hash="c10645fe57" data-kr-kind="arrow" data-kr-label="tgscout → matches.jsonl: appends matches"><path class="link" d="M677.28 304V411H837.08" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e6-dot" r="4" fill="var(--fg)" style="offset-path:path('M677.28 304V411H837.08')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(677.28 304) rotate(90)"/><text data-step="6" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="757.1800000000001" y="403.25" font-size="11" fill="var(--fg)" text-anchor="middle">appends matches</text><circle class="junction" cx="677.28" cy="411" r="3" fill="var(--fg)"/></svg></figure><p class="note">One Go process and two local files: 100 chats and 5,000 messages a day need no broker</p></div></div><!--/kit-render-->
+
+<table>
+<tr><th>Container</th><th>What it is</th><th>Technology</th></tr>
+<tr data-kr="t/l2-container/tr1" data-kr-hash="dce0992468" data-kr-kind="row" data-kr-label="tgscout | one process: reads Telegram, asks the judge, sends matches, writes th…"><td>tgscout</td><td>one process: reads Telegram, asks the judge, sends matches, writes the console</td><td>Go, CLI</td></tr>
+<tr data-kr="t/l2-container/tr2" data-kr-hash="c92c0b6c51" data-kr-kind="row" data-kr-label="store | processed IDs, last ID per chat, standing requests, judge decisions | S…"><td>store</td><td>processed IDs, last ID per chat, standing requests, judge decisions</td><td>SQLite, one local file</td></tr>
+<tr data-kr="t/l2-container/tr3" data-kr-hash="2abd68d2eb" data-kr-kind="row" data-kr-label="matches.jsonl | one match per line, for analysis and tests | JSONL file"><td>matches.jsonl</td><td>one match per line, for analysis and tests</td><td>JSONL file</td></tr>
+</table>
+
 
 
 </main>
-<template id="kit-review-state">{"pages":{"architecture/overview.html":[]},"counts":{"architecture/context.html":{"total":1,"reviewed":0,"edited":0},"architecture/overview.html":{"total":1,"reviewed":0,"edited":0},"index.html":{"total":9,"reviewed":0,"edited":0}}}</template>
+<template id="kit-review-state">{"pages":{"architecture/overview.html":[]},"counts":{"architecture/context.html":{"total":17,"reviewed":0,"edited":0},"architecture/overview.html":{"total":15,"reviewed":0,"edited":0},"architecture/quality-attributes.html":{"total":49,"reviewed":0,"edited":0},"index.html":{"total":13,"reviewed":0,"edited":0}}}</template>
 <script id="kit-review-script">(() => {
   "use strict";
   const meta = document.querySelector('meta[name="kit-review"]');
