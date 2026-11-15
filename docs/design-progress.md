@@ -15,7 +15,6 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 ## To discuss
 
 1. Peak 10 msg/s vs a judge of 1–3 s per message: one-by-one gives a growing queue at peak; batch several messages per request, run requests in parallel, or accept the lag at peak
-2. SQLite driver: modernc.org/sqlite (pure Go, no cgo) as in the notes, or mattn/go-sqlite3 (cgo) as the kit tech matrix says
 
 ## Later, not now
 
@@ -50,3 +49,4 @@ The slice order is drawn in `docs/index.html` § Plan as a `gantt` or `pipeline`
 |---|---|---|---|
 2026-11-15 — Version 1 matches text only; images are later, after a check of a local vision model (L1 System Context)
 2026-11-15 — Version 1 has no owner feedback and no commands: every found message goes to the owner as a plain private message (L1 System Context)
+2026-11-15 — SQLite driver: mattn/go-sqlite3, the most used Go SQLite driver (9.3k GitHub stars) and the kit tech matrix choice; needs cgo (L2 Container)
