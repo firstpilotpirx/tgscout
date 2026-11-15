@@ -16,7 +16,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 
 1. Peak 10 msg/s vs a judge of 1–3 s per message: one-by-one gives a growing queue at peak; batch several messages per request, run requests in parallel, or accept the lag at peak
 2. How the owner gives 👍/👎 and commands without bot buttons (an ordinary account cannot send inline buttons)
-3. Image search in version 1: send previews to a vision model now, or in a later step
+3. Images in version 1: the target is text and photos (video and audio are out); open: how well a local vision model in LM Studio reads a listing photo, to be checked on a few made-up samples before we decide
 4. SQLite driver: modernc.org/sqlite (pure Go, no cgo) as in the notes, or mattn/go-sqlite3 (cgo) as the kit tech matrix says
 
 ## Later, not now
