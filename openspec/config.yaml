@@ -1,7 +1,7 @@
 schema: spec-driven
 
 context: |
-  tgscout: a Go console program that reads chosen Telegram chats from a separate reader account and notifies the owner through a Telegram bot when a message matches a standing request; a local LLM judge (LM Studio, OpenAI-compatible API) decides each match.
+  tgscout: a Go console program that reads chosen Telegram chats from its own ordinary Telegram account (MTProto) and writes to the owner from that account when a message matches a standing request; a local LLM judge (LM Studio, OpenAI-compatible API) decides each match.
   Open source, public repository: never put a secret, a Telegram session, an API id or hash, a bot token, a phone number, a real chat message or any personal or work data into an artifact, test or fixture (AGENTS.md § Open source and secrets); fixtures are made up.
   Product stage: PoC.
   Workflow: AGENTS.md § Workflow. No code before the user approved the proposal.

@@ -2,7 +2,7 @@
 
 ## What this project is
 
-tgscout reads chosen Telegram chats from a separate reader account (MTProto) and tells the owner through a Telegram bot when a message matches a standing request ("a kids' bike, 16 inch, under 100 €"). A local LLM judge (LM Studio through its OpenAI-compatible API) decides each match. Version 1 is a console program: real time plus a short catch-up of recent history. Written in Go; the layout follows `~/.claude/rules-custom/architecture-go.md` and is set by the first code change.
+tgscout reads chosen Telegram chats from its own ordinary Telegram account (MTProto, a second account, not the owner's) and writes to the owner from that account when a message matches a standing request ("a kids' bike, 16 inch, under 100 €"). A local LLM judge (LM Studio through its OpenAI-compatible API) decides each match. Version 1 is a console program: real time plus a short catch-up of recent history. Written in Go; the layout follows `~/.claude/rules-custom/architecture-go.md` and is set by the first code change.
 
 **Product lifecycle stage:** PoC.
 
