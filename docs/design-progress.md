@@ -46,6 +46,7 @@ Nothing open.
 2026-11-15 — L3: a separate llm part is the only one that talks to the LLM; judge asks it, so the way of talking to the LLM can change without touching judge (L3 Component — tgscout)
 2026-11-15 — L3 parts of tgscout: config, reader, queue, judge, llm, notifier, store (L3 Component — tgscout)
 2026-11-15 — L3 names: reader → collector (new messages and catch-up), judge → matcher (does a message match a request), store → repository (DDD, kit naming rules ban Store) (L3 Component — tgscout)
+2026-11-15 — Message path: collector checks the repository, puts the message into the queue; a matcher worker asks llm (which alone calls LM Studio) once per request of the chat, saves each decision, sends a «yes» to notifier, then marks the message processed and moves the cursor (L3 Component, [message path](flows/message-path.html))
 
 ## Review
 
