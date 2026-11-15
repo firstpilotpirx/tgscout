@@ -8,7 +8,7 @@ Board format: 6
 
 Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] … — gate` waiting for acceptance, `- [x]` accepted; its pages follow as links. Nested as the C4 tree.
 
-- [ ] L1 System Context — [context](architecture/context.html)
+- [ ] L1 System Context — dialogue — [context](architecture/context.html)
 - [ ] L2 Container — [overview](architecture/overview.html)
 
 ## To discuss
@@ -22,6 +22,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 ## Decisions
 
 2026-11-15 — Design language: Go (board)
+2026-11-15 — L1 drawn question by question, not from a story first (L1 System Context)
 
 ## Review
 
