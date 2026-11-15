@@ -6,6 +6,15 @@ tgscout reads chosen Telegram chats from a separate reader account (MTProto) and
 
 **Product lifecycle stage:** PoC.
 
+## Rules and sources of truth
+
+`CLAUDE.md` is a link to this file: Claude Code and every other agent read the same text.
+
+- Engineering rules and skills are global, from agent-kit (`~/.claude/`): the index `~/.claude/rules/index.md` is always loaded; each rule in `~/.claude/rules-custom/` is read when its trigger fires.
+- **Primary language:** Go. Use the `~/.claude/rules-custom/*-go.md` variants wherever a rule links to a per-language file.
+- **Sources of truth, in order:** (1) the OpenSpec artifacts under `openspec/`; (2) the code. Nothing else outranks them.
+- **No glossary.** A term that needs defining is defined in the spec that uses it.
+
 ## Workflow — OpenSpec
 
 Every feature, bug fix and behavior change runs through the stages below, in order. Changes without behavior change (typos, formatting, renames, docs, dependency bumps) skip stages 1–3 and 6–7; they still go through a branch, the checks, a PR and a merge.
