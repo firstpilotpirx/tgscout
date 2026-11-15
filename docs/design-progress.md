@@ -15,13 +15,13 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 ## To discuss
 
 1. Peak 10 msg/s vs a judge of 1–3 s per message: one-by-one gives a growing queue at peak; batch several messages per request, run requests in parallel, or accept the lag at peak
-2. How the owner gives 👍/👎 and commands without bot buttons (an ordinary account cannot send inline buttons)
-3. Images in version 1: the target is text and photos (video and audio are out); open: how well a local vision model in LM Studio reads a listing photo, to be checked on a few made-up samples before we decide
-4. SQLite driver: modernc.org/sqlite (pure Go, no cgo) as in the notes, or mattn/go-sqlite3 (cgo) as the kit tech matrix says
+2. SQLite driver: modernc.org/sqlite (pure Go, no cgo) as in the notes, or mattn/go-sqlite3 (cgo) as the kit tech matrix says
 
 ## Later, not now
 
-1. Nothing postponed yet
+1. Images: check how well a local vision model reads a listing photo, then add photo search (video and audio stay out)
+2. L3 Component of tgscout
+3. Owner feedback (👍/👎, commands) on found messages
 
 ## Decisions
 
@@ -48,3 +48,5 @@ The slice order is drawn in `docs/index.html` § Plan as a `gantt` or `pipeline`
 
 | Slice | Change | Release | Depends on |
 |---|---|---|---|
+2026-11-15 — Version 1 matches text only; images are later, after a check of a local vision model (L1 System Context)
+2026-11-15 — Version 1 has no owner feedback and no commands: every found message goes to the owner as a plain private message (L1 System Context)
