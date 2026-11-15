@@ -44,6 +44,7 @@ Nothing open.
 2026-11-15 — SQLite driver: mattn/go-sqlite3, the most used Go SQLite driver (9.3k GitHub stars) and the kit tech matrix choice; needs cgo (L2 Container)
 2026-11-15 — Peak load: messages wait in an in-memory queue (a Go channel) for the judge; after a restart, catch-up rereads from Telegram from the cursor (the last processed message ID per chat) and skips IDs already in SQLite, so nothing is lost (L2 Container)
 2026-11-15 — L3: a separate llm part is the only one that talks to the LLM; judge asks it, so the way of talking to the LLM can change without touching judge (L3 Component — tgscout)
+2026-11-15 — L3 parts of tgscout: config, reader, queue, judge, llm, notifier, store (L3 Component — tgscout)
 
 ## Review
 
