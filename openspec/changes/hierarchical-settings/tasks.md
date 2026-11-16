@@ -2,9 +2,9 @@
 
 ## 1. Domain types and the port
 
-- [ ] 1.1 Red: unit tests for `NewChatRef` (`@username`, `t.me` link with and without `https://`, numeric ID, negative numeric ID accepted; empty, spaces, a short username, another host rejected; a link and `@name` of one username share one `Key()`), `NewOwner` (no link) and `Settings.DistinctChats`; verify: `go test -race ./components/matching/core/domain/...` fails to compile
-- [ ] 1.2 Green: `core/domain` types of design § Domain types and `SettingsRepository.Settings() domain.Settings`; verify: the 1.1 tests pass
-- [ ] 1.3 Commit the group (`kit ship`)
+- [x] 1.1 Red: unit tests for `NewChatRef` (`@username`, `t.me` link with and without `https://`, numeric ID, negative numeric ID accepted; empty, spaces, a short username, another host rejected; a link and `@name` of one username share one `Key()`), `NewOwner` (no link) and `Settings.DistinctChats`; verify: `go test -race ./components/matching/core/domain/...` fails to compile
+- [x] 1.2 Green: `core/domain` types of design § Domain types and `SettingsRepository.Settings() domain.Settings`; verify: the 1.1 tests pass
+- [x] 1.3 Commit the group (`kit ship`)
 
 ## 2. Parse and resolve tgscout.yaml
 
