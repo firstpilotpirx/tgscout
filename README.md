@@ -21,6 +21,18 @@ cp tgscout.yaml.example tgscout.yaml
 
 `tgscout --help` lists the options. The database `tgscout.db` is created next to the config; `--db <path>` puts it elsewhere. Press Ctrl+C to stop.
 
+## Config
+
+`tgscout.yaml` holds what tgscout looks for; [tgscout.yaml.example](tgscout.yaml.example) shows every field. It is read once, at start, and is never committed (`.gitignore`).
+
+- `owner` (required): the Telegram user tgscout writes to, `@username` or a numeric ID.
+- `workers` (default 2), `lm_studio.url` (default `http://localhost:1234/v1`), `lm_studio.model` (required), `lm_studio.timeout` (default `60s`).
+- `catch_up.messages` and `catch_up.days` (defaults 500 and 3): how far back each chat is read at start.
+- `requests`: each with a unique `id`, the `find` text and one or more `chats` (`@username`, a public `t.me` link or a numeric ID).
+- Only `catch_up` can be set again on a request or on one chat of a request; the nearest level wins (chat, then request, then root), field by field.
+
+On a good start tgscout prints one line: requests, chats and model. A bad config lists every problem with its line and stops with exit code 1. Secrets never go into this file.
+
 ## Run (production)
 
 ```bash

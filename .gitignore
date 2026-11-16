@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+tgscout.yaml
 *.session
 *.session-journal
 session*.json

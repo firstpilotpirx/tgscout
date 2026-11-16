@@ -36,9 +36,9 @@
 
 ## 6. Example, docs and version
 
-- [ ] 6.1 `tgscout.yaml.example` with every field and made-up values; add `tgscout.yaml` to `.gitignore`; README config section; the L2 board sample in `docs/architecture/overview.html` with the L3 names; `owner` in the L3 `tgscout.yaml` entity picture of `docs/architecture/tgscout.html`; verify: `tgscout --config tgscout.yaml.example` prints the summary line
-- [ ] 6.2 Bump `VERSION` to 0.2.0; verify: `kit version-check hierarchical-settings` passes
-- [ ] 6.3 Commit the group (`kit ship`)
+- [x] 6.1 `tgscout.yaml.example` with every field and made-up values; add `tgscout.yaml` to `.gitignore`; README config section; the L2 board sample in `docs/architecture/overview.html` with the L3 names; `owner` in the L3 `tgscout.yaml` entity picture of `docs/architecture/tgscout.html`; verify: `tgscout --config tgscout.yaml.example` prints the summary line
+- [x] 6.2 Bump `VERSION` to 0.2.0; verify: `kit version-check hierarchical-settings` passes
+- [x] 6.3 Commit the group (`kit ship`)
 
 ## Manual checks
 
