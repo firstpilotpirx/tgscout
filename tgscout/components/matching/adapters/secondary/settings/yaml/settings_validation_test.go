@@ -58,6 +58,8 @@ var problemCases = []struct {
 	{"no owner", "lm_studio: {model: m}\n" + oneRequest, wantError{1, "owner", "is required"}},
 	{"bad owner", "owner: 'https://t.me/made_up_owner'\nlm_studio: {model: m}\n" + oneRequest, wantError{1, "owner", "not an owner"}},
 	{"bad chat", header + "requests:\n  - id: bike\n    find: x\n    chats: [made_up_market]\n", wantError{7, "requests[0].chats[0]", "not a chat reference"}},
+	{"chat without ref", header + "requests:\n  - id: bike\n    find: x\n    chats:\n      - catch_up: {days: 1}\n",
+		wantError{8, "requests[0].chats[0].ref", "is required"}},
 	{"api_id at root", header + "api_id: 1\n" + oneRequest, wantError{4, "api_id", "secrets go to .env"}},
 	{"api_hash in lm_studio", "owner: '@made_up_owner'\nlm_studio: {model: m, api_hash: x}\n" + oneRequest,
 		wantError{2, "lm_studio.api_hash", "secrets go to .env"}},
