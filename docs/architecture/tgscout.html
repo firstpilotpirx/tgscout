@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en"><head><meta name="kit-review" content="architecture/tgscout.html"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L3 Component — tgscout</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#6b6a66;--card:#fff;--line:#e4e1da;
+--new:#1f8a55;--newbg:#e3f3ea;--newt:#1f7a4d;--chg:#c08000;--chgbg:#fbf0d9;--chgt:#8a5a00;
+--rem:#c0392b;--rembg:#fbe4e1;--remt:#a3261f;--err:#c0392b;--errbg:#fbe4e1;--errt:#a3261f;
+--old:#8f8d86;--oldbg:#f3f2ee;--oldt:#6b6a66;--focus:#2f5fb3;--focusbg:#e3ebfa;--focust:#2f5fb3;
+--client:#2563eb;--clientbg:#dbeafe;--clientt:#1d4ed8;--svc:#059669;--svcbg:#d1fae5;--svct:#047857;
+--store:#d97706;--storebg:#fef3c7;--storet:#b45309;--ext:#7c3aed;--extbg:#ede9fe;--extt:#6d28d9}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--card:#1f1f1d;--line:#34332f;
+--new:#4fbf85;--newbg:#17332a;--newt:#6fd19c;--chg:#e0a93a;--chgbg:#3a2e14;--chgt:#f0c46a;
+--rem:#e8645a;--rembg:#3d1d1a;--remt:#ff8a80;--err:#e8645a;--errbg:#3d1d1a;--errt:#ff8a80;
+--old:#6c6b66;--oldbg:#24241f;--oldt:#a09e98;--focus:#8fb3ff;--focusbg:#1c2740;--focust:#8fb3ff;
+--client:#6ea2ff;--clientbg:#172a4a;--clientt:#9cc0ff;--svc:#4fbf85;--svcbg:#17332a;--svct:#6fd19c;
+--store:#e0a93a;--storebg:#3a2e14;--storet:#f0c46a;--ext:#a78bfa;--extbg:#2a1f4a;--extt:#c4b5fd}}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1800px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:30px 0 8px}h3{font-size:16px;margin:20px 0 6px}
+.sub{color:var(--mut);font-size:14px;font-weight:400}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:10px 0}
+.verdict{font-size:22px;font-weight:700;border-width:2px}
+.v-new{border-color:var(--new);background:var(--newbg)}.v-rem,.v-err{border-color:var(--rem);background:var(--rembg)}
+.v-chg{border-color:var(--chg);background:var(--chgbg)}.v-focus{border-color:var(--focus);background:var(--focusbg)}
+.v-old{border-color:var(--old);background:var(--oldbg)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.pair{grid-template-columns:1fr}}
+figure{margin:10px 0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto}
+figcaption{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.pair figure:last-child figcaption{color:var(--newt)}
+.note{margin:6px 2px 0;color:var(--mut);font-size:14px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+.legend span::before{content:"";display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px;border:1.5px solid var(--k);background:var(--kb)}
+.l-new{--k:var(--new);--kb:var(--newbg)}.l-chg{--k:var(--chg);--kb:var(--chgbg)}.l-rem{--k:var(--rem);--kb:var(--rembg)}
+.l-old{--k:var(--old);--kb:var(--oldbg)}.l-focus{--k:var(--focus);--kb:var(--focusbg)}.l-err{--k:var(--err);--kb:var(--errbg)}
+.l-client{--k:var(--client);--kb:var(--clientbg)}.l-svc{--k:var(--svc);--kb:var(--svcbg)}
+.l-store{--k:var(--store);--kb:var(--storebg)}.l-ext{--k:var(--ext);--kb:var(--extbg)}
+.legend span.l-line::before{content:none}.l-line svg{vertical-align:middle;margin-right:6px}
+.verdict .chips{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:13px}
+.c-new{color:var(--newt);background:var(--newbg)}.c-chg{color:var(--chgt);background:var(--chgbg)}.c-rem{color:var(--remt);background:var(--rembg)}.c-old{color:var(--oldt);background:var(--oldbg)}.c-focus{color:var(--focust);background:var(--focusbg)}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:14px}
+code{font:14px ui-monospace,Menlo,monospace;background:color-mix(in srgb,var(--line) 50%,transparent);padding:1px 5px;border-radius:4px}
+.chip{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.ok{color:var(--newt);background:var(--newbg)}.warn{color:var(--chgt);background:var(--chgbg)}.fail{color:var(--remt);background:var(--rembg)}
+pre{font:13px/1.4 ui-monospace,Menlo,monospace;background:color-mix(in srgb,var(--line) 40%,transparent);padding:10px 12px;border-radius:8px;overflow:auto}
+.kit-render svg{max-width:100%;height:auto}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px}
+a{color:var(--focust)}
+</style><style id="kit-review-style">
+body.kr{--kr-ok:var(--new,#1f7a4d);--kr-okbg:var(--newbg,#e3f3ea);--kr-okt:var(--newt,#1f7a4d);--kr-chg:var(--chg,#9a5b00);--kr-chgbg:var(--chgbg,#fbf0d9);--kr-chgt:var(--chgt,#8a5a00);--kr-line:var(--line,#e4e1da);--kr-mut:var(--mut,#6b6a66);--kr-card:var(--card,#fff);--kr-fg:var(--fg,#1d1d1b);--kr-focus:var(--focus,#2f5fb3)}
+body.kr main{padding-left:34px}
+main{max-width:1800px}
+.kr-bar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;max-width:1834px;margin:-24px auto 14px;padding:10px 14px;background:color-mix(in srgb,var(--kr-card) 92%,transparent);backdrop-filter:blur(6px);border:1px solid var(--kr-line);border-top:0;border-radius:0 0 12px 12px;font-size:14px;box-sizing:border-box}
+.kr-pagecheck{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:2px dashed var(--kr-mut);font-weight:700;font-size:13px;color:#fff;box-sizing:border-box}
+.kr-pagecheck.kr-done{border:0;background:var(--kr-ok)}
+.kr-count{font-weight:600;font-variant-numeric:tabular-nums}
+.kr-prog{display:inline-block;flex:0 1 160px;min-width:60px;height:6px;border-radius:3px;background:var(--kr-line);overflow:hidden}
+.kr-prog i{display:block;height:100%;background:var(--kr-ok);transition:width .25s}
+.kr-chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;color:var(--kr-chgt);background:var(--kr-chgbg)}
+.kr-tbtn{font:inherit;font-size:13px;color:var(--kr-fg);background:var(--kr-card);border:1px solid var(--kr-line);border-radius:14px;padding:3px 11px;cursor:pointer}
+.kr-tbtn[aria-pressed="true"]{border-color:var(--kr-focus);color:var(--kr-focus)}
+.kr-tbtn:first-of-type{margin-left:auto}
+.kr-drawer{position:fixed;z-index:40;top:64px;right:max(16px,env(safe-area-inset-right,0px));width:min(360px,calc(100vw - 32px));max-height:calc(100vh - 88px);overflow:auto;background:var(--kr-card);border:1px solid var(--kr-line);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.18);font-size:14px;box-sizing:border-box}
+.kr-dh{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--kr-mut);margin:6px 0 8px}
+.kr-krow{display:grid;grid-template-columns:1fr 80px auto;align-items:center;gap:8px;margin:4px 0}
+.kr-knum{font-variant-numeric:tabular-nums;color:var(--kr-mut);font-size:13px}
+.kr-left{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.kr-lbtn{display:flex;gap:8px;width:100%;text-align:left;font:inherit;font-size:13px;color:var(--kr-fg);background:none;border:1px solid var(--kr-line);border-radius:8px;padding:5px 8px;cursor:pointer}
+.kr-lbtn.kr-chg{border-color:var(--kr-chg);background:var(--kr-chgbg)}
+.kr-lkind{flex:0 0 52px;color:var(--kr-mut);font-size:12px}
+.kr-lbtn.kr-chg .kr-lkind{color:var(--kr-chgt);font-weight:600}
+.kr-ltext{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kr-host{position:relative}
+.kr-btn{position:absolute;left:-30px;top:.15em;width:20px;height:20px;padding:0;border-radius:50%;border:1.5px dashed var(--kr-mut);background:var(--kr-card);cursor:pointer;display:grid;place-items:center}
+li>.kr-btn{left:-52px}
+td>.kr-btn,th>.kr-btn{left:-34px;top:.55em}
+.kr-btn::after{content:"";width:8px;height:4px;border:solid transparent;border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg)}
+.kr-btn.kr-ok{border:0;background:var(--kr-ok)}
+.kr-btn.kr-ok::after{border-color:#fff}
+.kr-btn.kr-chg{border:1.5px solid var(--kr-chg);background:var(--kr-chgbg)}
+.kr-btn.kr-chg::after{border-color:var(--kr-chg)}
+.kr-btn:focus-visible,.kr-svgbtn:focus-visible,.kr-tbtn:focus-visible,.kr-lbtn:focus-visible{outline:2px solid var(--kr-focus);outline-offset:2px}
+p.kr-chg,li.kr-chg,tr.kr-chg>td{background:var(--kr-chgbg)}
+p.kr-chg,li.kr-chg{border-radius:6px;box-shadow:0 0 0 4px var(--kr-chgbg)}
+p.kr-chg::after,li.kr-chg::after{content:" Edited after your review";display:block;font-size:12px;font-weight:600;color:var(--kr-chgt)}
+.kr-block{position:relative}
+.kr-drow{flex:1 0 100%;display:flex;justify-content:flex-end;margin:4px 4px -4px}
+.kit-render .kr-drow{order:1;flex:1 0 auto;margin:4px 0}
+.kr-dbadge{font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;color:var(--kr-mut);background:var(--kr-card);border:1px dashed var(--kr-mut)}
+.kr-dbadge.kr-chgd{color:var(--kr-chgt);border:1px solid var(--kr-chg);background:var(--kr-chgbg)}
+.kr-dbadge.kr-done{color:#fff;background:var(--kr-ok);border:1px solid var(--kr-ok)}
+.kr-block svg{overflow:visible}
+.kr-ring{fill:none;stroke-width:1.6;pointer-events:none}
+.kr-ring.kr-todo{stroke:var(--kr-mut);stroke-dasharray:4 3;opacity:.55}
+.kr-ring.kr-ok{stroke:none}
+.kr-ring.kr-chg{stroke:var(--kr-chg);stroke-width:2.2}
+.kr-svgbtn{cursor:pointer}
+.kr-svgbtn circle{fill:var(--kr-card);stroke:var(--kr-mut);stroke-width:1.4;stroke-dasharray:3 2}
+.kr-svgbtn path{fill:none;stroke:transparent;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kr-svgbtn.kr-ok circle{fill:var(--kr-ok);stroke:var(--kr-ok);stroke-dasharray:none}
+.kr-svgbtn.kr-ok path{stroke:#fff}
+.kr-svgbtn.kr-chg circle{fill:var(--kr-chgbg);stroke:var(--kr-chg);stroke-dasharray:none}
+.kr-svgbtn.kr-chg path{stroke:var(--kr-chg)}
+g.kr-item.kr-chg>path.link{stroke:var(--kr-chg)}
+.kr-lbadge{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;padding:0 7px;border-radius:99px;vertical-align:1px;color:var(--kr-mut);border:1px dashed var(--kr-mut)}
+.kr-lbadge.kr-ok{color:var(--kr-okt);background:var(--kr-okbg);border:1px solid transparent}
+.kr-lbadge.kr-chg{color:var(--kr-chgt);background:var(--kr-chgbg);border:1px solid transparent}
+.kr-only .kr-item.kr-ok,.kr-only g.kr-ov .kr-ok{opacity:.3}
+.kr-off .kr-btn,.kr-off .kr-ov,.kr-off .kr-rings,.kr-off .kr-drow,.kr-off .kr-lbadge{display:none}
+.kr-off p.kr-chg::after,.kr-off li.kr-chg::after{display:none}
+.kr-flash{animation:kr-flash 1.6s ease-out}
+@keyframes kr-flash{0%,40%{outline:3px solid var(--kr-focus);outline-offset:4px}100%{outline:3px solid transparent;outline-offset:4px}}
+@media (max-width:600px){body.kr main{padding-left:30px}.kr-tbtn:first-of-type{margin-left:0}}
+@media (prefers-reduced-motion:reduce){.kr-flash{animation:none}.kr-prog i{transition:none}}
+.kr-note{font-size:12px;color:var(--kr-mut)}
+body.kr-ro .kr-btn,body.kr-ro .kr-svgbtn{cursor:default}
+</style>
+</head>
+<body><svg id="kit-defs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs><marker id="m-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fg)"/></marker><marker id="open-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--fg)" stroke-width="1.5"/></marker><marker id="tri-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--fg)" stroke-width="1.2"/></marker><marker id="dia-fg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--fg)" stroke-width="1.2"/></marker><marker id="diaf-fg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--fg)"/></marker><marker id="circle-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="m-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--old)"/></marker><marker id="open-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--old)" stroke-width="1.5"/></marker><marker id="tri-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--old)" stroke-width="1.2"/></marker><marker id="dia-old" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--old)" stroke-width="1.2"/></marker><marker id="diaf-old" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--old)"/></marker><marker id="circle-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--old)" stroke-width="1.3"/></marker><marker id="m-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--new)"/></marker><marker id="open-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--new)" stroke-width="1.5"/></marker><marker id="tri-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--new)" stroke-width="1.2"/></marker><marker id="dia-new" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--new)" stroke-width="1.2"/></marker><marker id="diaf-new" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--new)"/></marker><marker id="circle-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--new)" stroke-width="1.3"/></marker><marker id="m-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--chg)"/></marker><marker id="open-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--chg)" stroke-width="1.5"/></marker><marker id="tri-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--chg)" stroke-width="1.2"/></marker><marker id="dia-chg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--chg)" stroke-width="1.2"/></marker><marker id="diaf-chg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--chg)"/></marker><marker id="circle-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--chg)" stroke-width="1.3"/></marker><marker id="m-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--rem)"/></marker><marker id="open-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--rem)" stroke-width="1.5"/></marker><marker id="tri-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--rem)" stroke-width="1.2"/></marker><marker id="dia-rem" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--rem)" stroke-width="1.2"/></marker><marker id="diaf-rem" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--rem)"/></marker><marker id="circle-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--rem)" stroke-width="1.3"/></marker><marker id="m-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--err)"/></marker><marker id="open-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--err)" stroke-width="1.5"/></marker><marker id="tri-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--err)" stroke-width="1.2"/></marker><marker id="dia-err" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--err)" stroke-width="1.2"/></marker><marker id="diaf-err" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--err)"/></marker><marker id="circle-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--err)" stroke-width="1.3"/></marker><marker id="m-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--focus)"/></marker><marker id="open-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--focus)" stroke-width="1.5"/></marker><marker id="tri-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--focus)" stroke-width="1.2"/></marker><marker id="dia-focus" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--focus)" stroke-width="1.2"/></marker><marker id="diaf-focus" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--focus)"/></marker><marker id="circle-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--focus)" stroke-width="1.3"/></marker><marker id="m-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--client)"/></marker><marker id="open-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--client)" stroke-width="1.5"/></marker><marker id="tri-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--client)" stroke-width="1.2"/></marker><marker id="dia-client" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--client)" stroke-width="1.2"/></marker><marker id="diaf-client" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--client)"/></marker><marker id="circle-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--client)" stroke-width="1.3"/></marker><marker id="m-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--svc)"/></marker><marker id="open-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--svc)" stroke-width="1.5"/></marker><marker id="tri-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--svc)" stroke-width="1.2"/></marker><marker id="dia-svc" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--svc)" stroke-width="1.2"/></marker><marker id="diaf-svc" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--svc)"/></marker><marker id="circle-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--svc)" stroke-width="1.3"/></marker><marker id="m-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--store)"/></marker><marker id="open-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--store)" stroke-width="1.5"/></marker><marker id="tri-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--store)" stroke-width="1.2"/></marker><marker id="dia-store" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--store)" stroke-width="1.2"/></marker><marker id="diaf-store" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--store)"/></marker><marker id="circle-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--store)" stroke-width="1.3"/></marker><marker id="m-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ext)"/></marker><marker id="open-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--ext)" stroke-width="1.5"/></marker><marker id="tri-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--ext)" stroke-width="1.2"/></marker><marker id="dia-ext" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--ext)" stroke-width="1.2"/></marker><marker id="diaf-ext" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--ext)"/></marker><marker id="circle-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--ext)" stroke-width="1.3"/></marker><marker id="er-one" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M14 2V18M10 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="er-zero-one" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M14 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/><circle cx="7" cy="10" r="3.5" fill="none" stroke="var(--fg)" stroke-width="1.3" style="fill:var(--card)"/></marker><marker id="er-one-many" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M20 10L10 2M20 10L10 18M20 10H0M8 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="er-zero-many" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M20 10L12 2M20 10L12 18M20 10H0" fill="none" stroke="var(--fg)" stroke-width="1.3"/><circle cx="6" cy="10" r="3.5" fill="none" stroke="var(--fg)" stroke-width="1.3" style="fill:var(--card)"/></marker></defs></svg>
+<main>
+<p><a href="../index.html">Index</a> › <a href="overview.html">L2 Container</a> › tgscout</p>
+<h1>L3 Component — tgscout</h1>
+<p data-kr="t/top/p2" data-kr-hash="d65b7c8ece" data-kr-kind="text" data-kr-label="The parts inside the tgscout app.">The parts inside the tgscout app.</p>
+<h2>Components</h2>
+<pre class="kit" data-kind="c4" data-kit-hash="d4052fa8c3e1" hidden>title: L3 Component — tgscout
+level: component
+caption: &#34;Collector puts messages into an in-memory queue, matcher workers ask the llm part, which alone talks to LM Studio, notifier sends matches to the owner; repository keeps IDs, cursor and decisions&#34;
+nodes:
+  - {id: yaml, at: [0, 0], type: note, name: tgscout.yaml, tech: config file}
+  - {id: tg, at: [0, 2], kind: ext, name: Telegram, tech: MTProto}
+  - {id: config, at: [1, 0], kind: svc, name: config, tech: Go, text: &#34;loads requests, chats, settings&#34;}
+  - {id: collector, at: [1, 1], kind: svc, name: collector, tech: Go, text: &#34;new messages and catch-up from the cursor&#34;}
+  - {id: queue, at: [1, 2], type: pipe, kind: svc, name: queue, tech: Go channel}
+  - {id: matcher, at: [1, 3], kind: svc, name: matcher, tech: Go workers, text: &#34;message + request → yes / no&#34;}
+  - {id: notifier, at: [1, 4], kind: svc, name: notifier, tech: Go, text: &#34;found message → owner and console&#34;}
+  - {id: repository, at: [2, 2], kind: svc, name: repository, tech: Go, text: &#34;processed IDs, cursor, decisions&#34;}
+  - {id: llmc, at: [2, 3], kind: svc, name: llm, tech: Go, text: &#34;the only part that talks to the LLM; swap it to change the LLM&#34;}
+  - {id: llm, at: [3, 3], kind: ext, name: LM Studio, tech: local LLM}
+  - {id: db, at: [3, 2], type: cylinder, kind: store, name: tgscout.db, tech: SQLite}
+groups:
+  - {id: app, title: &#34;tgscout [Go, CLI]&#34;, members: [config, collector, queue, matcher, notifier, repository, llmc]}
+links:
+  - {from: config, to: yaml, text: reads at start}
+  - {from: collector, to: tg, text: reads chats, tech: MTProto}
+  - {from: collector, to: queue, text: puts message}
+  - {from: queue, to: matcher, text: takes message}
+  - {from: matcher, to: llmc, text: &#34;does it match?&#34;}
+  - {from: llmc, to: llm, text: chat completion, tech: OpenAI API over HTTP}
+  - {from: matcher, to: notifier, text: match}
+  - {from: notifier, to: tg, text: private message to owner, tech: MTProto}
+  - {from: collector, to: repository, text: &#34;cursor, seen IDs&#34;}
+  - {from: matcher, to: repository, text: decision}
+  - {from: repository, to: db, text: &#34;reads / writes&#34;, tech: SQL}
+</pre>
+<div class="kit-render" id="kit-b1"><div class="kit-anim" style="--cycle:10.8s"><style>.kit-anim{position:relative;display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-anim>*{order:2;flex:0 0 100%}
+.kit-anim>h3{order:0}
+.kit-play,.kit-speed-in{position:absolute;opacity:0;width:1px;height:1px}
+.kit-play-btn{order:1;flex:0 0 auto;display:inline-block;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;margin:4px 0;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-play-btn::before{content:"\25B6  Play"}
+.kit-play:checked+.kit-play-btn::before{content:"\25A0  Stop"}
+.kit-play:focus-visible+.kit-play-btn{outline:2px solid var(--focus)}
+.kit-speed{order:1;flex:0 0 auto;display:inline-flex;margin:4px 0;font-size:11px;color:var(--mut);user-select:none;background:linear-gradient(var(--line),var(--line)) no-repeat 50% 6px/calc(100% - 36px) 2px}
+.kit-speed label{display:inline-flex;flex-direction:column;align-items:center;gap:2px;min-width:36px;cursor:pointer}
+.kit-speed label::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--card)}
+.kit-speed-in:focus-visible~.kit-speed{outline:2px solid var(--focus);outline-offset:2px}
+.kit-dot,.kit-later{opacity:0}
+.kit-anim [data-stream] path{animation:kit-stream .8s linear infinite}
+@keyframes kit-stream{to{stroke-dashoffset:16}}
+.kit-grow{transform-box:fill-box;transform-origin:left center}
+@keyframes kit-blink{to{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.kit-anim *{animation-name:none!important}}
+@keyframes kit-b1-e1-dot{0%{offset-distance:0%;opacity:1}8.33%{offset-distance:100%;opacity:1}8.34%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e1-dash{0%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}8.33%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}8.34%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e1-dot{animation:kit-b1-e1-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e1 path{animation:kit-b1-e1-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e2-dot{0%,8.33%{offset-distance:0%;opacity:0}8.34%{offset-distance:0%;opacity:1}16.67%{offset-distance:100%;opacity:1}16.68%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e2-dash{0%,8.33%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}8.34%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}16.67%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}16.68%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e2-dot{animation:kit-b1-e2-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e2 path{animation:kit-b1-e2-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e3-dot{0%,16.67%{offset-distance:0%;opacity:0}16.68%{offset-distance:0%;opacity:1}25%{offset-distance:100%;opacity:1}25.01%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e3-dash{0%,16.67%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}16.68%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}25%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}25.01%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e3-dot{animation:kit-b1-e3-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e3 path{animation:kit-b1-e3-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e4-dot{0%,25%{offset-distance:0%;opacity:0}25.01%{offset-distance:0%;opacity:1}33.33%{offset-distance:100%;opacity:1}33.34%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e4-dash{0%,25%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}25.01%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}33.33%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}33.34%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e4-dot{animation:kit-b1-e4-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e4 path{animation:kit-b1-e4-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e5-dot{0%,33.33%{offset-distance:0%;opacity:0}33.34%{offset-distance:0%;opacity:1}41.67%{offset-distance:100%;opacity:1}41.68%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e5-dash{0%,33.33%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}33.34%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}41.67%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}41.68%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e5-dot{animation:kit-b1-e5-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e5 path{animation:kit-b1-e5-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e6-dot{0%,41.67%{offset-distance:0%;opacity:0}41.68%{offset-distance:0%;opacity:1}50%{offset-distance:100%;opacity:1}50.01%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e6-dash{0%,41.67%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}41.68%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}50%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}50.01%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e6-dot{animation:kit-b1-e6-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e6 path{animation:kit-b1-e6-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e7-dot{0%,50%{offset-distance:0%;opacity:0}50.01%{offset-distance:0%;opacity:1}58.33%{offset-distance:100%;opacity:1}58.34%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e7-dash{0%,50%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}50.01%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}58.33%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}58.34%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e7-dot{animation:kit-b1-e7-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e7 path{animation:kit-b1-e7-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e8-dot{0%,58.33%{offset-distance:0%;opacity:0}58.34%{offset-distance:0%;opacity:1}66.67%{offset-distance:100%;opacity:1}66.68%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e8-dash{0%,58.33%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}58.34%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}66.67%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}66.68%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e8-dot{animation:kit-b1-e8-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e8 path{animation:kit-b1-e8-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e9-dot{0%,66.67%{offset-distance:0%;opacity:0}66.68%{offset-distance:0%;opacity:1}75%{offset-distance:100%;opacity:1}75.01%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e9-dash{0%,66.67%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}66.68%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}75%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}75.01%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e9-dot{animation:kit-b1-e9-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e9 path{animation:kit-b1-e9-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e10-dot{0%,75%{offset-distance:0%;opacity:0}75.01%{offset-distance:0%;opacity:1}83.33%{offset-distance:100%;opacity:1}83.34%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e10-dash{0%,75%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}75.01%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}83.33%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}83.34%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e10-dot{animation:kit-b1-e10-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e10 path{animation:kit-b1-e10-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e11-dot{0%,83.33%{offset-distance:0%;opacity:0}83.34%{offset-distance:0%;opacity:1}91.67%{offset-distance:100%;opacity:1}91.68%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e11-dash{0%,83.33%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}83.34%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}91.67%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}91.68%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e11-dot{animation:kit-b1-e11-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e11 path{animation:kit-b1-e11-dash var(--cycle) linear infinite}
+@keyframes kit-b1-n-db{0%{filter:none}87.5%{filter:none}91.67%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}95.84%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="db"]{animation:kit-b1-n-db var(--cycle) linear infinite}
+@keyframes kit-b1-n-llm{0%{filter:none}45.83%{filter:none}50%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}54.17%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="llm"]{animation:kit-b1-n-llm var(--cycle) linear infinite}
+@keyframes kit-b1-n-llmc{0%{filter:none}37.5%{filter:none}41.67%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}45.84%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="llmc"]{animation:kit-b1-n-llmc var(--cycle) linear infinite}
+@keyframes kit-b1-n-matcher{0%{filter:none}29.16%{filter:none}33.33%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}37.5%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="matcher"]{animation:kit-b1-n-matcher var(--cycle) linear infinite}
+@keyframes kit-b1-n-notifier{0%{filter:none}54.16%{filter:none}58.33%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}62.5%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="notifier"]{animation:kit-b1-n-notifier var(--cycle) linear infinite}
+@keyframes kit-b1-n-queue{0%{filter:none}20.83%{filter:none}25%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}29.17%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="queue"]{animation:kit-b1-n-queue var(--cycle) linear infinite}
+@keyframes kit-b1-n-repository{0%{filter:none}70.83%{filter:none}75%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}79.17%{filter:none}79.16%{filter:none}83.33%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}87.5%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="repository"]{animation:kit-b1-n-repository var(--cycle) linear infinite}
+@keyframes kit-b1-n-tg{0%{filter:none}12.5%{filter:none}16.67%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}20.84%{filter:none}62.5%{filter:none}66.67%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}70.84%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="tg"]{animation:kit-b1-n-tg var(--cycle) linear infinite}
+@keyframes kit-b1-n-yaml{0%{filter:none}4.16%{filter:none}8.33%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}12.5%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="yaml"]{animation:kit-b1-n-yaml var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * .kit-blink{animation:kit-blink .45s ease-in-out infinite alternate}
+#kit-b1-x05:checked ~ *{--cycle:21.6s}
+#kit-b1-x05:checked ~ .kit-speed label[for="kit-b1-x05"]{color:var(--fg);font-weight:600}
+#kit-b1-x05:checked ~ .kit-speed label[for="kit-b1-x05"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x1:checked ~ *{--cycle:10.8s}
+#kit-b1-x1:checked ~ .kit-speed label[for="kit-b1-x1"]{color:var(--fg);font-weight:600}
+#kit-b1-x1:checked ~ .kit-speed label[for="kit-b1-x1"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x15:checked ~ *{--cycle:7.2s}
+#kit-b1-x15:checked ~ .kit-speed label[for="kit-b1-x15"]{color:var(--fg);font-weight:600}
+#kit-b1-x15:checked ~ .kit-speed label[for="kit-b1-x15"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x2:checked ~ *{--cycle:5.4s}
+#kit-b1-x2:checked ~ .kit-speed label[for="kit-b1-x2"]{color:var(--fg);font-weight:600}
+#kit-b1-x2:checked ~ .kit-speed label[for="kit-b1-x2"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x3:checked ~ *{--cycle:3.6s}
+#kit-b1-x3:checked ~ .kit-speed label[for="kit-b1-x3"]{color:var(--fg);font-weight:600}
+#kit-b1-x3:checked ~ .kit-speed label[for="kit-b1-x3"]::before{background:var(--focus);border-color:var(--focus)}
+</style><input type="checkbox" class="kit-play" id="kit-b1-play" aria-label="play the animation"><label for="kit-b1-play" class="kit-play-btn"></label><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x05" aria-label="speed 0.5×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x1" checked aria-label="speed 1×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x15" aria-label="speed 1.5×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x2" aria-label="speed 2×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x3" aria-label="speed 3×"><span class="kit-speed" role="group" aria-label="playback speed"><label for="kit-b1-x05">0.5×</label><label for="kit-b1-x1">1×</label><label for="kit-b1-x15">1.5×</label><label for="kit-b1-x2">2×</label><label for="kit-b1-x3">3×</label></span><h3>L3 Component — tgscout</h3><style>.kit-render{position:relative}
+.kit-render svg a,.kit-render svg a *{cursor:pointer;pointer-events:all}
+.kit-render{--link-hover:.94}
+@media (prefers-color-scheme:dark){.kit-render{--link-hover:1.35}}
+.kit-render svg a:hover :is(rect,path,ellipse,circle,polygon){filter:brightness(var(--link-hover));stroke-width:2.5}
+.kit-render:has(>.kit-full){display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-render:has(>.kit-full)>*{flex:0 0 100%}
+.kit-render:has(>.kit-full)>:not(h3,.kit-full-btn,.kit-view,.kr-drow,.kit-play-btn,.kit-speed){order:2}
+.kit-render:has(>.kit-full)>.kit-view{flex:0 0 auto}
+.kit-render .kit-view{order:1;flex:0 0 auto;margin:4px 0;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);text-decoration:none;white-space:nowrap}
+.kit-render .kit-view:hover{border-color:var(--focus)}
+.kit-render .kit-view::after{content:" \2197"}
+.kit-render:has(>.kit-full)>.kr-drow{flex:1 0 auto;text-align:right}
+.kit-render:has(.kit-full) h3{margin-bottom:2px}
+.kit-render:has(.kit-full) figure{margin-top:4px}
+.kit-full{position:absolute;opacity:0;width:1px;height:1px}
+.kit-render .kit-full-btn{order:1;flex:0 0 auto;margin:4px 0 4px auto;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-full-btn::before{content:"\2922  Full screen"}
+.kit-full:focus-visible+.kit-full-btn{outline:2px solid var(--focus)}
+.kit-render:has(.kit-full:checked){position:fixed;inset:0;z-index:1000;margin:0;overflow:auto;background:var(--bg);padding:44px 16px 16px}
+.kit-render .kit-full:checked+.kit-full-btn{position:fixed;top:8px;right:16px;z-index:2}
+.kit-full:checked+.kit-full-btn::before{content:"\2715  Close"}
+.kit-render:has(.kit-full:checked) svg{width:100%!important;max-width:none;height:calc(100vh - 140px)}</style><input type="checkbox" class="kit-full" id="kit-b1-full" aria-label="show the picture on the whole screen"><label for="kit-b1-full" class="kit-full-btn"></label><figure><svg viewBox="48 60 1745.7000000000003 528" width="1745.7000000000003" style="width:2618.55px" role="img" aria-label="L3 Component — tgscout" font-family="system-ui,-apple-system,sans-serif"><rect x="68" y="180" width="1705.7000000000003" height="266" rx="10" fill="none" stroke="var(--old)" stroke-width="1.2" stroke-dasharray="6 4"/><text x="78" y="196" font-size="12" fill="var(--mut)" text-anchor="start" font-weight="600">tgscout [Go, CLI]</text><g data-node="yaml" data-kr="kit-b1/n/yaml" data-kr-hash="1c6612da1f" data-kr-kind="box" data-kr-label="tgscout.yaml"><path d="M80 80H273.79999999999995L283.79999999999995 90V134H80z" fill="var(--chgbg)" stroke="var(--chg)" stroke-width="1.5"/><path d="M273.79999999999995 80V90H283.79999999999995" fill="none" stroke="var(--chg)" stroke-width="1.5"/><text x="90" y="111" font-size="11" fill="var(--fg)" text-anchor="start">tgscout.yaml</text></g><g data-node="tg" data-kr="kit-b1/n/tg" data-kr-hash="c9b5758bcc" data-kr-kind="box" data-kr-label="Telegram"><rect x="746.16" y="80" width="209.6" height="54" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="850.9599999999999" y="104" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Telegram</text><text x="850.9599999999999" y="120" font-size="11" fill="var(--extt)" text-anchor="middle">[MTProto]</text></g><g data-node="config" data-kr="kit-b1/n/config" data-kr-hash="eeec693766" data-kr-kind="box" data-kr-label="config"><rect x="80" y="214" width="203.79999999999998" height="70" rx="8" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="181.89999999999998" y="246" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">config</text><text x="181.89999999999998" y="262" font-size="11" fill="var(--svct)" text-anchor="middle">[Go]</text><text x="181.89999999999998" y="274" font-size="10" fill="var(--mut)" text-anchor="middle">loads requests, chats, settings</text></g><g data-node="collector" data-kr="kit-b1/n/collector" data-kr-hash="0e18078554" data-kr-kind="box" data-kr-label="collector"><rect x="363.79999999999995" y="214" width="261.8" height="70" rx="8" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="494.69999999999993" y="246" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">collector</text><text x="494.69999999999993" y="262" font-size="11" fill="var(--svct)" text-anchor="middle">[Go]</text><text x="494.69999999999993" y="274" font-size="10" fill="var(--mut)" text-anchor="middle">new messages and catch-up from the cursor</text></g><g data-node="queue" data-kr="kit-b1/n/queue" data-kr-hash="59f1d30e5b" data-kr-kind="box" data-kr-label="queue"><path d="M754.16 214H947.76a8 35 0 0 1 0 70H754.16a8 35 0 0 1 0 -70z" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><ellipse cx="947.76" cy="249" rx="8" ry="35" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="842.9599999999999" y="246" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">queue</text><text x="842.9599999999999" y="262" font-size="11" fill="var(--svct)" text-anchor="middle">[Go channel]</text></g><g data-node="matcher" data-kr="kit-b1/n/matcher" data-kr-hash="0f1971fa7e" data-kr-kind="box" data-kr-label="matcher"><rect x="1082.7000000000003" y="214" width="383.59999999999997" height="70" rx="8" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="1274.5000000000002" y="246" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">matcher</text><text x="1274.5000000000002" y="262" font-size="11" fill="var(--svct)" text-anchor="middle">[Go workers]</text><text x="1274.5000000000002" y="274" font-size="10" fill="var(--mut)" text-anchor="middle">message + request → yes / no</text></g><g data-node="notifier" data-kr="kit-b1/n/notifier" data-kr-hash="d5d1367e8d" data-kr-kind="box" data-kr-label="notifier"><rect x="1546.3000000000002" y="214" width="215.39999999999998" height="70" rx="8" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="1654.0000000000002" y="246" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">notifier</text><text x="1654.0000000000002" y="262" font-size="11" fill="var(--svct)" text-anchor="middle">[Go]</text><text x="1654.0000000000002" y="274" font-size="10" fill="var(--mut)" text-anchor="middle">found message → owner and console</text></g><g data-node="repository" data-kr="kit-b1/n/repository" data-kr-hash="d14256a48c" data-kr-kind="box" data-kr-label="repository"><rect x="746.16" y="364" width="209.6" height="70" rx="8" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="850.9599999999999" y="396" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">repository</text><text x="850.9599999999999" y="412" font-size="11" fill="var(--svct)" text-anchor="middle">[Go]</text><text x="850.9599999999999" y="424" font-size="10" fill="var(--mut)" text-anchor="middle">processed IDs, cursor, decisions</text></g><g data-node="llmc" data-kr="kit-b1/n/llmc" data-kr-hash="550cd691ad" data-kr-kind="box" data-kr-label="llm"><rect x="1082.7000000000003" y="364" width="383.59999999999997" height="70" rx="8" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="1274.5000000000002" y="396" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">llm</text><text x="1274.5000000000002" y="412" font-size="11" fill="var(--svct)" text-anchor="middle">[Go]</text><text x="1274.5000000000002" y="424" font-size="10" fill="var(--mut)" text-anchor="middle">the only part that talks to the LLM; swap it to change the LLM</text></g><g data-node="llm" data-kr="kit-b1/n/llm" data-kr-hash="96b2893102" data-kr-kind="box" data-kr-label="LM Studio"><rect x="1082.7000000000003" y="514" width="383.59999999999997" height="54" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="1274.5000000000002" y="538" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">LM Studio</text><text x="1274.5000000000002" y="554" font-size="11" fill="var(--extt)" text-anchor="middle">[local LLM]</text></g><g data-node="db" data-kr="kit-b1/n/db" data-kr-hash="8b777674ae" data-kr-kind="box" data-kr-label="tgscout.db"><path d="M746.16 522a104.8 8 0 0 0 209.6 0v38a104.8 8 0 0 1 -209.6 0z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><ellipse cx="850.9599999999999" cy="522" rx="104.8" ry="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="850.9599999999999" y="542" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">tgscout.db</text><text x="850.9599999999999" y="558" font-size="11" fill="var(--storet)" text-anchor="middle">[SQLite]</text></g><g id="kit-b1-e1" data-step="1" data-from="config" data-to="yaml" data-kr="kit-b1/l/config&gt;yaml" data-kr-hash="0d50aeb92c" data-kr-kind="arrow" data-kr-label="config → tgscout.yaml: reads at start"><path class="link" d="M181.89999999999998 214V134" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e1-dot" r="4" fill="var(--fg)" style="offset-path:path('M181.89999999999998 214V134')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(181.89999999999998 214) rotate(-90)"/><text data-step="1" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="202.89999999999998" y="161.025" font-size="11" fill="var(--fg)" text-anchor="start">reads at start</text><g id="kit-b1-e2" data-step="2" data-from="collector" data-to="tg" data-kr="kit-b1/l/collector&gt;tg" data-kr-hash="68c3fc97bd" data-kr-kind="arrow" data-kr-label="collector → Telegram: reads chats [MTProto]"><path class="link" d="M494.69999999999993 214V107H746.16" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e2-dot" r="4" fill="var(--fg)" style="offset-path:path('M494.69999999999993 214V107H746.16')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(494.69999999999993 214) rotate(-90)"/><text data-step="2" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="620.43" y="99.25" font-size="11" fill="var(--fg)" text-anchor="middle">reads chats [MTProto]</text><g id="kit-b1-e3" data-step="3" data-from="collector" data-to="queue" data-kr="kit-b1/l/collector&gt;queue" data-kr-hash="d4d1822dfd" data-kr-kind="arrow" data-kr-label="collector → queue: puts message"><path class="link" d="M625.5999999999999 249H746.16" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e3-dot" r="4" fill="var(--fg)" style="offset-path:path('M625.5999999999999 249H746.16')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(625.5999999999999 249) rotate(0)"/><text data-step="3" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="685.8799999999999" y="241.25" font-size="11" fill="var(--fg)" text-anchor="middle">puts message</text><g id="kit-b1-e4" data-step="4" data-from="queue" data-to="matcher" data-kr="kit-b1/l/queue&gt;matcher" data-kr-hash="7c4acc0877" data-kr-kind="arrow" data-kr-label="queue → matcher: takes message"><path class="link" d="M955.76 237.33333333333334H1082.7000000000003" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e4-dot" r="4" fill="var(--fg)" style="offset-path:path('M955.76 237.33333333333334H1082.7000000000003')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(955.76 237.33333333333334) rotate(0)"/><text data-step="4" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1019.2300000000001" y="229.58333333333334" font-size="11" fill="var(--fg)" text-anchor="middle">takes message</text><g id="kit-b1-e5" data-step="5" data-from="matcher" data-to="llmc" data-kr="kit-b1/l/matcher&gt;llmc" data-kr-hash="df5eb8462d" data-kr-kind="arrow" data-kr-label="matcher → llm: does it match?"><path class="link" d="M1274.5000000000002 284V364" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e5-dot" r="4" fill="var(--fg)" style="offset-path:path('M1274.5000000000002 284V364')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(1274.5000000000002 284) rotate(90)"/><text data-step="5" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1295.5000000000002" y="327.02500000000003" font-size="11" fill="var(--fg)" text-anchor="start">does it match?</text><g id="kit-b1-e6" data-step="6" data-from="llmc" data-to="llm" data-kr="kit-b1/l/llmc&gt;llm" data-kr-hash="47e8c0ddae" data-kr-kind="arrow" data-kr-label="llm → LM Studio: chat completion [OpenAI API over HTTP]"><path class="link" d="M1274.5000000000002 434V514" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e6-dot" r="4" fill="var(--fg)" style="offset-path:path('M1274.5000000000002 434V514')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(1274.5000000000002 434) rotate(90)"/><text data-step="6" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1295.5000000000002" y="477.02500000000003" font-size="11" fill="var(--fg)" text-anchor="start">chat completion [OpenAI API over HTTP]</text><g id="kit-b1-e7" data-step="7" data-from="matcher" data-to="notifier" data-kr="kit-b1/l/matcher&gt;notifier" data-kr-hash="70896a2854" data-kr-kind="arrow" data-kr-label="matcher → notifier: match"><path class="link" d="M1466.3000000000002 249H1546.3000000000002" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e7-dot" r="4" fill="var(--fg)" style="offset-path:path('M1466.3000000000002 249H1546.3000000000002')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(1466.3000000000002 249) rotate(0)"/><text data-step="7" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1506.3000000000002" y="241.25" font-size="11" fill="var(--fg)" text-anchor="middle">match</text><g id="kit-b1-e8" data-step="8" data-from="notifier" data-to="tg" data-kr="kit-b1/l/notifier&gt;tg" data-kr-hash="8e11d39b0a" data-kr-kind="arrow" data-kr-label="notifier → Telegram: private message to owner [MTProto]"><path class="link" d="M1654.0000000000002 214V107H955.76" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e8-dot" r="4" fill="var(--fg)" style="offset-path:path('M1654.0000000000002 214V107H955.76')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(1654.0000000000002 214) rotate(-90)"/><text data-step="8" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1304.88" y="99.25" font-size="11" fill="var(--fg)" text-anchor="middle">private message to owner [MTProto]</text><g id="kit-b1-e9" data-step="9" data-from="collector" data-to="repository" data-kr="kit-b1/l/collector&gt;repository" data-kr-hash="0a13bf5e20" data-kr-kind="arrow" data-kr-label="collector → repository: cursor, seen IDs"><path class="link" d="M494.69999999999993 284V399H746.16" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e9-dot" r="4" fill="var(--fg)" style="offset-path:path('M494.69999999999993 284V399H746.16')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(494.69999999999993 284) rotate(90)"/><text data-step="9" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="620.43" y="391.25" font-size="11" fill="var(--fg)" text-anchor="middle">cursor, seen IDs</text><g id="kit-b1-e10" data-step="10" data-from="matcher" data-to="repository" data-kr="kit-b1/l/matcher&gt;repository" data-kr-hash="e51538c516" data-kr-kind="arrow" data-kr-label="matcher → repository: decision"><path class="link" d="M1082.7000000000003 260.6666666666667H1019.23V399H955.76" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e10-dot" r="4" fill="var(--fg)" style="offset-path:path('M1082.7000000000003 260.6666666666667H1019.23V399H955.76')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(1082.7000000000003 260.6666666666667) rotate(180)"/><text data-step="10" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1040.23" y="332.8583333333334" font-size="11" fill="var(--fg)" text-anchor="start">decision</text><g id="kit-b1-e11" data-step="11" data-from="repository" data-to="db" data-kr="kit-b1/l/repository&gt;db" data-kr-hash="77878cd0ea" data-kr-kind="arrow" data-kr-label="repository → tgscout.db: reads / writes [SQL]"><path class="link" d="M850.96 434V514" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e11-dot" r="4" fill="var(--fg)" style="offset-path:path('M850.96 434V514')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(850.96 434) rotate(90)"/><text data-step="11" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="871.96" y="477.02500000000003" font-size="11" fill="var(--fg)" text-anchor="start">reads / writes [SQL]</text></svg></figure><p class="note">Collector puts messages into an in-memory queue, matcher workers ask the llm part, which alone talks to LM Studio, notifier sends matches to the owner; repository keeps IDs, cursor and decisions</p></div></div><!--/kit-render-->
+
+<h2>Data flow</h2>
+
+<pre class="kit" data-kind="dfd" data-kit-hash="ac14e9919d00" hidden>title: Data flow
+caption: &#34;Messages come from Telegram, wait in the queue, are checked by the LLM against each request, and a match goes to the owner; tgscout.db keeps seen IDs, the cursor and decisions&#34;
+cell: [130, 96]
+gap: [110, 80]
+nodes:
+  - {id: tg, at: [0, 0], kind: ext, name: Telegram chats, w: 130}
+  - {id: p1, at: [0, 1], type: circle, kind: svc, name: 1.0 Collect, w: 96, h: 96}
+  - {id: dq, at: [0, 2], type: openrect, name: D1 queue, sub: in memory, w: 130}
+  - {id: p2, at: [0, 3], type: circle, kind: svc, name: 2.0 Match, w: 96, h: 96}
+  - {id: p3, at: [0, 4], type: circle, kind: svc, name: 3.0 Notify, w: 96, h: 96}
+  - {id: owner, at: [0, 5], kind: ext, name: Owner, sub: Telegram + console, w: 130}
+  - {id: dy, at: [1, 0], type: openrect, name: D3 tgscout.yaml, w: 130}
+  - {id: db, at: [1, 2], type: openrect, name: D2 tgscout.db, w: 130}
+  - {id: lms, at: [1, 3], kind: ext, name: LM Studio, sub: OpenAI-compatible API, w: 130}
+links:
+  - {from: tg, to: p1, text: &#34;new messages, history&#34;}
+  - {from: dy, to: p1, text: &#34;chats, requests, depth&#34;}
+  - {from: db, to: p1, text: &#34;seen IDs, cursor&#34;}
+  - {from: p1, to: dq, text: &#34;message + requests&#34;}
+  - {from: dq, to: p2, text: message}
+  - {from: p2, to: lms, text: &#34;message + request&#34;}
+  - {from: lms, to: p2, text: &#34;yes / no&#34;, below: true}
+  - {from: p2, to: db, text: &#34;decision, cursor&#34;}
+  - {from: p2, to: p3, text: match}
+  - {from: p3, to: owner, text: private message}</pre>
+<div class="kit-render" id="kit-b2"><div class="kit-anim" style="--cycle:9.9s"><style>.kit-anim{position:relative;display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-anim>*{order:2;flex:0 0 100%}
+.kit-anim>h3{order:0}
+.kit-play,.kit-speed-in{position:absolute;opacity:0;width:1px;height:1px}
+.kit-play-btn{order:1;flex:0 0 auto;display:inline-block;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;margin:4px 0;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-play-btn::before{content:"\25B6  Play"}
+.kit-play:checked+.kit-play-btn::before{content:"\25A0  Stop"}
+.kit-play:focus-visible+.kit-play-btn{outline:2px solid var(--focus)}
+.kit-speed{order:1;flex:0 0 auto;display:inline-flex;margin:4px 0;font-size:11px;color:var(--mut);user-select:none;background:linear-gradient(var(--line),var(--line)) no-repeat 50% 6px/calc(100% - 36px) 2px}
+.kit-speed label{display:inline-flex;flex-direction:column;align-items:center;gap:2px;min-width:36px;cursor:pointer}
+.kit-speed label::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--card)}
+.kit-speed-in:focus-visible~.kit-speed{outline:2px solid var(--focus);outline-offset:2px}
+.kit-dot,.kit-later{opacity:0}
+.kit-anim [data-stream] path{animation:kit-stream .8s linear infinite}
+@keyframes kit-stream{to{stroke-dashoffset:16}}
+.kit-grow{transform-box:fill-box;transform-origin:left center}
+@keyframes kit-blink{to{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.kit-anim *{animation-name:none!important}}
+@keyframes kit-b2-e1-dot{0%{offset-distance:0%;opacity:1}9.09%{offset-distance:100%;opacity:1}9.1%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e1-dash{0%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}9.09%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}9.1%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e1-dot{animation:kit-b2-e1-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e1 path{animation:kit-b2-e1-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e2-dot{0%,9.09%{offset-distance:0%;opacity:0}9.1%{offset-distance:0%;opacity:1}18.18%{offset-distance:100%;opacity:1}18.19%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e2-dash{0%,9.09%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}9.1%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}18.18%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}18.19%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e2-dot{animation:kit-b2-e2-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e2 path{animation:kit-b2-e2-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e3-dot{0%,18.18%{offset-distance:0%;opacity:0}18.19%{offset-distance:0%;opacity:1}27.27%{offset-distance:100%;opacity:1}27.28%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e3-dash{0%,18.18%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}18.19%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}27.27%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}27.28%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e3-dot{animation:kit-b2-e3-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e3 path{animation:kit-b2-e3-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e4-dot{0%,27.27%{offset-distance:0%;opacity:0}27.28%{offset-distance:0%;opacity:1}36.36%{offset-distance:100%;opacity:1}36.37%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e4-dash{0%,27.27%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}27.28%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}36.36%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}36.37%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e4-dot{animation:kit-b2-e4-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e4 path{animation:kit-b2-e4-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e5-dot{0%,36.36%{offset-distance:0%;opacity:0}36.37%{offset-distance:0%;opacity:1}45.45%{offset-distance:100%;opacity:1}45.46%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e5-dash{0%,36.36%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}36.37%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}45.45%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}45.46%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e5-dot{animation:kit-b2-e5-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e5 path{animation:kit-b2-e5-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e6-dot{0%,45.45%{offset-distance:0%;opacity:0}45.46%{offset-distance:0%;opacity:1}54.55%{offset-distance:100%;opacity:1}54.56%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e6-dash{0%,45.45%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}45.46%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}54.55%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}54.56%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e6-dot{animation:kit-b2-e6-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e6 path{animation:kit-b2-e6-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e7-dot{0%,54.55%{offset-distance:0%;opacity:0}54.56%{offset-distance:0%;opacity:1}63.64%{offset-distance:100%;opacity:1}63.65%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e7-dash{0%,54.55%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}54.56%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}63.64%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}63.65%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e7-dot{animation:kit-b2-e7-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e7 path{animation:kit-b2-e7-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e8-dot{0%,63.64%{offset-distance:0%;opacity:0}63.65%{offset-distance:0%;opacity:1}72.73%{offset-distance:100%;opacity:1}72.74%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e8-dash{0%,63.64%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}63.65%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}72.73%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}72.74%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e8-dot{animation:kit-b2-e8-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e8 path{animation:kit-b2-e8-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e9-dot{0%,72.73%{offset-distance:0%;opacity:0}72.74%{offset-distance:0%;opacity:1}81.82%{offset-distance:100%;opacity:1}81.83%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e9-dash{0%,72.73%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}72.74%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}81.82%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}81.83%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e9-dot{animation:kit-b2-e9-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e9 path{animation:kit-b2-e9-dash var(--cycle) linear infinite}
+@keyframes kit-b2-e10-dot{0%,81.82%{offset-distance:0%;opacity:0}81.83%{offset-distance:0%;opacity:1}90.91%{offset-distance:100%;opacity:1}90.92%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b2-e10-dash{0%,81.82%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}81.83%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}90.91%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}90.92%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b2-play:checked ~ * #kit-b2-e10-dot{animation:kit-b2-e10-dot var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * #kit-b2-e10 path{animation:kit-b2-e10-dash var(--cycle) linear infinite}
+@keyframes kit-b2-n-db{0%{filter:none}68.18%{filter:none}72.73%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}77.28%{filter:none}100%{filter:none}}
+#kit-b2-play:checked ~ * [data-node="db"]{animation:kit-b2-n-db var(--cycle) linear infinite}
+@keyframes kit-b2-n-dq{0%{filter:none}31.81%{filter:none}36.36%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}40.91%{filter:none}100%{filter:none}}
+#kit-b2-play:checked ~ * [data-node="dq"]{animation:kit-b2-n-dq var(--cycle) linear infinite}
+@keyframes kit-b2-n-lms{0%{filter:none}50%{filter:none}54.55%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}59.1%{filter:none}100%{filter:none}}
+#kit-b2-play:checked ~ * [data-node="lms"]{animation:kit-b2-n-lms var(--cycle) linear infinite}
+@keyframes kit-b2-n-owner{0%{filter:none}86.36%{filter:none}90.91%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}95.46%{filter:none}100%{filter:none}}
+#kit-b2-play:checked ~ * [data-node="owner"]{animation:kit-b2-n-owner var(--cycle) linear infinite}
+@keyframes kit-b2-n-p1{0%{filter:none}4.54%{filter:none}9.09%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}13.64%{filter:none}13.63%{filter:none}18.18%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}22.73%{filter:none}22.72%{filter:none}27.27%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}31.82%{filter:none}100%{filter:none}}
+#kit-b2-play:checked ~ * [data-node="p1"]{animation:kit-b2-n-p1 var(--cycle) linear infinite}
+@keyframes kit-b2-n-p2{0%{filter:none}40.9%{filter:none}45.45%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}50%{filter:none}59.09%{filter:none}63.64%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}68.19%{filter:none}100%{filter:none}}
+#kit-b2-play:checked ~ * [data-node="p2"]{animation:kit-b2-n-p2 var(--cycle) linear infinite}
+@keyframes kit-b2-n-p3{0%{filter:none}77.27%{filter:none}81.82%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}86.37%{filter:none}100%{filter:none}}
+#kit-b2-play:checked ~ * [data-node="p3"]{animation:kit-b2-n-p3 var(--cycle) linear infinite}
+#kit-b2-play:checked ~ * .kit-blink{animation:kit-blink .45s ease-in-out infinite alternate}
+#kit-b2-x05:checked ~ *{--cycle:19.8s}
+#kit-b2-x05:checked ~ .kit-speed label[for="kit-b2-x05"]{color:var(--fg);font-weight:600}
+#kit-b2-x05:checked ~ .kit-speed label[for="kit-b2-x05"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b2-x1:checked ~ *{--cycle:9.9s}
+#kit-b2-x1:checked ~ .kit-speed label[for="kit-b2-x1"]{color:var(--fg);font-weight:600}
+#kit-b2-x1:checked ~ .kit-speed label[for="kit-b2-x1"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b2-x15:checked ~ *{--cycle:6.6s}
+#kit-b2-x15:checked ~ .kit-speed label[for="kit-b2-x15"]{color:var(--fg);font-weight:600}
+#kit-b2-x15:checked ~ .kit-speed label[for="kit-b2-x15"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b2-x2:checked ~ *{--cycle:4.95s}
+#kit-b2-x2:checked ~ .kit-speed label[for="kit-b2-x2"]{color:var(--fg);font-weight:600}
+#kit-b2-x2:checked ~ .kit-speed label[for="kit-b2-x2"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b2-x3:checked ~ *{--cycle:3.3s}
+#kit-b2-x3:checked ~ .kit-speed label[for="kit-b2-x3"]{color:var(--fg);font-weight:600}
+#kit-b2-x3:checked ~ .kit-speed label[for="kit-b2-x3"]::before{background:var(--focus);border-color:var(--focus)}
+</style><input type="checkbox" class="kit-play" id="kit-b2-play" aria-label="play the animation"><label for="kit-b2-play" class="kit-play-btn"></label><input type="radio" class="kit-speed-in" name="kit-b2-speed" id="kit-b2-x05" aria-label="speed 0.5×"><input type="radio" class="kit-speed-in" name="kit-b2-speed" id="kit-b2-x1" checked aria-label="speed 1×"><input type="radio" class="kit-speed-in" name="kit-b2-speed" id="kit-b2-x15" aria-label="speed 1.5×"><input type="radio" class="kit-speed-in" name="kit-b2-speed" id="kit-b2-x2" aria-label="speed 2×"><input type="radio" class="kit-speed-in" name="kit-b2-speed" id="kit-b2-x3" aria-label="speed 3×"><span class="kit-speed" role="group" aria-label="playback speed"><label for="kit-b2-x05">0.5×</label><label for="kit-b2-x1">1×</label><label for="kit-b2-x15">1.5×</label><label for="kit-b2-x2">2×</label><label for="kit-b2-x3">3×</label></span><h3>Data flow</h3><style>.kit-render{position:relative}
+.kit-render svg a,.kit-render svg a *{cursor:pointer;pointer-events:all}
+.kit-render{--link-hover:.94}
+@media (prefers-color-scheme:dark){.kit-render{--link-hover:1.35}}
+.kit-render svg a:hover :is(rect,path,ellipse,circle,polygon){filter:brightness(var(--link-hover));stroke-width:2.5}
+.kit-render:has(>.kit-full){display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-render:has(>.kit-full)>*{flex:0 0 100%}
+.kit-render:has(>.kit-full)>:not(h3,.kit-full-btn,.kit-view,.kr-drow,.kit-play-btn,.kit-speed){order:2}
+.kit-render:has(>.kit-full)>.kit-view{flex:0 0 auto}
+.kit-render .kit-view{order:1;flex:0 0 auto;margin:4px 0;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);text-decoration:none;white-space:nowrap}
+.kit-render .kit-view:hover{border-color:var(--focus)}
+.kit-render .kit-view::after{content:" \2197"}
+.kit-render:has(>.kit-full)>.kr-drow{flex:1 0 auto;text-align:right}
+.kit-render:has(.kit-full) h3{margin-bottom:2px}
+.kit-render:has(.kit-full) figure{margin-top:4px}
+.kit-full{position:absolute;opacity:0;width:1px;height:1px}
+.kit-render .kit-full-btn{order:1;flex:0 0 auto;margin:4px 0 4px auto;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-full-btn::before{content:"\2922  Full screen"}
+.kit-full:focus-visible+.kit-full-btn{outline:2px solid var(--focus)}
+.kit-render:has(.kit-full:checked){position:fixed;inset:0;z-index:1000;margin:0;overflow:auto;background:var(--bg);padding:44px 16px 16px}
+.kit-render .kit-full:checked+.kit-full-btn{position:fixed;top:8px;right:16px;z-index:2}
+.kit-full:checked+.kit-full-btn::before{content:"\2715  Close"}
+.kit-render:has(.kit-full:checked) svg{width:100%!important;max-width:none;height:calc(100vh - 140px)}</style><input type="checkbox" class="kit-full" id="kit-b2-full" aria-label="show the picture on the whole screen"><label for="kit-b2-full" class="kit-full-btn"></label><figure><svg viewBox="75 60 1465.5200000000002 453.30000000000007" width="1465.5200000000002" style="width:2198.28px" role="img" aria-label="Data flow" font-family="system-ui,-apple-system,sans-serif"><g data-node="tg" data-kr="kit-b2/n/tg" data-kr-hash="0359cdb445" data-kr-kind="box" data-kr-label="Telegram chats"><rect x="95" y="80" width="130" height="96" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="160" y="133" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Telegram chats</text></g><g data-node="p1" data-kr="kit-b2/n/p1" data-kr-hash="fbbd1e79d0" data-kr-kind="box" data-kr-label="1.0 Collect"><circle cx="450.98" cy="128" r="46" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="450.98" y="133" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">1.0 Collect</text></g><g data-node="dq" data-kr="kit-b2/n/dq" data-kr-hash="b37ec67470" data-kr-kind="box" data-kr-label="D1 queue"><path d="M787.82 80H657.82V176H787.82" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="722.82" y="125" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">D1 queue</text><text x="722.82" y="141" font-size="11" fill="var(--storet)" text-anchor="middle">in memory</text></g><g data-node="p2" data-kr="kit-b2/n/p2" data-kr-hash="86ccc4432e" data-kr-kind="box" data-kr-label="2.0 Match"><circle cx="962.82" cy="128" r="46" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="962.82" y="133" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">2.0 Match</text></g><g data-node="p3" data-kr="kit-b2/n/p3" data-kr-hash="1927c485a8" data-kr-kind="box" data-kr-label="3.0 Notify"><circle cx="1202.8200000000002" cy="128" r="46" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="1202.8200000000002" y="133" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">3.0 Notify</text></g><g data-node="owner" data-kr="kit-b2/n/owner" data-kr-hash="917f14114b" data-kr-kind="box" data-kr-label="Owner"><rect x="1390.5200000000002" y="80" width="130" height="96" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="1455.5200000000002" y="125" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Owner</text><text x="1455.5200000000002" y="141" font-size="11" fill="var(--extt)" text-anchor="middle">Telegram + console</text></g><g data-node="dy" data-kr="kit-b2/n/dy" data-kr-hash="76b44c5858" data-kr-kind="box" data-kr-label="D3 tgscout.yaml"><path d="M225 397.30000000000007H95V493.30000000000007H225" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="160" y="450.30000000000007" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">D3 tgscout.yaml</text></g><g data-node="db" data-kr="kit-b2/n/db" data-kr-hash="645ff038e2" data-kr-kind="box" data-kr-label="D2 tgscout.db"><path d="M787.82 397.30000000000007H657.82V493.30000000000007H787.82" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="722.82" y="450.30000000000007" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">D2 tgscout.db</text></g><g data-node="lms" data-kr="kit-b2/n/lms" data-kr-hash="4906954e02" data-kr-kind="box" data-kr-label="LM Studio"><rect x="897.82" y="397.30000000000007" width="130" height="96" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="962.82" y="442.30000000000007" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">LM Studio</text><text x="962.82" y="458.30000000000007" font-size="11" fill="var(--extt)" text-anchor="middle">OpenAI-compatible API</text></g><g id="kit-b2-e1" data-step="1" data-from="tg" data-to="p1" data-kr="kit-b2/l/tg&gt;p1" data-kr-hash="b4fa20cd54" data-kr-kind="arrow" data-kr-label="Telegram chats → 1.0 Collect: new messages, history"><path class="link" d="M225 128H402.98" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e1-dot" r="4" fill="var(--fg)" style="offset-path:path('M225 128H402.98')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(225 128) rotate(0)"/><text data-step="1" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="313.99" y="120.25" font-size="11" fill="var(--fg)" text-anchor="middle">new messages, history</text><g id="kit-b2-e2" data-step="2" data-from="dy" data-to="p1" data-kr="kit-b2/l/dy&gt;p1" data-kr-hash="7b257741c6" data-kr-kind="arrow" data-kr-label="D3 tgscout.yaml → 1.0 Collect: chats, requests, depth"><path class="link" d="M225 445.30000000000007H438.98V176" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e2-dot" r="4" fill="var(--fg)" style="offset-path:path('M225 445.30000000000007H438.98V176')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(225 445.30000000000007) rotate(0)"/><text data-step="2" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="433.98" y="313.67500000000007" font-size="11" fill="var(--fg)" text-anchor="end">chats, requests, depth</text><g id="kit-b2-e3" data-step="3" data-from="db" data-to="p1" data-kr="kit-b2/l/db&gt;p1" data-kr-hash="039eaa4de0" data-kr-kind="arrow" data-kr-label="D2 tgscout.db → 1.0 Collect: seen IDs, cursor"><path class="link" d="M657.82 445.30000000000007H462.98V176" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e3-dot" r="4" fill="var(--fg)" style="offset-path:path('M657.82 445.30000000000007H462.98V176')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(657.82 445.30000000000007) rotate(180)"/><text data-step="3" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="483.98" y="313.67500000000007" font-size="11" fill="var(--fg)" text-anchor="start">seen IDs, cursor</text><g id="kit-b2-e4" data-step="4" data-from="p1" data-to="dq" data-kr="kit-b2/l/p1&gt;dq" data-kr-hash="a7406a28b6" data-kr-kind="arrow" data-kr-label="1.0 Collect → D1 queue: message + requests"><path class="link" d="M498.98 128H657.82" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e4-dot" r="4" fill="var(--fg)" style="offset-path:path('M498.98 128H657.82')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(498.98 128) rotate(0)"/><text data-step="4" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="578.4000000000001" y="120.25" font-size="11" fill="var(--fg)" text-anchor="middle">message + requests</text><g id="kit-b2-e5" data-step="5" data-from="dq" data-to="p2" data-kr="kit-b2/l/dq&gt;p2" data-kr-hash="0e613af3db" data-kr-kind="arrow" data-kr-label="D1 queue → 2.0 Match: message"><path class="link" d="M787.82 116H914.82" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e5-dot" r="4" fill="var(--fg)" style="offset-path:path('M787.82 116H914.82')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(787.82 116) rotate(0)"/><text data-step="5" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="851.32" y="108.25" font-size="11" fill="var(--fg)" text-anchor="middle">message</text><g id="kit-b2-e6" data-step="6" data-from="p2" data-to="lms" data-kr="kit-b2/l/p2&gt;lms" data-kr-hash="b2a888a9b1" data-kr-kind="arrow" data-kr-label="2.0 Match → LM Studio: message + request"><path class="link" d="M938.82 176V397.30000000000007" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e6-dot" r="4" fill="var(--fg)" style="offset-path:path('M938.82 176V397.30000000000007')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(938.82 176) rotate(90)"/><text data-step="6" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="959.82" y="289.67500000000007" font-size="11" fill="var(--fg)" text-anchor="start">message + request</text><g id="kit-b2-e7" data-step="7" data-from="lms" data-to="p2" data-kr="kit-b2/l/lms&gt;p2" data-kr-hash="e3d1dfc4d4" data-kr-kind="arrow" data-kr-label="LM Studio → 2.0 Match: yes / no"><path class="link" d="M986.82 397.30000000000007V176" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e7-dot" r="4" fill="var(--fg)" style="offset-path:path('M986.82 397.30000000000007V176')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(986.82 397.30000000000007) rotate(-90)"/><text data-step="7" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1007.82" y="245.41500000000002" font-size="11" fill="var(--fg)" text-anchor="start">yes / no</text><g id="kit-b2-e8" data-step="8" data-from="p2" data-to="db" data-kr="kit-b2/l/p2&gt;db" data-kr-hash="c75d193562" data-kr-kind="arrow" data-kr-label="2.0 Match → D2 tgscout.db: decision, cursor"><path class="link" d="M914.82 140H842.82V445.30000000000007H787.82" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e8-dot" r="4" fill="var(--fg)" style="offset-path:path('M914.82 140H842.82V445.30000000000007H787.82')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(914.82 140) rotate(180)"/><text data-step="8" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="837.82" y="295.67500000000007" font-size="11" fill="var(--fg)" text-anchor="end">decision, cursor</text><g id="kit-b2-e9" data-step="9" data-from="p2" data-to="p3" data-kr="kit-b2/l/p2&gt;p3" data-kr-hash="7da6b2cb5a" data-kr-kind="arrow" data-kr-label="2.0 Match → 3.0 Notify: match"><path class="link" d="M1010.82 128H1154.8200000000002" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e9-dot" r="4" fill="var(--fg)" style="offset-path:path('M1010.82 128H1154.8200000000002')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(1010.82 128) rotate(0)"/><text data-step="9" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1082.8200000000002" y="120.25" font-size="11" fill="var(--fg)" text-anchor="middle">match</text><g id="kit-b2-e10" data-step="10" data-from="p3" data-to="owner" data-kr="kit-b2/l/p3&gt;owner" data-kr-hash="119ff64211" data-kr-kind="arrow" data-kr-label="3.0 Notify → Owner: private message"><path class="link" d="M1250.8200000000002 128H1390.5200000000002" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b2-e10-dot" r="4" fill="var(--fg)" style="offset-path:path('M1250.8200000000002 128H1390.5200000000002')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(1250.8200000000002 128) rotate(0)"/><text data-step="10" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1320.67" y="120.25" font-size="11" fill="var(--fg)" text-anchor="middle">private message</text></svg></figure><p class="note">Messages come from Telegram, wait in the queue, are checked by the LLM against each request, and a match goes to the owner; tgscout.db keeps seen IDs, the cursor and decisions</p></div></div><!--/kit-render-->
+
+<h2>Folders and layers</h2>
+<p data-kr="t/folders-and-layers/p1" data-kr-hash="f18fce20c7" data-kr-kind="text" data-kr-label="The repository layout by the kit rules for Go. The repository is the service na…">The repository layout by the kit rules for Go. The repository is the service namespace (one service), so the workspace folder <code>tgscout/</code> and <code>e2e/</code> sit at its root. Each adapter folder is <code>&lt;what&gt;/&lt;technology&gt;</code>: <code>llm/openai</code> is the LLM over the OpenAI-compatible API, <code>settings/yaml</code> is the settings read from the YAML file tgscout.yaml. One Go module, one component <code>matching</code> in the hexagonal style.</p>
+
+<pre class="kit" data-kind="folders" data-kit-hash="298ada7e4e29" hidden>title: Repository and workspace
+caption: &#34;Where every part of tgscout lives; colours show the hexagon layers&#34;
+root: &#34;tgscout/ (repository = service namespace)&#34;
+layers: [primary adapters, application, domain, secondary adapters]
+folders:
+  - name: tgscout
+    text: &#34;service workspace: go.work + the one go.mod&#34;
+    folders:
+      - name: apps
+        folders:
+          - {name: cli, text: &#34;main.go: wires everything, starts the parts&#34;}
+      - name: components
+        folders:
+          - name: matching
+            text: &#34;the one component; MatchingConfig wires it&#34;
+            folders:
+              - name: core
+                folders:
+                  - {name: domain, layer: domain, text: &#34;Message, Request, Decision, Cursor&#34;}
+                  - {name: application, layer: application, text: &#34;use cases CollectMessage, MatchMessage; ports MessageQueue, Llm, Notifier, MessageRepository, SettingsRepository&#34;}
+              - name: adapters
+                folders:
+                  - name: primary
+                    folders:
+                      - {name: collect, layer: primary adapters, folders: [{name: telegram, text: &#34;collector: new messages and catch-up over MTProto&#34;}]}
+                      - {name: match, layer: primary adapters, folders: [{name: channel, text: &#34;matcher workers: take a message from the queue&#34;}]}
+                  - name: secondary
+                    folders:
+                      - {name: queue, layer: secondary adapters, folders: [{name: channel, text: &#34;queue: ChannelMessageQueue, a Go channel&#34;}]}
+                      - {name: llm, layer: secondary adapters, folders: [{name: openai, text: &#34;llm: OpenAiLlmClient, one HTTP client for any OpenAI-compatible API: LM Studio, OpenAI, OpenRouter&#34;}]}
+                      - {name: notify, layer: secondary adapters, folders: [{name: telegram, text: &#34;notifier: TelegramNotifierClient, private message + console&#34;}]}
+                      - {name: persistence, layer: secondary adapters, folders: [{name: sqlite, text: &#34;repository: SqliteMessageRepository + migrations/&#34;}]}
+                      - {name: settings, layer: secondary adapters, text: &#34;config: the settings from tgscout.yaml&#34;, folders: [{name: yaml, text: &#34;YamlSettingsRepository: search requests with their chats, catch-up depth, LLM address&#34;}]}
+      - name: infra
+        folders:
+          - {name: telegram, text: &#34;MTProto client and session, shared by collect and notify&#34;}
+          - {name: sqlite, text: &#34;opens tgscout.db (mattn/go-sqlite3)&#34;}
+  - {name: e2e, text: &#34;end-to-end tests, own go.mod&#34;}
+  - {name: docs, text: &#34;design board&#34;}
+  - {name: openspec, text: &#34;specs and changes&#34;}
+  - {name: scripts, text: &#34;qa.sh&#34;}
+files: [README.md, AGENTS.md, VERSION, .env.example, tgscout.yaml.example]</pre>
+<div class="kit-render" id="kit-b3"><h3>Repository and workspace</h3><style>.kit-render{position:relative}
+.kit-render svg a,.kit-render svg a *{cursor:pointer;pointer-events:all}
+.kit-render{--link-hover:.94}
+@media (prefers-color-scheme:dark){.kit-render{--link-hover:1.35}}
+.kit-render svg a:hover :is(rect,path,ellipse,circle,polygon){filter:brightness(var(--link-hover));stroke-width:2.5}
+.kit-render:has(>.kit-full){display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-render:has(>.kit-full)>*{flex:0 0 100%}
+.kit-render:has(>.kit-full)>:not(h3,.kit-full-btn,.kit-view,.kr-drow,.kit-play-btn,.kit-speed){order:2}
+.kit-render:has(>.kit-full)>.kit-view{flex:0 0 auto}
+.kit-render .kit-view{order:1;flex:0 0 auto;margin:4px 0;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);text-decoration:none;white-space:nowrap}
+.kit-render .kit-view:hover{border-color:var(--focus)}
+.kit-render .kit-view::after{content:" \2197"}
+.kit-render:has(>.kit-full)>.kr-drow{flex:1 0 auto;text-align:right}
+.kit-render:has(.kit-full) h3{margin-bottom:2px}
+.kit-render:has(.kit-full) figure{margin-top:4px}
+.kit-full{position:absolute;opacity:0;width:1px;height:1px}
+.kit-render .kit-full-btn{order:1;flex:0 0 auto;margin:4px 0 4px auto;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-full-btn::before{content:"\2922  Full screen"}
+.kit-full:focus-visible+.kit-full-btn{outline:2px solid var(--focus)}
+.kit-render:has(.kit-full:checked){position:fixed;inset:0;z-index:1000;margin:0;overflow:auto;background:var(--bg);padding:44px 16px 16px}
+.kit-render .kit-full:checked+.kit-full-btn{position:fixed;top:8px;right:16px;z-index:2}
+.kit-full:checked+.kit-full-btn::before{content:"\2715  Close"}
+.kit-render:has(.kit-full:checked) svg{width:100%!important;max-width:none;height:calc(100vh - 140px)}</style><input type="checkbox" class="kit-full" id="kit-b3-full" aria-label="show the picture on the whole screen"><label for="kit-b3-full" class="kit-full-btn"></label><figure><svg viewBox="0 0 732.3168000000001 1065" width="732.3168000000001" role="img" aria-label="Repository and workspace" font-family="system-ui,-apple-system,sans-serif"><g><path class="link" d="M23 35.5V52H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M45 59.5V76H57" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M67 83.5V100H79" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M45 59.5V124H57" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M67 131.5V148H79" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M89 155.5V172H101" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M111 179.5V196H123" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M111 179.5V220H123" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M89 155.5V272H101" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M111 279.5V296H123" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M133 303.5V320H145" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M155 327.5V344H167" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M133 303.5V368H145" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M155 375.5V392H167" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M111 279.5V416H123" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M133 423.5V440H145" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M155 447.5V464H167" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M133 423.5V488H145" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M155 495.5V512H167" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M133 423.5V564H145" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M155 571.5V588H167" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M133 423.5V626H145" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M155 633.5V650H167" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M133 423.5V674H145" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M155 681.5V698H167" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M45 59.5V736H57" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M67 743.5V760H79" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M67 743.5V798H79" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V822H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V846H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V870H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V894H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V918H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V942H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V966H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V990H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><g><path class="link" d="M23 35.5V1014H35" fill="none" stroke="var(--old)" stroke-width="1.2"/></g><path d="M16 22.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="38" y="32" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">tgscout/ (repository = service namespace)</text><path d="M38 46.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="56" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">tgscout</text><text x="397.3168" y="56" font-size="11" fill="var(--mut)" text-anchor="start">service workspace: go.work + the one go.mod</text><path d="M60 70.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="82" y="80" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">apps</text><text x="119.76" y="80" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><path d="M82 94.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="104" y="104" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">cli</text><text x="134.32" y="104" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><text x="397.3168" y="104" font-size="11" fill="var(--mut)" text-anchor="start">main.go: wires everything, starts the parts</text><path d="M60 118.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="82" y="128" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">components</text><path d="M82 142.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="104" y="152" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">matching</text><text x="397.3168" y="152" font-size="11" fill="var(--mut)" text-anchor="start">the one component; MatchingConfig wires it</text><path d="M104 166.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="126" y="176" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">core</text><path d="M126 190.5h5l2 2h7v9h-14z" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.2"/><text x="148" y="200" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">domain</text><rect x="200.64" y="188" width="45.8256" height="16" rx="4" fill="var(--extbg)" stroke="var(--ext)" data-tag="domain"/><text x="223.5528" y="199" font-size="9" fill="var(--extt)" text-anchor="middle" font-weight="700">DOMAIN</text><text x="397.3168" y="200" font-size="11" fill="var(--mut)" text-anchor="start">Message, Request, Decision, Cursor</text><path d="M126 214.5h5l2 2h7v9h-14z" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.2"/><text x="148" y="224" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">application</text><rect x="237.84" y="212" width="74.0136" height="16" rx="4" fill="var(--svcbg)" stroke="var(--svc)" data-tag="application"/><text x="274.84680000000003" y="223" font-size="9" fill="var(--svct)" text-anchor="middle" font-weight="700">APPLICATION</text><text x="397.3168" y="224" font-size="11" fill="var(--mut)" text-anchor="start">use cases CollectMessage, MatchMessage; ports</text><text x="397.3168" y="238" font-size="11" fill="var(--mut)" text-anchor="start">MessageQueue, Llm, Notifier, MessageRepository,</text><text x="397.3168" y="252" font-size="11" fill="var(--mut)" text-anchor="start">SettingsRepository</text><path d="M104 266.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="126" y="276" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">adapters</text><path d="M126 290.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="148" y="300" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">primary</text><path d="M148 314.5h5l2 2h7v9h-14z" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.2"/><text x="170" y="324" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">collect</text><rect x="230.08" y="312" width="102.2016" height="16" rx="4" fill="var(--clientbg)" stroke="var(--client)" data-tag="primary adapters"/><text x="281.18080000000003" y="323" font-size="9" fill="var(--clientt)" text-anchor="middle" font-weight="700">PRIMARY ADAPTERS</text><path d="M170 338.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="192" y="348" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">telegram</text><text x="397.3168" y="348" font-size="11" fill="var(--mut)" text-anchor="start">collector: new messages and catch-up over MTProto</text><path d="M148 362.5h5l2 2h7v9h-14z" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.2"/><text x="170" y="372" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">match</text><rect x="215.2" y="360" width="102.2016" height="16" rx="4" fill="var(--clientbg)" stroke="var(--client)" data-tag="primary adapters"/><text x="266.3008" y="371" font-size="9" fill="var(--clientt)" text-anchor="middle" font-weight="700">PRIMARY ADAPTERS</text><path d="M170 386.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="192" y="396" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">channel</text><text x="397.3168" y="396" font-size="11" fill="var(--mut)" text-anchor="start">matcher workers: take a message from the queue</text><path d="M126 410.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="148" y="420" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">secondary</text><path d="M148 434.5h5l2 2h7v9h-14z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.2"/><text x="170" y="444" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">queue</text><rect x="215.2" y="432" width="113.4768" height="16" rx="4" fill="var(--storebg)" stroke="var(--store)" data-tag="secondary adapters"/><text x="271.9384" y="443" font-size="9" fill="var(--storet)" text-anchor="middle" font-weight="700">SECONDARY ADAPTERS</text><path d="M170 458.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="192" y="468" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">channel</text><text x="397.3168" y="468" font-size="11" fill="var(--mut)" text-anchor="start">queue: ChannelMessageQueue, a Go channel</text><path d="M148 482.5h5l2 2h7v9h-14z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.2"/><text x="170" y="492" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">llm</text><rect x="200.32" y="480" width="113.4768" height="16" rx="4" fill="var(--storebg)" stroke="var(--store)" data-tag="secondary adapters"/><text x="257.0584" y="491" font-size="9" fill="var(--storet)" text-anchor="middle" font-weight="700">SECONDARY ADAPTERS</text><path d="M170 506.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="192" y="516" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">openai</text><text x="397.3168" y="516" font-size="11" fill="var(--mut)" text-anchor="start">llm: OpenAiLlmClient, one HTTP client for any</text><text x="397.3168" y="530" font-size="11" fill="var(--mut)" text-anchor="start">OpenAI-compatible API: LM Studio, OpenAI,</text><text x="397.3168" y="544" font-size="11" fill="var(--mut)" text-anchor="start">OpenRouter</text><path d="M148 558.5h5l2 2h7v9h-14z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.2"/><text x="170" y="568" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">notify</text><rect x="222.64" y="556" width="113.4768" height="16" rx="4" fill="var(--storebg)" stroke="var(--store)" data-tag="secondary adapters"/><text x="279.3784" y="567" font-size="9" fill="var(--storet)" text-anchor="middle" font-weight="700">SECONDARY ADAPTERS</text><path d="M170 582.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="192" y="592" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">telegram</text><text x="397.3168" y="592" font-size="11" fill="var(--mut)" text-anchor="start">notifier: TelegramNotifierClient, private message</text><text x="397.3168" y="606" font-size="11" fill="var(--mut)" text-anchor="start">+ console</text><path d="M148 620.5h5l2 2h7v9h-14z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.2"/><text x="170" y="630" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">persistence</text><rect x="259.84000000000003" y="618" width="113.4768" height="16" rx="4" fill="var(--storebg)" stroke="var(--store)" data-tag="secondary adapters"/><text x="316.57840000000004" y="629" font-size="9" fill="var(--storet)" text-anchor="middle" font-weight="700">SECONDARY ADAPTERS</text><path d="M170 644.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="192" y="654" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">sqlite</text><text x="397.3168" y="654" font-size="11" fill="var(--mut)" text-anchor="start">repository: SqliteMessageRepository + migrations/</text><path d="M148 668.5h5l2 2h7v9h-14z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.2"/><text x="170" y="678" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">settings</text><rect x="237.52" y="666" width="113.4768" height="16" rx="4" fill="var(--storebg)" stroke="var(--store)" data-tag="secondary adapters"/><text x="294.2584" y="677" font-size="9" fill="var(--storet)" text-anchor="middle" font-weight="700">SECONDARY ADAPTERS</text><text x="397.3168" y="678" font-size="11" fill="var(--mut)" text-anchor="start">config: the settings from tgscout.yaml</text><path d="M170 692.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="192" y="702" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">yaml</text><text x="397.3168" y="702" font-size="11" fill="var(--mut)" text-anchor="start">YamlSettingsRepository: search requests with their</text><text x="397.3168" y="716" font-size="11" fill="var(--mut)" text-anchor="start">chats, catch-up depth, LLM address</text><path d="M60 730.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="82" y="740" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">infra</text><text x="127.2" y="740" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><path d="M82 754.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="104" y="764" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">telegram</text><text x="171.52" y="764" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><text x="397.3168" y="764" font-size="11" fill="var(--mut)" text-anchor="start">MTProto client and session, shared by collect and</text><text x="397.3168" y="778" font-size="11" fill="var(--mut)" text-anchor="start">notify</text><path d="M82 792.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="104" y="802" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">sqlite</text><text x="156.64" y="802" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><text x="397.3168" y="802" font-size="11" fill="var(--mut)" text-anchor="start">opens tgscout.db (mattn/go-sqlite3)</text><path d="M38 816.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="826" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">e2e</text><text x="90.32" y="826" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><text x="397.3168" y="826" font-size="11" fill="var(--mut)" text-anchor="start">end-to-end tests, own go.mod</text><path d="M38 840.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="850" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">docs</text><text x="97.76" y="850" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><text x="397.3168" y="850" font-size="11" fill="var(--mut)" text-anchor="start">design board</text><path d="M38 864.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="874" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">openspec</text><text x="127.52" y="874" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><text x="397.3168" y="874" font-size="11" fill="var(--mut)" text-anchor="start">specs and changes</text><path d="M38 888.5h5l2 2h7v9h-14z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="898" font-size="12" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">scripts</text><text x="120.08" y="898" font-size="11" fill="var(--mut)" text-anchor="start">— outside the layers</text><text x="397.3168" y="898" font-size="11" fill="var(--mut)" text-anchor="start">qa.sh</text><path d="M40 911.5h7l3 3v10h-10z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="922" font-size="12" fill="var(--mut)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">README.md</text><path d="M40 935.5h7l3 3v10h-10z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="946" font-size="12" fill="var(--mut)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">AGENTS.md</text><path d="M40 959.5h7l3 3v10h-10z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="970" font-size="12" fill="var(--mut)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">VERSION</text><path d="M40 983.5h7l3 3v10h-10z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="994" font-size="12" fill="var(--mut)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">.env.example</text><path d="M40 1007.5h7l3 3v10h-10z" fill="none" stroke="var(--mut)" stroke-width="1.2"/><text x="60" y="1018" font-size="12" fill="var(--mut)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">tgscout.yaml.example</text><text x="16" y="1049" font-size="11" fill="var(--clientt)" text-anchor="start">▮ primary adapters</text><text x="144.84" y="1049" font-size="11" fill="var(--svct)" text-anchor="start">▮ application</text><text x="241.78" y="1049" font-size="11" fill="var(--extt)" text-anchor="start">▮ domain</text><text x="306.82" y="1049" font-size="11" fill="var(--storet)" text-anchor="start">▮ secondary adapters</text><text x="448.41999999999996" y="1049" font-size="11" fill="var(--mut)" text-anchor="start">▮ outside the layers</text></svg></figure><p class="note">Where every part of tgscout lives; colours show the hexagon layers</p></div><!--/kit-render-->
+
+<pre class="kit" data-kind="layers" data-kit-hash="5a156b475772" hidden>title: Hexagon of matching
+caption: &#34;Each adapter with the outside system it reaches and the protocol; the queue is a Go channel inside the app&#34;
+style: hexagonal
+layers:
+  - {name: primary adapters, place: driving, folders: [primary/collect/telegram, primary/match/channel], items: [{name: collector, port: CollectMessage, to: {name: Telegram, sub: chats, tech: MTProto, text: &#34;updates + history&#34;}}, {name: matcher workers, port: MatchMessage, to: {name: queue, sub: Go channel, type: pipe, tech: Go channel, text: receive}}]}
+  - {name: application, place: core, text: use cases and ports, folders: [core/application]}
+  - {name: domain, place: core, folders: [core/domain]}
+  - {name: secondary adapters, place: driven, folders: [secondary/queue/channel, secondary/llm/openai, secondary/notify/telegram, secondary/persistence/sqlite, secondary/settings/yaml], items: [{name: queue, port: MessageQueue, to: {name: queue, sub: Go channel, type: pipe, tech: Go channel, text: send}}, {name: llm, port: Llm, to: {name: LM Studio, sub: &#34;or OpenAI, OpenRouter&#34;, tech: HTTP, text: OpenAI-compatible API}}, {name: notifier, port: Notifier, to: {name: Telegram, sub: &#34;owner + console&#34;, tech: MTProto, text: private message}}, {name: repository, port: MessageRepository, to: {name: tgscout.db, sub: SQLite, type: cylinder, tech: SQL, text: &#34;read / write&#34;}}, {name: config, port: SettingsRepository, to: {name: tgscout.yaml, sub: YAML, type: file, tech: file, text: read at start}}]}
+ports:
+  - {name: CollectMessage}
+  - {name: MatchMessage}
+  - {name: MessageQueue, side: driven}
+  - {name: Llm, side: driven}
+  - {name: Notifier, side: driven}
+  - {name: MessageRepository, side: driven}
+  - {name: SettingsRepository, side: driven}</pre>
+<div class="kit-render" id="kit-b4"><h3>Hexagon of matching</h3><style>.kit-render{position:relative}
+.kit-render svg a,.kit-render svg a *{cursor:pointer;pointer-events:all}
+.kit-render{--link-hover:.94}
+@media (prefers-color-scheme:dark){.kit-render{--link-hover:1.35}}
+.kit-render svg a:hover :is(rect,path,ellipse,circle,polygon){filter:brightness(var(--link-hover));stroke-width:2.5}
+.kit-render:has(>.kit-full){display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-render:has(>.kit-full)>*{flex:0 0 100%}
+.kit-render:has(>.kit-full)>:not(h3,.kit-full-btn,.kit-view,.kr-drow,.kit-play-btn,.kit-speed){order:2}
+.kit-render:has(>.kit-full)>.kit-view{flex:0 0 auto}
+.kit-render .kit-view{order:1;flex:0 0 auto;margin:4px 0;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);text-decoration:none;white-space:nowrap}
+.kit-render .kit-view:hover{border-color:var(--focus)}
+.kit-render .kit-view::after{content:" \2197"}
+.kit-render:has(>.kit-full)>.kr-drow{flex:1 0 auto;text-align:right}
+.kit-render:has(.kit-full) h3{margin-bottom:2px}
+.kit-render:has(.kit-full) figure{margin-top:4px}
+.kit-full{position:absolute;opacity:0;width:1px;height:1px}
+.kit-render .kit-full-btn{order:1;flex:0 0 auto;margin:4px 0 4px auto;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-full-btn::before{content:"\2922  Full screen"}
+.kit-full:focus-visible+.kit-full-btn{outline:2px solid var(--focus)}
+.kit-render:has(.kit-full:checked){position:fixed;inset:0;z-index:1000;margin:0;overflow:auto;background:var(--bg);padding:44px 16px 16px}
+.kit-render .kit-full:checked+.kit-full-btn{position:fixed;top:8px;right:16px;z-index:2}
+.kit-full:checked+.kit-full-btn::before{content:"\2715  Close"}
+.kit-render:has(.kit-full:checked) svg{width:100%!important;max-width:none;height:calc(100vh - 140px)}</style><input type="checkbox" class="kit-full" id="kit-b4-full" aria-label="show the picture on the whole screen"><label for="kit-b4-full" class="kit-full-btn"></label><figure><svg viewBox="0 0 1589.2698589940196 964" width="1589.2698589940196" role="img" aria-label="Hexagon of matching" font-family="system-ui,-apple-system,sans-serif"><rect x="0" y="0" width="742.7698589940195" height="964" fill="var(--clientbg)" opacity="0.35" data-half="driving"/><rect x="742.7698589940195" y="0" width="846.5000000000001" height="964" fill="var(--storebg)" opacity="0.35" data-half="driven"/><line x1="742.7698589940195" y1="0" x2="742.7698589940195" y2="964" stroke="var(--mut)" stroke-width="1.5" stroke-dasharray="8 6"/><polygon points="970.7698589940195,572.9406922210657 837.2105512150852,706.5 648.3291667729538,706.5 514.7698589940195,572.9406922210657 514.7698589940195,384.05930777893434 648.3291667729537,250.50000000000006 837.2105512150853,250.50000000000003 970.7698589940194,384.05930777893417" fill="var(--card)" stroke="var(--rem)" stroke-width="5" stroke-linejoin="round" data-octagon="1" data-cx="742.7698589940195" data-cy="478.5" data-a="228"/><text x="628.7698589940195" y="238.5" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="700">Ports</text><circle cx="742.7698589940195" cy="478.5" r="182.4" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5" data-core="application"/><text x="742.7698589940195" y="316.09999999999997" font-size="9" fill="var(--svct)" text-anchor="middle" font-weight="700">APPLICATION</text><rect x="680.8962589940195" y="324.09999999999997" width="123.7472" height="26" rx="13" fill="var(--svcbg)" stroke="var(--svc)"/><text x="742.7698589940195" y="341.09999999999997" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">core/application</text><circle cx="742.7698589940195" cy="478.5" r="104.88000000000001" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5" data-core="domain"/><text x="742.7698589940195" y="393.62" font-size="9" fill="var(--extt)" text-anchor="middle" font-weight="700">DOMAIN</text><rect x="697.4192589940195" y="401.62" width="90.70119999999999" height="26" rx="13" fill="var(--extbg)" stroke="var(--ext)"/><text x="742.7698589940195" y="418.62" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">core/domain</text><g data-node="kit-b4-l0-i0" data-kr="kit-b4/n/kit-b4-l0-i0" data-kr-hash="0736fd5b7c" data-kr-kind="box" data-kr-label="collector"><rect x="334.00000000000006" y="209.73014100598056" width="168" height="56" rx="8" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.5"/><text x="418.00000000000006" y="242.73014100598056" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">collector</text></g><g data-node="kit-b4-l0-i1" data-kr="kit-b4/n/kit-b4-l0-i1" data-kr-hash="a27ebeb81d" data-kr-kind="box" data-kr-label="matcher workers"><rect x="334.00000000000017" y="691.2698589940195" width="168" height="56" rx="8" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.5"/><text x="418.00000000000017" y="724.2698589940195" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">matcher workers</text></g><g data-node="kit-b4-l3-i0" data-kr="kit-b4/n/kit-b4-l3-i0" data-kr-hash="00b109cf11" data-kr-kind="box" data-kr-label="queue"><rect x="718.7698589940195" y="78" width="168" height="56" rx="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="802.7698589940195" y="111" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">queue</text></g><g data-node="kit-b4-l3-i1" data-kr="kit-b4/n/kit-b4-l3-i1" data-kr-hash="487b91042c" data-kr-kind="box" data-kr-label="llm"><rect x="986.368145112785" y="206.90171388123431" width="168" height="56" rx="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="1070.368145112785" y="239.90171388123431" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">llm</text></g><g data-node="kit-b4-l3-i2" data-kr="kit-b4/n/kit-b4-l3-i2" data-kr-hash="6a7694ff66" data-kr-kind="box" data-kr-label="notifier"><rect x="1087.2698589940196" y="450.5" width="168" height="56" rx="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="1171.2698589940196" y="483.5" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">notifier</text></g><g data-node="kit-b4-l3-i3" data-kr="kit-b4/n/kit-b4-l3-i3" data-kr-hash="e2885f2bbe" data-kr-kind="box" data-kr-label="repository"><rect x="986.3681451127852" y="694.0982861187655" width="168" height="56" rx="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="1070.3681451127852" y="727.0982861187655" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">repository</text></g><g data-node="kit-b4-l3-i4" data-kr="kit-b4/n/kit-b4-l3-i4" data-kr-hash="b79606fb3a" data-kr-kind="box" data-kr-label="config"><rect x="718.7698589940195" y="823" width="168" height="56" rx="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="802.7698589940195" y="856" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">config</text></g><text x="16" y="26" font-size="9" fill="var(--clientt)" text-anchor="start" font-weight="700">PRIMARY ADAPTERS</text><rect x="16" y="34" width="176.6208" height="26" rx="13" fill="var(--clientbg)" stroke="var(--client)"/><text x="104.3104" y="51" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">primary/collect/telegram</text><rect x="200.6208" y="34" width="156.79319999999998" height="26" rx="13" fill="var(--clientbg)" stroke="var(--client)"/><text x="279.0174" y="51" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">primary/match/channel</text><text x="664.7750589940197" y="26" font-size="9" fill="var(--storet)" text-anchor="start" font-weight="700">SECONDARY ADAPTERS</text><rect x="664.7750589940197" y="34" width="170.0116" height="26" rx="13" fill="var(--storebg)" stroke="var(--store)"/><text x="749.7808589940197" y="51" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">secondary/queue/channel</text><rect x="842.7866589940197" y="34" width="150.18399999999997" height="26" rx="13" fill="var(--storebg)" stroke="var(--store)"/><text x="917.8786589940197" y="51" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">secondary/llm/openai</text><rect x="1000.9706589940197" y="34" width="183.23" height="26" rx="13" fill="var(--storebg)" stroke="var(--store)"/><text x="1092.5856589940197" y="51" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">secondary/notify/telegram</text><rect x="1192.2006589940197" y="34" width="203.0576" height="26" rx="13" fill="var(--storebg)" stroke="var(--store)"/><text x="1293.7294589940198" y="51" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">secondary/persistence/sqlite</text><rect x="1403.2582589940198" y="34" width="170.0116" height="26" rx="13" fill="var(--storebg)" stroke="var(--store)"/><text x="1488.2640589940197" y="51" font-size="12" fill="var(--fg)" text-anchor="middle" font-weight="600" font-family="ui-monospace,Menlo,monospace">secondary/settings/yaml</text><g id="kit-b4-p0" data-port="CollectMessage" data-edge="225" data-x="581.5495128834866" data-y="317.27965388946717"><text transform="translate(592.8632213824714 328.5933623884519) rotate(315)" y="4" font-size="11" font-weight="600" fill="var(--fg)" text-anchor="middle"><tspan font-family="ui-monospace,Menlo,monospace" fill="var(--mut)">&lt;|&gt; </tspan>CollectMessage</text></g><g id="kit-b4-p1" data-port="MatchMessage" data-edge="135" data-x="581.5495128834867" data-y="639.7203461105329"><text transform="translate(592.8632213824715 628.4066376115481) rotate(45)" y="4" font-size="11" font-weight="600" fill="var(--fg)" text-anchor="middle"><tspan font-family="ui-monospace,Menlo,monospace" fill="var(--mut)">&lt;|&gt; </tspan>MatchMessage</text></g><g id="kit-b4-p2" data-port="MessageQueue" data-edge="270" data-x="742.7698589940195" data-y="250.5"><text transform="translate(742.7698589940195 266.5) rotate(0)" y="4" font-size="11" font-weight="600" fill="var(--fg)" text-anchor="middle"><tspan font-family="ui-monospace,Menlo,monospace" fill="var(--mut)">&lt;|&gt; </tspan>MessageQueue</text></g><g id="kit-b4-p3" data-port="Llm" data-edge="315" data-x="903.9902051045523" data-y="317.2796538894671"><text transform="translate(892.6764966055675 328.59336238845185) rotate(45)" y="4" font-size="11" font-weight="600" fill="var(--fg)" text-anchor="middle"><tspan font-family="ui-monospace,Menlo,monospace" fill="var(--mut)">&lt;|&gt; </tspan>Llm</text></g><g id="kit-b4-p4" data-port="Notifier" data-edge="0" data-x="970.7698589940195" data-y="478.5"><text transform="translate(954.7698589940195 478.5) rotate(90)" y="4" font-size="11" font-weight="600" fill="var(--fg)" text-anchor="middle"><tspan font-family="ui-monospace,Menlo,monospace" fill="var(--mut)">&lt;|&gt; </tspan>Notifier</text></g><g id="kit-b4-p5" data-port="MessageRepository" data-edge="45" data-x="903.9902051045524" data-y="639.7203461105328"><text transform="translate(892.6764966055676 628.406637611548) rotate(-45)" y="4" font-size="11" font-weight="600" fill="var(--fg)" text-anchor="middle"><tspan font-family="ui-monospace,Menlo,monospace" fill="var(--mut)">&lt;|&gt; </tspan>MessageRepository</text></g><g id="kit-b4-p6" data-port="SettingsRepository" data-edge="90" data-x="742.7698589940195" data-y="706.5"><text transform="translate(742.7698589940195 690.5) rotate(0)" y="4" font-size="11" font-weight="600" fill="var(--fg)" text-anchor="middle"><tspan font-family="ui-monospace,Menlo,monospace" fill="var(--mut)">&lt;|&gt; </tspan>SettingsRepository</text></g><g id="kit-b4-l0-i0-line" data-from="kit-b4-l0-i0" data-to="kit-b4-p0" data-kr="kit-b4/l/kit-b4-l0-i0&gt;kit-b4-p0" data-kr-hash="7ea8f8e096" data-kr-kind="arrow" data-kr-label="collector → kit-b4-p0"><path class="link" d="M579.7817459305203 315.5118869365008L502.00000000000006 237.73014100598056" fill="none" stroke="var(--client)" stroke-width="1.6"/></g><g data-joint="kit-b4-l0-i0"><path d="M540.8908729652602 286.6210139712407A10 10 0 1 1 550.8908729652602 276.6210139712407" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M540.8908729652602 286.6210139712407A10 10 0 1 1 550.8908729652602 276.6210139712407" fill="none" stroke="var(--client)" stroke-width="2.2"/><circle cx="540.8908729652602" cy="276.6210139712407" r="7.2" fill="var(--bg)"/><circle cx="540.8908729652602" cy="276.6210139712407" r="6" fill="var(--client)"/></g><g id="kit-b4-l0-i1-line" data-from="kit-b4-l0-i1" data-to="kit-b4-p1" data-kr="kit-b4/l/kit-b4-l0-i1&gt;kit-b4-p1" data-kr-hash="6d5fa8e9a5" data-kr-kind="arrow" data-kr-label="matcher workers → kit-b4-p1"><path class="link" d="M579.7817459305204 641.4881130634992L502.00000000000017 719.2698589940195" fill="none" stroke="var(--client)" stroke-width="1.6"/></g><g data-joint="kit-b4-l0-i1"><path d="M550.8908729652603 680.3789860287593A10 10 0 1 1 540.8908729652603 670.3789860287593" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M550.8908729652603 680.3789860287593A10 10 0 1 1 540.8908729652603 670.3789860287593" fill="none" stroke="var(--client)" stroke-width="2.2"/><circle cx="540.8908729652603" cy="680.3789860287593" r="7.2" fill="var(--bg)"/><circle cx="540.8908729652603" cy="680.3789860287593" r="6" fill="var(--client)"/></g><line x1="733.7698589940195" y1="246" x2="751.7698589940195" y2="246" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-p2"/><g id="kit-b4-l3-i0-line" data-from="kit-b4-l3-i0" data-to="kit-b4-p2" data-kr="kit-b4/l/kit-b4-l3-i0&gt;kit-b4-p2" data-kr-hash="e83ab2f7ba" data-kr-kind="arrow" data-kr-label="queue → kit-b4-p2"><path class="link" d="M742.7698589940195 244L742.7698589940195 199" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M742.7698589940195 189L742.7698589940195 134" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-l3-i0"><path d="M749.8409268058849 181.92893218813452A10 10 0 1 1 735.698791182154 181.92893218813452" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M749.8409268058849 181.92893218813452A10 10 0 1 1 735.698791182154 181.92893218813452" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="742.7698589940195" cy="189" r="7.2" fill="var(--bg)"/><circle cx="742.7698589940195" cy="189" r="6" fill="var(--fg)"/></g><line x1="900.8082245892127" y1="307.73371234344876" x2="913.5361466505707" y2="320.4616344048066" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-p3"/><g id="kit-b4-l3-i1-line" data-from="kit-b4-l3-i1" data-to="kit-b4-p3" data-kr="kit-b4/l/kit-b4-l3-i1&gt;kit-b4-p3" data-kr-hash="a995f0fd63" data-kr-kind="arrow" data-kr-label="llm → kit-b4-p3"><path class="link" d="M908.5863991822648 312.6834598117546L940.4062043356595 280.8636546583599" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M947.4772721475249 273.79258684649443L986.368145112785 234.90171388123431" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-l3-i1"><path d="M957.4772721475249 273.79258684649443A10 10 0 1 1 947.4772721475249 263.79258684649443" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M957.4772721475249 273.79258684649443A10 10 0 1 1 947.4772721475249 263.79258684649443" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="947.4772721475249" cy="273.79258684649443" r="7.2" fill="var(--bg)"/><circle cx="947.4772721475249" cy="273.79258684649443" r="6" fill="var(--fg)"/></g><line x1="975.2698589940195" y1="469.5" x2="975.2698589940195" y2="487.5" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-p4"/><g id="kit-b4-l3-i2-line" data-from="kit-b4-l3-i2" data-to="kit-b4-p4" data-kr="kit-b4/l/kit-b4-l3-i2&gt;kit-b4-p4" data-kr-hash="a02138e5dc" data-kr-kind="arrow" data-kr-label="notifier → kit-b4-p4"><path class="link" d="M977.2698589940195 478.5L1022.2698589940196 478.5" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M1032.2698589940196 478.5L1087.2698589940196 478.5" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-l3-i2"><path d="M1039.3409268058851 485.5710678118655A10 10 0 1 1 1039.3409268058851 471.4289321881345" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M1039.3409268058851 485.5710678118655A10 10 0 1 1 1039.3409268058851 471.4289321881345" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="1032.2698589940196" cy="478.5" r="7.2" fill="var(--bg)"/><circle cx="1032.2698589940196" cy="478.5" r="6" fill="var(--fg)"/></g><line x1="913.5361466505708" y1="636.5383655951932" x2="900.8082245892128" y2="649.2662876565512" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-p5"/><g id="kit-b4-l3-i3-line" data-from="kit-b4-l3-i3" data-to="kit-b4-p5" data-kr="kit-b4/l/kit-b4-l3-i3&gt;kit-b4-p5" data-kr-hash="e4e8b2e421" data-kr-kind="arrow" data-kr-label="repository → kit-b4-p5"><path class="link" d="M908.5863991822649 644.3165401882453L940.4062043356596 676.13634534164" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M947.4772721475251 683.2074131535054L986.3681451127852 722.0982861187655" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-l3-i3"><path d="M947.4772721475251 693.2074131535054A10 10 0 1 1 957.4772721475251 683.2074131535054" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M947.4772721475251 693.2074131535054A10 10 0 1 1 957.4772721475251 683.2074131535054" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="947.4772721475251" cy="683.2074131535054" r="7.2" fill="var(--bg)"/><circle cx="947.4772721475251" cy="683.2074131535054" r="6" fill="var(--fg)"/></g><line x1="751.7698589940195" y1="711" x2="733.7698589940195" y2="711" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-p6"/><g id="kit-b4-l3-i4-line" data-from="kit-b4-l3-i4" data-to="kit-b4-p6" data-kr="kit-b4/l/kit-b4-l3-i4&gt;kit-b4-p6" data-kr-hash="0235314fe2" data-kr-kind="arrow" data-kr-label="config → kit-b4-p6"><path class="link" d="M742.7698589940195 713L742.7698589940195 758" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M742.7698589940195 768L742.7698589940195 823" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-l3-i4"><path d="M735.698791182154 775.0710678118654A10 10 0 1 1 749.8409268058849 775.0710678118654" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M735.698791182154 775.0710678118654A10 10 0 1 1 749.8409268058849 775.0710678118654" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="742.7698589940195" cy="768" r="7.2" fill="var(--bg)"/><circle cx="742.7698589940195" cy="768" r="6" fill="var(--fg)"/></g><g data-node="kit-b4-o0" data-outside="Telegram" data-x="16.000000000000057" data-kr="kit-b4/n/kit-b4-o0" data-kr-hash="0359cdb445" data-kr-kind="box" data-kr-label="Telegram"><rect x="16.000000000000057" y="209.73014100598056" width="168" height="56" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="100.00000000000006" y="234.73014100598056" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Telegram</text><text x="100.00000000000006" y="250.73014100598056" font-size="11" fill="var(--extt)" text-anchor="middle">chats</text></g><g id="kit-b4-o0-line" data-from="kit-b4-o0" data-to="kit-b4-l0-i0" data-kr="kit-b4/l/kit-b4-o0&gt;kit-b4-l0-i0" data-kr-hash="070a975bc8" data-kr-kind="arrow" data-kr-label="Telegram → collector"><path class="link" d="M184.00000000000006 237.73014100598056L334.00000000000006 237.73014100598056" fill="none" stroke="var(--client)" stroke-width="1.6"/></g><g data-joint="kit-b4-o0-in"><path d="M266.07106781186553 244.80120881784603A10 10 0 1 1 266.07106781186553 230.65907319411508" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M266.07106781186553 244.80120881784603A10 10 0 1 1 266.07106781186553 230.65907319411508" fill="none" stroke="var(--client)" stroke-width="2.2"/><circle cx="259.00000000000006" cy="237.73014100598056" r="7.2" fill="var(--bg)"/><circle cx="259.00000000000006" cy="237.73014100598056" r="6" fill="var(--client)"/></g><text x="259.00000000000006" y="221.73014100598056" font-size="10" fill="var(--fg)" text-anchor="middle">MTProto</text><text x="259.00000000000006" y="263.73014100598056" font-size="10" fill="var(--mut)" text-anchor="middle">updates + history</text><g data-node="kit-b4-o1" data-outside="queue" data-x="16.00000000000017" data-kr="kit-b4/n/kit-b4-o1" data-kr-hash="276b7a3531" data-kr-kind="box" data-kr-label="queue"><path d="M24.00000000000017 691.2698589940195H176.00000000000017a8 28 0 0 1 0 56H24.00000000000017a8 28 0 0 1 0 -56z" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.5"/><ellipse cx="176.00000000000017" cy="719.2698589940195" rx="8" ry="28" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.5"/><text x="92.00000000000017" y="716.2698589940195" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">queue</text><text x="92.00000000000017" y="732.2698589940195" font-size="11" fill="var(--clientt)" text-anchor="middle">Go channel</text></g><g id="kit-b4-o1-line" data-from="kit-b4-o1" data-to="kit-b4-l0-i1" data-kr="kit-b4/l/kit-b4-o1&gt;kit-b4-l0-i1" data-kr-hash="6308e2bd95" data-kr-kind="arrow" data-kr-label="queue → matcher workers"><path class="link" d="M184.00000000000017 719.2698589940195L334.00000000000017 719.2698589940195" fill="none" stroke="var(--client)" stroke-width="1.6"/></g><g data-joint="kit-b4-o1-in"><path d="M266.07106781186565 726.3409268058849A10 10 0 1 1 266.07106781186565 712.198791182154" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M266.07106781186565 726.3409268058849A10 10 0 1 1 266.07106781186565 712.198791182154" fill="none" stroke="var(--client)" stroke-width="2.2"/><circle cx="259.00000000000017" cy="719.2698589940195" r="7.2" fill="var(--bg)"/><circle cx="259.00000000000017" cy="719.2698589940195" r="6" fill="var(--client)"/></g><text x="259.00000000000017" y="703.2698589940195" font-size="10" fill="var(--fg)" text-anchor="middle">Go channel</text><text x="259.00000000000017" y="745.2698589940195" font-size="10" fill="var(--mut)" text-anchor="middle">receive</text><g data-node="kit-b4-o2" data-outside="queue" data-x="1036.7698589940196" data-kr="kit-b4/n/kit-b4-o2" data-kr-hash="276b7a3531" data-kr-kind="box" data-kr-label="queue"><path d="M1044.7698589940196 78H1196.7698589940196a8 28 0 0 1 0 56H1044.7698589940196a8 28 0 0 1 0 -56z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><ellipse cx="1196.7698589940196" cy="106" rx="8" ry="28" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="1112.7698589940196" y="103" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">queue</text><text x="1112.7698589940196" y="119" font-size="11" fill="var(--storet)" text-anchor="middle">Go channel</text></g><line x1="888.7698589940195" y1="97" x2="888.7698589940195" y2="115" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-l3-i0"/><g id="kit-b4-o2-line" data-from="kit-b4-l3-i0" data-to="kit-b4-o2" data-kr="kit-b4/l/kit-b4-l3-i0&gt;kit-b4-o2" data-kr-hash="bd889d812e" data-kr-kind="arrow" data-kr-label="queue → queue"><path class="link" d="M890.7698589940195 106L953.7698589940196 106" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M963.7698589940196 106L1036.7698589940196 106" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-o2"><path d="M970.8409268058851 113.07106781186548A10 10 0 1 1 970.840926805885 98.92893218813452" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M970.8409268058851 113.07106781186548A10 10 0 1 1 970.840926805885 98.92893218813452" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="963.7698589940196" cy="106" r="7.2" fill="var(--bg)"/><circle cx="963.7698589940196" cy="106" r="6" fill="var(--fg)"/></g><text x="961.7698589940196" y="90" font-size="10" fill="var(--fg)" text-anchor="middle">Go channel</text><text x="961.7698589940196" y="132" font-size="10" fill="var(--mut)" text-anchor="middle">send</text><g data-node="kit-b4-o3" data-outside="LM Studio" data-x="1304.368145112785" data-kr="kit-b4/n/kit-b4-o3" data-kr-hash="2b5ee58e8c" data-kr-kind="box" data-kr-label="LM Studio"><rect x="1304.368145112785" y="206.90171388123431" width="168" height="56" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="1388.368145112785" y="231.90171388123431" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">LM Studio</text><text x="1388.368145112785" y="247.90171388123431" font-size="11" fill="var(--extt)" text-anchor="middle">or OpenAI, OpenRouter</text></g><line x1="1156.368145112785" y1="225.90171388123431" x2="1156.368145112785" y2="243.90171388123431" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-l3-i1"/><g id="kit-b4-o3-line" data-from="kit-b4-l3-i1" data-to="kit-b4-o3" data-kr="kit-b4/l/kit-b4-l3-i1&gt;kit-b4-o3" data-kr-hash="544e951178" data-kr-kind="arrow" data-kr-label="llm → LM Studio"><path class="link" d="M1158.368145112785 234.90171388123431L1221.368145112785 234.90171388123431" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M1231.368145112785 234.90171388123431L1304.368145112785 234.90171388123431" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-o3"><path d="M1238.4392129246505 241.9727816930998A10 10 0 1 1 1238.4392129246505 227.83064606936884" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M1238.4392129246505 241.9727816930998A10 10 0 1 1 1238.4392129246505 227.83064606936884" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="1231.368145112785" cy="234.90171388123431" r="7.2" fill="var(--bg)"/><circle cx="1231.368145112785" cy="234.90171388123431" r="6" fill="var(--fg)"/></g><text x="1229.368145112785" y="218.90171388123431" font-size="10" fill="var(--fg)" text-anchor="middle">HTTP</text><text x="1229.368145112785" y="260.9017138812343" font-size="10" fill="var(--mut)" text-anchor="middle">OpenAI-compatible API</text><g data-node="kit-b4-o4" data-outside="Telegram" data-x="1405.2698589940196" data-kr="kit-b4/n/kit-b4-o4" data-kr-hash="f3deba41b1" data-kr-kind="box" data-kr-label="Telegram"><rect x="1405.2698589940196" y="450.5" width="168" height="56" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="1489.2698589940196" y="475.5" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Telegram</text><text x="1489.2698589940196" y="491.5" font-size="11" fill="var(--extt)" text-anchor="middle">owner + console</text></g><line x1="1257.2698589940196" y1="469.5" x2="1257.2698589940196" y2="487.5" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-l3-i2"/><g id="kit-b4-o4-line" data-from="kit-b4-l3-i2" data-to="kit-b4-o4" data-kr="kit-b4/l/kit-b4-l3-i2&gt;kit-b4-o4" data-kr-hash="8dc963557d" data-kr-kind="arrow" data-kr-label="notifier → Telegram"><path class="link" d="M1259.2698589940196 478.5L1322.2698589940196 478.5" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M1332.2698589940196 478.5L1405.2698589940196 478.5" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-o4"><path d="M1339.3409268058851 485.5710678118655A10 10 0 1 1 1339.3409268058851 471.4289321881345" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M1339.3409268058851 485.5710678118655A10 10 0 1 1 1339.3409268058851 471.4289321881345" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="1332.2698589940196" cy="478.5" r="7.2" fill="var(--bg)"/><circle cx="1332.2698589940196" cy="478.5" r="6" fill="var(--fg)"/></g><text x="1330.2698589940196" y="462.5" font-size="10" fill="var(--fg)" text-anchor="middle">MTProto</text><text x="1330.2698589940196" y="504.5" font-size="10" fill="var(--mut)" text-anchor="middle">private message</text><g data-node="kit-b4-o5" data-outside="tgscout.db" data-x="1304.3681451127852" data-kr="kit-b4/n/kit-b4-o5" data-kr-hash="0f69813fae" data-kr-kind="box" data-kr-label="tgscout.db"><path d="M1304.3681451127852 702.0982861187655a84 8 0 0 0 168 0v40a84 8 0 0 1 -168 0z" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><ellipse cx="1388.3681451127852" cy="702.0982861187655" rx="84" ry="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="1388.3681451127852" y="723.0982861187655" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">tgscout.db</text><text x="1388.3681451127852" y="739.0982861187655" font-size="11" fill="var(--extt)" text-anchor="middle">SQLite</text></g><line x1="1156.3681451127852" y1="713.0982861187655" x2="1156.3681451127852" y2="731.0982861187655" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-l3-i3"/><g id="kit-b4-o5-line" data-from="kit-b4-l3-i3" data-to="kit-b4-o5" data-kr="kit-b4/l/kit-b4-l3-i3&gt;kit-b4-o5" data-kr-hash="b9e057d050" data-kr-kind="arrow" data-kr-label="repository → tgscout.db"><path class="link" d="M1158.3681451127852 722.0982861187655L1221.3681451127852 722.0982861187655" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M1231.3681451127852 722.0982861187655L1304.3681451127852 722.0982861187655" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-o5"><path d="M1238.4392129246507 729.1693539306309A10 10 0 1 1 1238.4392129246507 715.0272183069" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M1238.4392129246507 729.1693539306309A10 10 0 1 1 1238.4392129246507 715.0272183069" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="1231.3681451127852" cy="722.0982861187655" r="7.2" fill="var(--bg)"/><circle cx="1231.3681451127852" cy="722.0982861187655" r="6" fill="var(--fg)"/></g><text x="1229.3681451127852" y="706.0982861187655" font-size="10" fill="var(--fg)" text-anchor="middle">SQL</text><text x="1229.3681451127852" y="748.0982861187655" font-size="10" fill="var(--mut)" text-anchor="middle">read / write</text><g data-node="kit-b4-o6" data-outside="tgscout.yaml" data-x="1036.7698589940196" data-kr="kit-b4/n/kit-b4-o6" data-kr-hash="82f04f4244" data-kr-kind="box" data-kr-label="tgscout.yaml"><path d="M1036.7698589940196 823H1194.7698589940196L1204.7698589940196 833V879H1036.7698589940196z" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><path d="M1194.7698589940196 823V833H1204.7698589940196" fill="none" stroke="var(--ext)" stroke-width="1.5"/><text x="1046.7698589940196" y="847" font-size="11" fill="var(--fg)" text-anchor="start">tgscout.yaml</text><text x="1046.7698589940196" y="863" font-size="11" fill="var(--fg)" text-anchor="start">YAML</text></g><line x1="888.7698589940195" y1="842" x2="888.7698589940195" y2="860" stroke="var(--fg)" stroke-width="4" data-bar="kit-b4-l3-i4"/><g id="kit-b4-o6-line" data-from="kit-b4-l3-i4" data-to="kit-b4-o6" data-kr="kit-b4/l/kit-b4-l3-i4&gt;kit-b4-o6" data-kr-hash="cbc9432d1b" data-kr-kind="arrow" data-kr-label="config → tgscout.yaml"><path class="link" d="M890.7698589940195 851L953.7698589940196 851" fill="none" stroke="var(--fg)" stroke-width="3"/></g><path d="M963.7698589940196 851L1036.7698589940196 851" fill="none" stroke="var(--fg)" stroke-width="1.6"/><g data-joint="kit-b4-o6"><path d="M970.8409268058851 858.0710678118654A10 10 0 1 1 970.840926805885 843.9289321881345" fill="none" stroke="var(--bg)" stroke-width="5.5"/><path d="M970.8409268058851 858.0710678118654A10 10 0 1 1 970.840926805885 843.9289321881345" fill="none" stroke="var(--fg)" stroke-width="2.2"/><circle cx="963.7698589940196" cy="851" r="7.2" fill="var(--bg)"/><circle cx="963.7698589940196" cy="851" r="6" fill="var(--fg)"/></g><text x="961.7698589940196" y="835" font-size="10" fill="var(--fg)" text-anchor="middle">file</text><text x="961.7698589940196" y="877" font-size="10" fill="var(--mut)" text-anchor="middle">read at start</text><text x="794.6349294970098" y="922" font-size="11" fill="var(--mut)" text-anchor="middle" stroke="var(--bg)" stroke-width="4" paint-order="stroke">── driving adapter calls its port · ━┫ driven adapter implements its port (bar on the border) · ●( ball and socket where a line is used · dependencies point inwards · ▬▶ violation · one colour per layer · ── protocol (above) · what moves</text><text x="794.6349294970098" y="937" font-size="11" fill="var(--mut)" text-anchor="middle" stroke="var(--bg)" stroke-width="4" paint-order="stroke">(below)</text></svg></figure><p class="note">Each adapter with the outside system it reaches and the protocol; the queue is a Go channel inside the app</p></div><!--/kit-render-->
+
+<h2>Data structures</h2>
+
+<pre class="kit" data-kind="er" data-kit-hash="9f94c976ca97" hidden>title: &#34;Queue message&#34;
+caption: &#34;The collector puts one item per message; it carries the requests of its chat, so the matcher never reads the config&#34;
+entities:
+  - {id: item, at: [0, 0], name: queue item, fields: [chat_id int64, message_id int64, sent_at time.Time, text string, link string]}
+  - {id: req, at: [0, 1], name: request, fields: [id string, find string]}
+rels:
+  - {from: item, to: req, text: requests of its chat, card: [one, one-or-many]}</pre>
+<div class="kit-render" id="kit-b5"><div class="kit-anim" style="--cycle:1.8s"><style>.kit-anim{position:relative;display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-anim>*{order:2;flex:0 0 100%}
+.kit-anim>h3{order:0}
+.kit-play,.kit-speed-in{position:absolute;opacity:0;width:1px;height:1px}
+.kit-play-btn{order:1;flex:0 0 auto;display:inline-block;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;margin:4px 0;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-play-btn::before{content:"\25B6  Play"}
+.kit-play:checked+.kit-play-btn::before{content:"\25A0  Stop"}
+.kit-play:focus-visible+.kit-play-btn{outline:2px solid var(--focus)}
+.kit-speed{order:1;flex:0 0 auto;display:inline-flex;margin:4px 0;font-size:11px;color:var(--mut);user-select:none;background:linear-gradient(var(--line),var(--line)) no-repeat 50% 6px/calc(100% - 36px) 2px}
+.kit-speed label{display:inline-flex;flex-direction:column;align-items:center;gap:2px;min-width:36px;cursor:pointer}
+.kit-speed label::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--card)}
+.kit-speed-in:focus-visible~.kit-speed{outline:2px solid var(--focus);outline-offset:2px}
+.kit-dot,.kit-later{opacity:0}
+.kit-anim [data-stream] path{animation:kit-stream .8s linear infinite}
+@keyframes kit-stream{to{stroke-dashoffset:16}}
+.kit-grow{transform-box:fill-box;transform-origin:left center}
+@keyframes kit-blink{to{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.kit-anim *{animation-name:none!important}}
+@keyframes kit-b5-e1-dot{0%{offset-distance:0%;opacity:1}50%{offset-distance:100%;opacity:1}50.01%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b5-e1-dash{0%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}50%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}50.01%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b5-play:checked ~ * #kit-b5-e1-dot{animation:kit-b5-e1-dot var(--cycle) linear infinite}
+#kit-b5-play:checked ~ * #kit-b5-e1 path{animation:kit-b5-e1-dash var(--cycle) linear infinite}
+@keyframes kit-b5-n-req{0%{filter:none}25%{filter:none}50%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}75%{filter:none}100%{filter:none}}
+#kit-b5-play:checked ~ * [data-node="req"]{animation:kit-b5-n-req var(--cycle) linear infinite}
+#kit-b5-play:checked ~ * .kit-blink{animation:kit-blink .45s ease-in-out infinite alternate}
+#kit-b5-x05:checked ~ *{--cycle:3.6s}
+#kit-b5-x05:checked ~ .kit-speed label[for="kit-b5-x05"]{color:var(--fg);font-weight:600}
+#kit-b5-x05:checked ~ .kit-speed label[for="kit-b5-x05"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b5-x1:checked ~ *{--cycle:1.8s}
+#kit-b5-x1:checked ~ .kit-speed label[for="kit-b5-x1"]{color:var(--fg);font-weight:600}
+#kit-b5-x1:checked ~ .kit-speed label[for="kit-b5-x1"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b5-x15:checked ~ *{--cycle:1.2s}
+#kit-b5-x15:checked ~ .kit-speed label[for="kit-b5-x15"]{color:var(--fg);font-weight:600}
+#kit-b5-x15:checked ~ .kit-speed label[for="kit-b5-x15"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b5-x2:checked ~ *{--cycle:0.9s}
+#kit-b5-x2:checked ~ .kit-speed label[for="kit-b5-x2"]{color:var(--fg);font-weight:600}
+#kit-b5-x2:checked ~ .kit-speed label[for="kit-b5-x2"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b5-x3:checked ~ *{--cycle:0.6s}
+#kit-b5-x3:checked ~ .kit-speed label[for="kit-b5-x3"]{color:var(--fg);font-weight:600}
+#kit-b5-x3:checked ~ .kit-speed label[for="kit-b5-x3"]::before{background:var(--focus);border-color:var(--focus)}
+</style><input type="checkbox" class="kit-play" id="kit-b5-play" aria-label="play the animation"><label for="kit-b5-play" class="kit-play-btn"></label><input type="radio" class="kit-speed-in" name="kit-b5-speed" id="kit-b5-x05" aria-label="speed 0.5×"><input type="radio" class="kit-speed-in" name="kit-b5-speed" id="kit-b5-x1" checked aria-label="speed 1×"><input type="radio" class="kit-speed-in" name="kit-b5-speed" id="kit-b5-x15" aria-label="speed 1.5×"><input type="radio" class="kit-speed-in" name="kit-b5-speed" id="kit-b5-x2" aria-label="speed 2×"><input type="radio" class="kit-speed-in" name="kit-b5-speed" id="kit-b5-x3" aria-label="speed 3×"><span class="kit-speed" role="group" aria-label="playback speed"><label for="kit-b5-x05">0.5×</label><label for="kit-b5-x1">1×</label><label for="kit-b5-x15">1.5×</label><label for="kit-b5-x2">2×</label><label for="kit-b5-x3">3×</label></span><h3>Queue message</h3><style>.kit-render{position:relative}
+.kit-render svg a,.kit-render svg a *{cursor:pointer;pointer-events:all}
+.kit-render{--link-hover:.94}
+@media (prefers-color-scheme:dark){.kit-render{--link-hover:1.35}}
+.kit-render svg a:hover :is(rect,path,ellipse,circle,polygon){filter:brightness(var(--link-hover));stroke-width:2.5}
+.kit-render:has(>.kit-full){display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-render:has(>.kit-full)>*{flex:0 0 100%}
+.kit-render:has(>.kit-full)>:not(h3,.kit-full-btn,.kit-view,.kr-drow,.kit-play-btn,.kit-speed){order:2}
+.kit-render:has(>.kit-full)>.kit-view{flex:0 0 auto}
+.kit-render .kit-view{order:1;flex:0 0 auto;margin:4px 0;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);text-decoration:none;white-space:nowrap}
+.kit-render .kit-view:hover{border-color:var(--focus)}
+.kit-render .kit-view::after{content:" \2197"}
+.kit-render:has(>.kit-full)>.kr-drow{flex:1 0 auto;text-align:right}
+.kit-render:has(.kit-full) h3{margin-bottom:2px}
+.kit-render:has(.kit-full) figure{margin-top:4px}
+.kit-full{position:absolute;opacity:0;width:1px;height:1px}
+.kit-render .kit-full-btn{order:1;flex:0 0 auto;margin:4px 0 4px auto;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-full-btn::before{content:"\2922  Full screen"}
+.kit-full:focus-visible+.kit-full-btn{outline:2px solid var(--focus)}
+.kit-render:has(.kit-full:checked){position:fixed;inset:0;z-index:1000;margin:0;overflow:auto;background:var(--bg);padding:44px 16px 16px}
+.kit-render .kit-full:checked+.kit-full-btn{position:fixed;top:8px;right:16px;z-index:2}
+.kit-full:checked+.kit-full-btn::before{content:"\2715  Close"}
+.kit-render:has(.kit-full:checked) svg{width:100%!important;max-width:none;height:calc(100vh - 140px)}</style><input type="checkbox" class="kit-full" id="kit-b5-full" aria-label="show the picture on the whole screen"><label for="kit-b5-full" class="kit-full-btn"></label><figure><svg viewBox="60.000000000000014 60 519.24 174" width="519.24" style="width:778.86px" role="img" aria-label="Queue message" font-family="system-ui,-apple-system,sans-serif"><g data-node="item" data-kr="kit-b5/n/item" data-kr-hash="8e56744119" data-kr-kind="box" data-kr-label="queue item"><rect x="80.00000000000001" y="80" width="175.21" height="134" rx="6" fill="var(--card)" stroke="var(--store)" stroke-width="1.5"/><path d="M80.00000000000001 108h175.21v-22h-175.21z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="167.60500000000002" y="99" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="700">queue item</text><text x="122.00000000000001" y="123" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">chat_id int64</text><text x="122.00000000000001" y="143" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">message_id int64</text><text x="122.00000000000001" y="163" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">sent_at time.Time</text><text x="122.00000000000001" y="183" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">text string</text><text x="122.00000000000001" y="203" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">link string</text></g><g data-node="req" data-kr="kit-b5/n/req" data-kr-hash="26cdbce8f7" data-kr-kind="box" data-kr-label="request"><rect x="426.81000000000006" y="110" width="132.43" height="74" rx="6" fill="var(--card)" stroke="var(--store)" stroke-width="1.5"/><path d="M426.81000000000006 138h132.43v-22h-132.43z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="493.0250000000001" y="129" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="700">request</text><text x="468.81000000000006" y="153" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">id string</text><text x="468.81000000000006" y="173" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">find string</text></g><g id="kit-b5-e1" data-step="1" data-from="item" data-to="req" data-kr="kit-b5/l/item&gt;req" data-kr-hash="5df17e6f38" data-kr-kind="arrow" data-kr-label="queue item → request: requests of its chat"><path class="link" d="M255.21000000000004 147H426.81000000000006" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#er-one-many)" marker-start="url(#er-one)"/></g><circle class="kit-dot" id="kit-b5-e1-dot" r="4" fill="var(--fg)" style="offset-path:path('M255.21000000000004 147H426.81000000000006')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(255.21000000000004 147) rotate(0)"/><text data-step="1" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="341.01000000000005" y="139.25" font-size="11" fill="var(--fg)" text-anchor="middle">requests of its chat</text></svg></figure><p class="note">The collector puts one item per message; it carries the requests of its chat, so the matcher never reads the config</p></div></div><!--/kit-render-->
+
+<pre class="kit" data-kind="er" data-kit-hash="4d29f778de3b" hidden>title: &#34;tgscout.yaml&#34;
+caption: &#34;Settings are read root, then request, then chat; a request or a chat may override the catch-up depth&#34;
+entities:
+  - {id: root, at: [0, 1], name: tgscout.yaml, fields: [workers int]}
+  - {id: lm, at: [1, 0], name: lm_studio, fields: [url string, model string, timeout duration]}
+  - {id: catch, at: [1, 1], name: catch_up, fields: [messages int = 500, days int = 3]}
+  - {id: req, at: [1, 2], name: request, fields: [id string, find string]}
+  - {id: chat, at: [2, 2], name: chat, fields: [ref string]}
+rels:
+  - {from: root, to: lm, text: LLM settings, card: [one, one]}
+  - {from: root, to: catch, text: default, card: [one, one]}
+  - {from: root, to: req, text: requests, card: [one, one-or-many]}
+  - {from: req, to: chat, text: chats, card: [one, one-or-many]}
+  - {from: req, to: catch, text: override, card: [one, zero-or-one]}
+  - {from: chat, to: catch, text: override, card: [one, zero-or-one]}</pre>
+<div class="kit-render" id="kit-b6"><div class="kit-anim" style="--cycle:6.3s"><style>.kit-anim{position:relative;display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-anim>*{order:2;flex:0 0 100%}
+.kit-anim>h3{order:0}
+.kit-play,.kit-speed-in{position:absolute;opacity:0;width:1px;height:1px}
+.kit-play-btn{order:1;flex:0 0 auto;display:inline-block;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;margin:4px 0;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-play-btn::before{content:"\25B6  Play"}
+.kit-play:checked+.kit-play-btn::before{content:"\25A0  Stop"}
+.kit-play:focus-visible+.kit-play-btn{outline:2px solid var(--focus)}
+.kit-speed{order:1;flex:0 0 auto;display:inline-flex;margin:4px 0;font-size:11px;color:var(--mut);user-select:none;background:linear-gradient(var(--line),var(--line)) no-repeat 50% 6px/calc(100% - 36px) 2px}
+.kit-speed label{display:inline-flex;flex-direction:column;align-items:center;gap:2px;min-width:36px;cursor:pointer}
+.kit-speed label::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--card)}
+.kit-speed-in:focus-visible~.kit-speed{outline:2px solid var(--focus);outline-offset:2px}
+.kit-dot,.kit-later{opacity:0}
+.kit-anim [data-stream] path{animation:kit-stream .8s linear infinite}
+@keyframes kit-stream{to{stroke-dashoffset:16}}
+.kit-grow{transform-box:fill-box;transform-origin:left center}
+@keyframes kit-blink{to{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.kit-anim *{animation-name:none!important}}
+@keyframes kit-b6-e1-dot{0%{offset-distance:0%;opacity:1}14.29%{offset-distance:100%;opacity:1}14.3%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b6-e1-dash{0%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}14.29%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}14.3%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b6-play:checked ~ * #kit-b6-e1-dot{animation:kit-b6-e1-dot var(--cycle) linear infinite}
+#kit-b6-play:checked ~ * #kit-b6-e1 path{animation:kit-b6-e1-dash var(--cycle) linear infinite}
+@keyframes kit-b6-e2-dot{0%,14.29%{offset-distance:0%;opacity:0}14.3%{offset-distance:0%;opacity:1}28.57%{offset-distance:100%;opacity:1}28.58%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b6-e2-dash{0%,14.29%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}14.3%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}28.57%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}28.58%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b6-play:checked ~ * #kit-b6-e2-dot{animation:kit-b6-e2-dot var(--cycle) linear infinite}
+#kit-b6-play:checked ~ * #kit-b6-e2 path{animation:kit-b6-e2-dash var(--cycle) linear infinite}
+@keyframes kit-b6-e3-dot{0%,28.57%{offset-distance:0%;opacity:0}28.58%{offset-distance:0%;opacity:1}42.86%{offset-distance:100%;opacity:1}42.87%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b6-e3-dash{0%,28.57%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}28.58%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}42.86%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}42.87%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b6-play:checked ~ * #kit-b6-e3-dot{animation:kit-b6-e3-dot var(--cycle) linear infinite}
+#kit-b6-play:checked ~ * #kit-b6-e3 path{animation:kit-b6-e3-dash var(--cycle) linear infinite}
+@keyframes kit-b6-e4-dot{0%,42.86%{offset-distance:0%;opacity:0}42.87%{offset-distance:0%;opacity:1}57.14%{offset-distance:100%;opacity:1}57.15%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b6-e4-dash{0%,42.86%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}42.87%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}57.14%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}57.15%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b6-play:checked ~ * #kit-b6-e4-dot{animation:kit-b6-e4-dot var(--cycle) linear infinite}
+#kit-b6-play:checked ~ * #kit-b6-e4 path{animation:kit-b6-e4-dash var(--cycle) linear infinite}
+@keyframes kit-b6-e5-dot{0%,57.14%{offset-distance:0%;opacity:0}57.15%{offset-distance:0%;opacity:1}71.43%{offset-distance:100%;opacity:1}71.44%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b6-e5-dash{0%,57.14%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}57.15%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}71.43%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}71.44%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b6-play:checked ~ * #kit-b6-e5-dot{animation:kit-b6-e5-dot var(--cycle) linear infinite}
+#kit-b6-play:checked ~ * #kit-b6-e5 path{animation:kit-b6-e5-dash var(--cycle) linear infinite}
+@keyframes kit-b6-e6-dot{0%,71.43%{offset-distance:0%;opacity:0}71.44%{offset-distance:0%;opacity:1}85.71%{offset-distance:100%;opacity:1}85.72%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b6-e6-dash{0%,71.43%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}71.44%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}85.71%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}85.72%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b6-play:checked ~ * #kit-b6-e6-dot{animation:kit-b6-e6-dot var(--cycle) linear infinite}
+#kit-b6-play:checked ~ * #kit-b6-e6 path{animation:kit-b6-e6-dash var(--cycle) linear infinite}
+@keyframes kit-b6-n-catch{0%{filter:none}21.43%{filter:none}28.57%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}35.71%{filter:none}64.29%{filter:none}71.43%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}78.57%{filter:none}78.57%{filter:none}85.71%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}92.85%{filter:none}100%{filter:none}}
+#kit-b6-play:checked ~ * [data-node="catch"]{animation:kit-b6-n-catch var(--cycle) linear infinite}
+@keyframes kit-b6-n-chat{0%{filter:none}50%{filter:none}57.14%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}64.28%{filter:none}100%{filter:none}}
+#kit-b6-play:checked ~ * [data-node="chat"]{animation:kit-b6-n-chat var(--cycle) linear infinite}
+@keyframes kit-b6-n-lm{0%{filter:none}7.15%{filter:none}14.29%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}21.43%{filter:none}100%{filter:none}}
+#kit-b6-play:checked ~ * [data-node="lm"]{animation:kit-b6-n-lm var(--cycle) linear infinite}
+@keyframes kit-b6-n-req{0%{filter:none}35.72%{filter:none}42.86%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}50%{filter:none}100%{filter:none}}
+#kit-b6-play:checked ~ * [data-node="req"]{animation:kit-b6-n-req var(--cycle) linear infinite}
+#kit-b6-play:checked ~ * .kit-blink{animation:kit-blink .45s ease-in-out infinite alternate}
+#kit-b6-x05:checked ~ *{--cycle:12.6s}
+#kit-b6-x05:checked ~ .kit-speed label[for="kit-b6-x05"]{color:var(--fg);font-weight:600}
+#kit-b6-x05:checked ~ .kit-speed label[for="kit-b6-x05"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b6-x1:checked ~ *{--cycle:6.3s}
+#kit-b6-x1:checked ~ .kit-speed label[for="kit-b6-x1"]{color:var(--fg);font-weight:600}
+#kit-b6-x1:checked ~ .kit-speed label[for="kit-b6-x1"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b6-x15:checked ~ *{--cycle:4.2s}
+#kit-b6-x15:checked ~ .kit-speed label[for="kit-b6-x15"]{color:var(--fg);font-weight:600}
+#kit-b6-x15:checked ~ .kit-speed label[for="kit-b6-x15"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b6-x2:checked ~ *{--cycle:3.15s}
+#kit-b6-x2:checked ~ .kit-speed label[for="kit-b6-x2"]{color:var(--fg);font-weight:600}
+#kit-b6-x2:checked ~ .kit-speed label[for="kit-b6-x2"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b6-x3:checked ~ *{--cycle:2.1s}
+#kit-b6-x3:checked ~ .kit-speed label[for="kit-b6-x3"]{color:var(--fg);font-weight:600}
+#kit-b6-x3:checked ~ .kit-speed label[for="kit-b6-x3"]::before{background:var(--focus);border-color:var(--focus)}
+</style><input type="checkbox" class="kit-play" id="kit-b6-play" aria-label="play the animation"><label for="kit-b6-play" class="kit-play-btn"></label><input type="radio" class="kit-speed-in" name="kit-b6-speed" id="kit-b6-x05" aria-label="speed 0.5×"><input type="radio" class="kit-speed-in" name="kit-b6-speed" id="kit-b6-x1" checked aria-label="speed 1×"><input type="radio" class="kit-speed-in" name="kit-b6-speed" id="kit-b6-x15" aria-label="speed 1.5×"><input type="radio" class="kit-speed-in" name="kit-b6-speed" id="kit-b6-x2" aria-label="speed 2×"><input type="radio" class="kit-speed-in" name="kit-b6-speed" id="kit-b6-x3" aria-label="speed 3×"><span class="kit-speed" role="group" aria-label="playback speed"><label for="kit-b6-x05">0.5×</label><label for="kit-b6-x1">1×</label><label for="kit-b6-x15">1.5×</label><label for="kit-b6-x2">2×</label><label for="kit-b6-x3">3×</label></span><h3>tgscout.yaml</h3><style>.kit-render{position:relative}
+.kit-render svg a,.kit-render svg a *{cursor:pointer;pointer-events:all}
+.kit-render{--link-hover:.94}
+@media (prefers-color-scheme:dark){.kit-render{--link-hover:1.35}}
+.kit-render svg a:hover :is(rect,path,ellipse,circle,polygon){filter:brightness(var(--link-hover));stroke-width:2.5}
+.kit-render:has(>.kit-full){display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-render:has(>.kit-full)>*{flex:0 0 100%}
+.kit-render:has(>.kit-full)>:not(h3,.kit-full-btn,.kit-view,.kr-drow,.kit-play-btn,.kit-speed){order:2}
+.kit-render:has(>.kit-full)>.kit-view{flex:0 0 auto}
+.kit-render .kit-view{order:1;flex:0 0 auto;margin:4px 0;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);text-decoration:none;white-space:nowrap}
+.kit-render .kit-view:hover{border-color:var(--focus)}
+.kit-render .kit-view::after{content:" \2197"}
+.kit-render:has(>.kit-full)>.kr-drow{flex:1 0 auto;text-align:right}
+.kit-render:has(.kit-full) h3{margin-bottom:2px}
+.kit-render:has(.kit-full) figure{margin-top:4px}
+.kit-full{position:absolute;opacity:0;width:1px;height:1px}
+.kit-render .kit-full-btn{order:1;flex:0 0 auto;margin:4px 0 4px auto;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-full-btn::before{content:"\2922  Full screen"}
+.kit-full:focus-visible+.kit-full-btn{outline:2px solid var(--focus)}
+.kit-render:has(.kit-full:checked){position:fixed;inset:0;z-index:1000;margin:0;overflow:auto;background:var(--bg);padding:44px 16px 16px}
+.kit-render .kit-full:checked+.kit-full-btn{position:fixed;top:8px;right:16px;z-index:2}
+.kit-full:checked+.kit-full-btn::before{content:"\2715  Close"}
+.kit-render:has(.kit-full:checked) svg{width:100%!important;max-width:none;height:calc(100vh - 140px)}</style><input type="checkbox" class="kit-full" id="kit-b6-full" aria-label="show the picture on the whole screen"><label for="kit-b6-full" class="kit-full-btn"></label><figure><svg viewBox="60.000000000000014 60 705.8900000000001 402" width="705.8900000000001" style="width:1058.835px" role="img" aria-label="tgscout.yaml" font-family="system-ui,-apple-system,sans-serif"><g data-node="root" data-kr="kit-b6/n/root" data-kr-hash="5f4cef8280" data-kr-kind="box" data-kr-label="tgscout.yaml"><rect x="353.0350000000001" y="80" width="132.43" height="54" rx="6" fill="var(--card)" stroke="var(--store)" stroke-width="1.5"/><path d="M353.0350000000001 108h132.43v-22h-132.43z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="419.2500000000001" y="99" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="700">tgscout.yaml</text><text x="395.0350000000001" y="123" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">workers int</text></g><g data-node="lm" data-kr="kit-b6/n/lm" data-kr-hash="f13e21ad71" data-kr-kind="box" data-kr-label="lm_studio"><rect x="80.00000000000001" y="214" width="168.08" height="94" rx="6" fill="var(--card)" stroke="var(--store)" stroke-width="1.5"/><path d="M80.00000000000001 242h168.08v-22h-168.08z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="164.04000000000002" y="233" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="700">lm_studio</text><text x="122.00000000000001" y="257" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">url string</text><text x="122.00000000000001" y="277" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">model string</text><text x="122.00000000000001" y="297" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">timeout duration</text></g><g data-node="catch" data-kr="kit-b6/n/catch" data-kr-hash="1b5de91d42" data-kr-kind="box" data-kr-label="catch_up"><rect x="328.08000000000004" y="224" width="182.34" height="74" rx="6" fill="var(--card)" stroke="var(--store)" stroke-width="1.5"/><path d="M328.08000000000004 252h182.34v-22h-182.34z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="419.25000000000006" y="243" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="700">catch_up</text><text x="370.08000000000004" y="267" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">messages int = 500</text><text x="370.08000000000004" y="287" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">days int = 3</text></g><g data-node="req" data-kr="kit-b6/n/req" data-kr-hash="26cdbce8f7" data-kr-kind="box" data-kr-label="request"><rect x="613.4600000000002" y="224" width="132.43" height="74" rx="6" fill="var(--card)" stroke="var(--store)" stroke-width="1.5"/><path d="M613.4600000000002 252h132.43v-22h-132.43z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="679.6750000000002" y="243" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="700">request</text><text x="655.4600000000002" y="267" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">id string</text><text x="655.4600000000002" y="287" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">find string</text></g><g data-node="chat" data-kr="kit-b6/n/chat" data-kr-hash="7db3821302" data-kr-kind="box" data-kr-label="chat"><rect x="617.0250000000002" y="388" width="125.3" height="54" rx="6" fill="var(--card)" stroke="var(--store)" stroke-width="1.5"/><path d="M617.0250000000002 416h125.3v-22h-125.3z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="679.6750000000002" y="407" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="700">chat</text><text x="659.0250000000002" y="431" font-size="11.5" fill="var(--fg)" text-anchor="start" font-family="ui-monospace,Menlo,monospace">ref string</text></g><g id="kit-b6-e1" data-step="1" data-from="root" data-to="lm" data-kr="kit-b6/l/root&gt;lm" data-kr-hash="0b166cd15a" data-kr-kind="arrow" data-kr-label="tgscout.yaml → lm_studio: LLM settings"><path class="link" d="M353.0350000000001 107H164.04000000000002V214" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#er-one)" marker-start="url(#er-one)"/></g><circle class="kit-dot" id="kit-b6-e1-dot" r="4" fill="var(--fg)" style="offset-path:path('M353.0350000000001 107H164.04000000000002V214')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(353.0350000000001 107) rotate(180)"/><text data-step="1" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="258.5375" y="99.25" font-size="11" fill="var(--fg)" text-anchor="middle">LLM settings</text><g id="kit-b6-e2" data-step="2" data-from="root" data-to="catch" data-kr="kit-b6/l/root&gt;catch" data-kr-hash="791bd3a8d8" data-kr-kind="arrow" data-kr-label="tgscout.yaml → catch_up: default"><path class="link" d="M419.2500000000001 134V224" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#er-one)" marker-start="url(#er-one)"/></g><circle class="kit-dot" id="kit-b6-e2-dot" r="4" fill="var(--fg)" style="offset-path:path('M419.2500000000001 134V224')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(419.2500000000001 134) rotate(90)"/><text data-step="2" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="440.2500000000001" y="182.025" font-size="11" fill="var(--fg)" text-anchor="start">default</text><g id="kit-b6-e3" data-step="3" data-from="root" data-to="req" data-kr="kit-b6/l/root&gt;req" data-kr-hash="a1a23f4879" data-kr-kind="arrow" data-kr-label="tgscout.yaml → request: requests"><path class="link" d="M485.4650000000001 107H679.6750000000002V224" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#er-one-many)" marker-start="url(#er-one)"/></g><circle class="kit-dot" id="kit-b6-e3-dot" r="4" fill="var(--fg)" style="offset-path:path('M485.4650000000001 107H679.6750000000002V224')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(485.4650000000001 107) rotate(0)"/><text data-step="3" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="582.5700000000002" y="99.25" font-size="11" fill="var(--fg)" text-anchor="middle">requests</text><g id="kit-b6-e4" data-step="4" data-from="req" data-to="chat" data-kr="kit-b6/l/req&gt;chat" data-kr-hash="46ee2b0704" data-kr-kind="arrow" data-kr-label="request → chat: chats"><path class="link" d="M679.6750000000002 298V388" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#er-one-many)" marker-start="url(#er-one)"/></g><circle class="kit-dot" id="kit-b6-e4-dot" r="4" fill="var(--fg)" style="offset-path:path('M679.6750000000002 298V388')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(679.6750000000002 298) rotate(90)"/><text data-step="4" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="700.6750000000002" y="346.02500000000003" font-size="11" fill="var(--fg)" text-anchor="start">chats</text><g id="kit-b6-e5" data-step="5" data-from="req" data-to="catch" data-kr="kit-b6/l/req&gt;catch" data-kr-hash="d6fd98b9cd" data-kr-kind="arrow" data-kr-label="request → catch_up: override"><path class="link" d="M613.4600000000002 261H510.4200000000001" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#er-zero-one)" marker-start="url(#er-one)"/></g><circle class="kit-dot" id="kit-b6-e5-dot" r="4" fill="var(--fg)" style="offset-path:path('M613.4600000000002 261H510.4200000000001')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(613.4600000000002 261) rotate(180)"/><text data-step="5" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="561.94" y="253.25" font-size="11" fill="var(--fg)" text-anchor="middle">override</text><g id="kit-b6-e6" data-step="6" data-from="chat" data-to="catch" data-kr="kit-b6/l/chat&gt;catch" data-kr-hash="722c582e5d" data-kr-kind="arrow" data-kr-label="chat → catch_up: override"><path class="link" d="M617.0250000000002 415H419.25000000000006V298" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#er-zero-one)" marker-start="url(#er-one)"/></g><circle class="kit-dot" id="kit-b6-e6-dot" r="4" fill="var(--fg)" style="offset-path:path('M617.0250000000002 415H419.25000000000006V298')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(617.0250000000002 415) rotate(180)"/><text data-step="6" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="518.1375000000002" y="407.25" font-size="11" fill="var(--fg)" text-anchor="middle">override</text></svg></figure><p class="note">Settings are read root, then request, then chat; a request or a chat may override the catch-up depth</p></div></div><!--/kit-render-->
+
+<h2>Agreed so far</h2>
+<ul>
+<li data-kr="t/agreed-so-far/li1" data-kr-hash="f49322120d" data-kr-kind="text" data-kr-label="At peak, messages wait in an in-memory queue (a Go channel) before the matcher.">At peak, messages wait in an in-memory queue (a Go channel) before the matcher.</li>
+<li data-kr="t/agreed-so-far/li2" data-kr-hash="7eee50f5f6" data-kr-kind="text" data-kr-label="The cursor is the last processed message ID of each chat, kept in SQLite.">The cursor is the last processed message ID of each chat, kept in SQLite.</li>
+<li data-kr="t/agreed-so-far/li3" data-kr-hash="4735493f89" data-kr-kind="text" data-kr-label="After a restart, catch-up rereads from Telegram from the cursor and skips IDs a…">After a restart, catch-up rereads from Telegram from the cursor and skips IDs already in SQLite: nothing is lost.</li>
+</ul>
+<h2>Deeper</h2>
+<ul>
+<li data-kr="t/deeper/li1" data-kr-hash="921f669a59" data-kr-kind="text" data-kr-label="Message path — how one message goes through the parts"><a href="../flows/message-path.html">Message path</a> — how one message goes through the parts</li>
+<li data-kr="t/deeper/li2" data-kr-hash="aa059eb22a" data-kr-kind="text" data-kr-label="Start — what tgscout does when the owner runs it"><a href="../flows/start.html">Start</a> — what tgscout does when the owner runs it</li>
+<li data-kr="t/deeper/li3" data-kr-hash="ad56923c54" data-kr-kind="text" data-kr-label="Catch-up — how tgscout reads the history it missed"><a href="../flows/catch-up.html">Catch-up</a> — how tgscout reads the history it missed</li>
+</ul>
+</main>
+<template id="kit-review-state">{"pages":{"architecture/tgscout.html":[]},"counts":{"architecture/context.html":{"total":18,"reviewed":0,"edited":0},"architecture/overview.html":{"total":19,"reviewed":0,"edited":0},"architecture/quality-attributes.html":{"total":51,"reviewed":0,"edited":0},"architecture/store.html":{"total":8,"reviewed":0,"edited":0},"architecture/tgscout.html":{"total":91,"reviewed":0,"edited":0},"flows/catch-up.html":{"total":22,"reviewed":0,"edited":0},"flows/message-path.html":{"total":49,"reviewed":0,"edited":0},"flows/start.html":{"total":23,"reviewed":0,"edited":0},"index.html":{"total":16,"reviewed":0,"edited":0}}}</template>
+<script id="kit-review-script">(() => {
+  "use strict";
+  const meta = document.querySelector('meta[name="kit-review"]');
+  if (!meta) return;
+  const path = meta.content;
+  const kinds = { box: "Diagram boxes", arrow: "Diagram arrows", text: "Paragraphs and list items", row: "Table rows" };
+  const svgNS = "http://www.w3.org/2000/svg";
+  const items = [...document.querySelectorAll("[data-kr]")].map((el) => ({
+    el, key: el.dataset.kr, hash: el.dataset.krHash, kind: el.dataset.krKind,
+    label: el.dataset.krLabel || el.dataset.kr, block: el.closest(".kit-render"),
+  }));
+  let stored = new Map();
+  let live = false;
+  let pageCounts = {};
+  let writing = Promise.resolve();
+
+  const read = (key) => { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } };
+  const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage is optional */ } };
+  const setStored = (pairs) => { stored = new Map((pairs || []).filter((p) => Array.isArray(p) && p.length === 2)); };
+  const storedHashes = () => new Set(stored.values());
+
+  // The same rule as reviewState.status in Go: reviewed as it is now (even under another key), edited, or todo.
+  const status = (it, hashes) => {
+    if (stored.get(it.key) === it.hash || hashes.has(it.hash)) return "ok";
+    return stored.has(it.key) ? "chg" : "todo";
+  };
+
+  const counts = () => {
+    const hashes = storedHashes();
+    const out = { total: items.length, reviewed: 0, changed: 0, byKind: {} };
+    for (const it of items) {
+      it.state = status(it, hashes);
+      const k = (out.byKind[it.kind] = out.byKind[it.kind] || { total: 0, reviewed: 0 });
+      k.total++;
+      if (it.state === "ok") { out.reviewed++; k.reviewed++; }
+      if (it.state === "chg") out.changed++;
+    }
+    return out;
+  };
+
+  // The checks live in the repository's checks file: only the kit's local server takes a write.
+  const depth = path.split("/").length - 1;
+  const root = new URL("../".repeat(depth) || "./", location.href);
+  const endpoint = new URL(".kit-review", root);
+  const apply = (state) => {
+    if (!state) return;
+    setStored((state.pages || {})[path]);
+    pageCounts = state.counts || {};
+  };
+  // A template's text sits in its content, not its own children; the kit escapes <, > and & in it.
+  try { apply(JSON.parse((document.getElementById("kit-review-state") || {}).innerHTML || "null")); } catch (e) { /* no baked state */ }
+
+  const save = () => {
+    counts();
+    const pairs = [];
+    for (const it of items) {
+      if (it.state === "ok") pairs.push([it.key, it.hash]);
+      if (it.state === "chg") pairs.push([it.key, stored.get(it.key)]);
+    }
+    // Writes go one after another, and an answer only refreshes the other pages' counts, so a later check
+    // made while an earlier write is on its way is never undone.
+    const body = JSON.stringify({ path, items: pairs });
+    writing = writing
+      .then(() => fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body }))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((state) => { if (state) { pageCounts = state.counts || {}; badges(); } })
+      .catch(() => {});
+  };
+
+  const toggle = (it) => {
+    if (!live) return;
+    if (it.state === "ok") {
+      stored.delete(it.key);
+      for (const [key, hash] of [...stored]) if (hash === it.hash) stored.delete(key);
+    } else {
+      stored.set(it.key, it.hash);
+    }
+    save();
+    render();
+  };
+
+  const el = (tag, cls, text) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  };
+  const svgEl = (tag, attrs) => {
+    const node = document.createElementNS(svgNS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
+    return node;
+  };
+  const onActivate = (node, fn) => {
+    node.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
+    node.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); }
+    });
+  };
+
+  // Bar, drawer and per-item controls.
+  document.body.classList.add("kr");
+  const bar = el("div", "kr-bar");
+  bar.setAttribute("role", "region");
+  bar.setAttribute("aria-label", "Review progress");
+  const pageCheck = el("span", "kr-pagecheck");
+  pageCheck.setAttribute("aria-hidden", "true");
+  const countText = el("span", "kr-count");
+  const prog = el("span", "kr-prog");
+  const progFill = el("i");
+  prog.appendChild(progFill);
+  const chgChip = el("span", "kr-chip");
+  const onlyBtn = el("button", "kr-tbtn", "Only unreviewed");
+  const hideBtn = el("button", "kr-tbtn", "Hide checks");
+  const listBtn = el("button", "kr-tbtn", "Still to review");
+  for (const b of [onlyBtn, hideBtn, listBtn]) b.type = "button";
+  const note = el("span", "kr-note", "Read-only — open with kit report serve to check");
+  bar.append(pageCheck, countText, prog, chgChip, note, onlyBtn, hideBtn, listBtn);
+  const drawer = el("aside", "kr-drawer");
+  drawer.hidden = true;
+  document.body.insertBefore(drawer, document.body.firstChild);
+  document.body.insertBefore(bar, document.body.firstChild);
+  const pref = read("kit-review-view") || {};
+  const applyView = () => {
+    document.body.classList.toggle("kr-only", !!pref.only);
+    document.body.classList.toggle("kr-off", !!pref.off);
+    onlyBtn.setAttribute("aria-pressed", String(!!pref.only));
+    hideBtn.setAttribute("aria-pressed", String(!!pref.off));
+  };
+  onlyBtn.addEventListener("click", () => { pref.only = !pref.only; write("kit-review-view", pref); applyView(); });
+  hideBtn.addEventListener("click", () => { pref.off = !pref.off; write("kit-review-view", pref); applyView(); });
+  listBtn.addEventListener("click", () => { drawer.hidden = !drawer.hidden; listBtn.setAttribute("aria-pressed", String(!drawer.hidden)); });
+  applyView();
+
+  for (const it of items) {
+    if (it.kind === "text" || it.kind === "row") {
+      const host = it.kind === "row" ? it.el.querySelector("td,th") || it.el : it.el;
+      host.classList.add("kr-host");
+      it.el.classList.add("kr-item");
+      const btn = el("button", "kr-btn");
+      btn.type = "button";
+      it.btn = btn;
+      onActivate(btn, () => toggle(it));
+      host.insertBefore(btn, host.firstChild);
+      continue;
+    }
+    const svg = it.el.ownerSVGElement;
+    if (!svg) continue;
+    let layer = svg.querySelector(":scope > g.kr-ov");
+    if (!layer) { layer = svgEl("g", { class: "kr-ov" }); svg.appendChild(layer); }
+    // Rings sit under the drawing, so arrow heads stay on top of a checked box's ring.
+    let rings = svg.querySelector(":scope > g.kr-rings");
+    if (!rings) { rings = svgEl("g", { class: "kr-rings" }); svg.insertBefore(rings, svg.firstChild); }
+    it.el.classList.add("kr-item");
+    let box;
+    try { box = it.el.getBBox(); } catch (e) { continue; }
+    if (it.kind === "box") {
+      it.ring = svgEl("rect", { class: "kr-ring", x: box.x - 4, y: box.y - 4, width: box.width + 8, height: box.height + 8, rx: 10 });
+      rings.appendChild(it.ring);
+      it.btn = svgEl("g", { class: "kr-svgbtn", role: "button", tabindex: "0", transform: `translate(${box.x + box.width + 2} ${box.y - 2})` });
+      it.btn.append(svgEl("circle", { r: 8 }), svgEl("path", { d: "M-3.5 0.2l2.4 2.4l4.6-4.8" }));
+    } else {
+      let x = box.x + box.width / 2, y = box.y + box.height / 2;
+      const step = it.el.getAttribute("data-step");
+      const label = step && svg.querySelector(`text[data-step="${step}"]`);
+      if (label) {
+        try { const lb = label.getBBox(); x = lb.x - 9; y = lb.y + lb.height / 2; } catch (e) { /* keep the middle */ }
+      } else {
+        const line = it.el.querySelector("path");
+        try { const p = line.getPointAtLength(line.getTotalLength() / 2); x = p.x; y = p.y; } catch (e) { /* keep the middle */ }
+      }
+      it.btn = svgEl("g", { class: "kr-svgbtn kr-dot", role: "button", tabindex: "0", transform: `translate(${x} ${y})` });
+      it.btn.append(svgEl("circle", { r: 6 }), svgEl("path", { d: "M-2.6 0.1l1.8 1.8l3.4-3.6" }));
+    }
+    onActivate(it.btn, () => toggle(it));
+    layer.appendChild(it.btn);
+  }
+
+  const blocks = new Map();
+  for (const it of items) {
+    if (!it.block) continue;
+    if (!blocks.has(it.block)) {
+      const badge = el("span", "kr-dbadge");
+      const row = el("div", "kr-drow");
+      row.appendChild(badge);
+      it.block.classList.add("kr-block");
+      // The badge joins the toolbar right above the diagram, just left of «Full screen».
+      const fig = it.block.querySelector(".kit-full") || it.block.querySelector("figure");
+      if (fig) fig.parentNode.insertBefore(row, fig);
+      else it.block.insertBefore(row, it.block.firstChild);
+      blocks.set(it.block, { badge, items: [] });
+    }
+    blocks.get(it.block).items.push(it);
+  }
+
+  const flash = (it) => {
+    it.el.scrollIntoView({ block: "center", behavior: "smooth" });
+    it.el.classList.add("kr-flash");
+    setTimeout(() => it.el.classList.remove("kr-flash"), 1600);
+  };
+
+  const renderDrawer = (c) => {
+    drawer.replaceChildren();
+    drawer.append(el("h2", "kr-dh", "Review progress"));
+    for (const [kind, name] of Object.entries(kinds)) {
+      const k = c.byKind[kind];
+      if (!k) continue;
+      const row = el("div", "kr-krow");
+      const fill = el("i");
+      fill.style.width = (100 * k.reviewed / k.total) + "%";
+      const meter = el("span", "kr-prog");
+      meter.appendChild(fill);
+      row.append(el("span", "kr-kname", name), meter, el("span", "kr-knum", `${k.reviewed} / ${k.total}`));
+      drawer.appendChild(row);
+    }
+    const left = items.filter((it) => it.state !== "ok").sort((a, b) => (a.state === "chg" ? 0 : 1) - (b.state === "chg" ? 0 : 1));
+    drawer.append(el("h2", "kr-dh", left.length ? `Still to review — ${left.length}` : "Everything on this page is reviewed"));
+    const list = el("ol", "kr-left");
+    for (const it of left) {
+      const li = el("li");
+      const b = el("button", "kr-lbtn " + (it.state === "chg" ? "kr-chg" : "kr-todo"));
+      b.type = "button";
+      b.append(el("span", "kr-lkind", it.state === "chg" ? "edited" : it.kind), el("span", "kr-ltext", it.label));
+      b.addEventListener("click", () => flash(it));
+      li.appendChild(b);
+      list.appendChild(li);
+    }
+    drawer.appendChild(list);
+  };
+
+  const render = () => {
+    const c = counts();
+    for (const it of items) {
+      for (const node of [it.el, it.ring, it.btn]) {
+        if (!node) continue;
+        node.classList.remove("kr-ok", "kr-chg", "kr-todo");
+        node.classList.add("kr-" + it.state);
+      }
+      if (it.btn) {
+        const verb = !live ? (it.state === "ok" ? "Reviewed" : "Not reviewed") : it.state === "ok" ? "Unmark" : "Mark reviewed";
+        it.btn.setAttribute("aria-label", `${verb}: ${it.label}`);
+        it.btn.setAttribute("title", it.state === "chg" ? "Edited after review" : verb);
+        it.btn.setAttribute("aria-disabled", String(!live));
+        if ("disabled" in it.btn) it.btn.disabled = !live;
+      }
+    }
+    for (const { badge, items: own } of blocks.values()) {
+      const done = own.filter((it) => it.state === "ok").length;
+      const all = done === own.length;
+      badge.className = "kr-dbadge" + (all ? " kr-done" : own.some((it) => it.state === "chg") ? " kr-chgd" : "");
+      badge.textContent = all ? "✓ Diagram reviewed" : `${done} / ${own.length} reviewed`;
+    }
+    const all = c.total > 0 && c.reviewed === c.total;
+    pageCheck.className = "kr-pagecheck" + (all ? " kr-done" : "");
+    pageCheck.textContent = all ? "✓" : "";
+    countText.textContent = all ? `Page reviewed · ${c.total} items` : `Reviewed ${c.reviewed} / ${c.total}`;
+    progFill.style.width = (c.total ? 100 * c.reviewed / c.total : 0) + "%";
+    chgChip.textContent = `${c.changed} edited`;
+    chgChip.hidden = c.changed === 0;
+    note.hidden = live;
+    document.body.classList.toggle("kr-ro", !live);
+    renderDrawer(c);
+    return c;
+  };
+
+  // A badge with the state of every review page this page links to.
+  const targetOf = (a) => {
+    try {
+      const u = new URL(a.getAttribute("href"), location.href);
+      if (u.origin !== root.origin || !u.pathname.startsWith(root.pathname)) return null;
+      const p = decodeURIComponent(u.pathname.slice(root.pathname.length));
+      return p.endsWith(".html") && p !== path ? p : null;
+    } catch (e) { return null; }
+  };
+  const badges = () => {
+    for (const a of document.querySelectorAll("main [data-kr] a[href]")) {
+      const target = targetOf(a);
+      if (!target) continue;
+      const s = pageCounts[target];
+      let badge = a.nextElementSibling && a.nextElementSibling.classList.contains("kr-lbadge") ? a.nextElementSibling : null;
+      if (!badge) { badge = el("span", "kr-lbadge"); a.after(badge); }
+      if (!s || !s.total) { badge.className = "kr-lbadge kr-todo"; badge.textContent = "not reviewed"; continue; }
+      const left = s.total - s.reviewed;
+      badge.className = "kr-lbadge " + (left === 0 ? "kr-ok" : s.edited ? "kr-chg" : "kr-todo");
+      badge.textContent = left === 0 ? "✓ reviewed" : `${left} left` + (s.edited ? `, ${s.edited} edited` : "");
+    }
+  };
+
+  render();
+  badges();
+
+  fetch(endpoint, { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((state) => {
+      if (!state || typeof state.pages !== "object") return;
+      live = true;
+      apply(state);
+      render();
+      badges();
+    })
+    .catch(() => { /* read-only away from kit report serve */ });
+})();
+</script>
+</body></html>

@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en"><head><meta name="kit-review" content="architecture/overview.html"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L2 Container — tgscout</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#6b6a66;--card:#fff;--line:#e4e1da;
+--new:#1f8a55;--newbg:#e3f3ea;--newt:#1f7a4d;--chg:#c08000;--chgbg:#fbf0d9;--chgt:#8a5a00;
+--rem:#c0392b;--rembg:#fbe4e1;--remt:#a3261f;--err:#c0392b;--errbg:#fbe4e1;--errt:#a3261f;
+--old:#8f8d86;--oldbg:#f3f2ee;--oldt:#6b6a66;--focus:#2f5fb3;--focusbg:#e3ebfa;--focust:#2f5fb3;
+--client:#2563eb;--clientbg:#dbeafe;--clientt:#1d4ed8;--svc:#059669;--svcbg:#d1fae5;--svct:#047857;
+--store:#d97706;--storebg:#fef3c7;--storet:#b45309;--ext:#7c3aed;--extbg:#ede9fe;--extt:#6d28d9}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--card:#1f1f1d;--line:#34332f;
+--new:#4fbf85;--newbg:#17332a;--newt:#6fd19c;--chg:#e0a93a;--chgbg:#3a2e14;--chgt:#f0c46a;
+--rem:#e8645a;--rembg:#3d1d1a;--remt:#ff8a80;--err:#e8645a;--errbg:#3d1d1a;--errt:#ff8a80;
+--old:#6c6b66;--oldbg:#24241f;--oldt:#a09e98;--focus:#8fb3ff;--focusbg:#1c2740;--focust:#8fb3ff;
+--client:#6ea2ff;--clientbg:#172a4a;--clientt:#9cc0ff;--svc:#4fbf85;--svcbg:#17332a;--svct:#6fd19c;
+--store:#e0a93a;--storebg:#3a2e14;--storet:#f0c46a;--ext:#a78bfa;--extbg:#2a1f4a;--extt:#c4b5fd}}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1800px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:30px 0 8px}h3{font-size:16px;margin:20px 0 6px}
+.sub{color:var(--mut);font-size:14px;font-weight:400}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:10px 0}
+.verdict{font-size:22px;font-weight:700;border-width:2px}
+.v-new{border-color:var(--new);background:var(--newbg)}.v-rem,.v-err{border-color:var(--rem);background:var(--rembg)}
+.v-chg{border-color:var(--chg);background:var(--chgbg)}.v-focus{border-color:var(--focus);background:var(--focusbg)}
+.v-old{border-color:var(--old);background:var(--oldbg)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.pair{grid-template-columns:1fr}}
+figure{margin:10px 0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto}
+figcaption{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.pair figure:last-child figcaption{color:var(--newt)}
+.note{margin:6px 2px 0;color:var(--mut);font-size:14px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+.legend span::before{content:"";display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:6px;vertical-align:-2px;border:1.5px solid var(--k);background:var(--kb)}
+.l-new{--k:var(--new);--kb:var(--newbg)}.l-chg{--k:var(--chg);--kb:var(--chgbg)}.l-rem{--k:var(--rem);--kb:var(--rembg)}
+.l-old{--k:var(--old);--kb:var(--oldbg)}.l-focus{--k:var(--focus);--kb:var(--focusbg)}.l-err{--k:var(--err);--kb:var(--errbg)}
+.l-client{--k:var(--client);--kb:var(--clientbg)}.l-svc{--k:var(--svc);--kb:var(--svcbg)}
+.l-store{--k:var(--store);--kb:var(--storebg)}.l-ext{--k:var(--ext);--kb:var(--extbg)}
+.legend span.l-line::before{content:none}.l-line svg{vertical-align:middle;margin-right:6px}
+.verdict .chips{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:13px}
+.c-new{color:var(--newt);background:var(--newbg)}.c-chg{color:var(--chgt);background:var(--chgbg)}.c-rem{color:var(--remt);background:var(--rembg)}.c-old{color:var(--oldt);background:var(--oldbg)}.c-focus{color:var(--focust);background:var(--focusbg)}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:14px}
+code{font:14px ui-monospace,Menlo,monospace;background:color-mix(in srgb,var(--line) 50%,transparent);padding:1px 5px;border-radius:4px}
+.chip{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.ok{color:var(--newt);background:var(--newbg)}.warn{color:var(--chgt);background:var(--chgbg)}.fail{color:var(--remt);background:var(--rembg)}
+pre{font:13px/1.4 ui-monospace,Menlo,monospace;background:color-mix(in srgb,var(--line) 40%,transparent);padding:10px 12px;border-radius:8px;overflow:auto}
+.kit-render svg{max-width:100%;height:auto}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px}
+a{color:var(--focust)}
+</style><style id="kit-review-style">
+body.kr{--kr-ok:var(--new,#1f7a4d);--kr-okbg:var(--newbg,#e3f3ea);--kr-okt:var(--newt,#1f7a4d);--kr-chg:var(--chg,#9a5b00);--kr-chgbg:var(--chgbg,#fbf0d9);--kr-chgt:var(--chgt,#8a5a00);--kr-line:var(--line,#e4e1da);--kr-mut:var(--mut,#6b6a66);--kr-card:var(--card,#fff);--kr-fg:var(--fg,#1d1d1b);--kr-focus:var(--focus,#2f5fb3)}
+body.kr main{padding-left:34px}
+main{max-width:1800px}
+.kr-bar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;max-width:1834px;margin:-24px auto 14px;padding:10px 14px;background:color-mix(in srgb,var(--kr-card) 92%,transparent);backdrop-filter:blur(6px);border:1px solid var(--kr-line);border-top:0;border-radius:0 0 12px 12px;font-size:14px;box-sizing:border-box}
+.kr-pagecheck{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:2px dashed var(--kr-mut);font-weight:700;font-size:13px;color:#fff;box-sizing:border-box}
+.kr-pagecheck.kr-done{border:0;background:var(--kr-ok)}
+.kr-count{font-weight:600;font-variant-numeric:tabular-nums}
+.kr-prog{display:inline-block;flex:0 1 160px;min-width:60px;height:6px;border-radius:3px;background:var(--kr-line);overflow:hidden}
+.kr-prog i{display:block;height:100%;background:var(--kr-ok);transition:width .25s}
+.kr-chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;color:var(--kr-chgt);background:var(--kr-chgbg)}
+.kr-tbtn{font:inherit;font-size:13px;color:var(--kr-fg);background:var(--kr-card);border:1px solid var(--kr-line);border-radius:14px;padding:3px 11px;cursor:pointer}
+.kr-tbtn[aria-pressed="true"]{border-color:var(--kr-focus);color:var(--kr-focus)}
+.kr-tbtn:first-of-type{margin-left:auto}
+.kr-drawer{position:fixed;z-index:40;top:64px;right:max(16px,env(safe-area-inset-right,0px));width:min(360px,calc(100vw - 32px));max-height:calc(100vh - 88px);overflow:auto;background:var(--kr-card);border:1px solid var(--kr-line);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.18);font-size:14px;box-sizing:border-box}
+.kr-dh{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--kr-mut);margin:6px 0 8px}
+.kr-krow{display:grid;grid-template-columns:1fr 80px auto;align-items:center;gap:8px;margin:4px 0}
+.kr-knum{font-variant-numeric:tabular-nums;color:var(--kr-mut);font-size:13px}
+.kr-left{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.kr-lbtn{display:flex;gap:8px;width:100%;text-align:left;font:inherit;font-size:13px;color:var(--kr-fg);background:none;border:1px solid var(--kr-line);border-radius:8px;padding:5px 8px;cursor:pointer}
+.kr-lbtn.kr-chg{border-color:var(--kr-chg);background:var(--kr-chgbg)}
+.kr-lkind{flex:0 0 52px;color:var(--kr-mut);font-size:12px}
+.kr-lbtn.kr-chg .kr-lkind{color:var(--kr-chgt);font-weight:600}
+.kr-ltext{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kr-host{position:relative}
+.kr-btn{position:absolute;left:-30px;top:.15em;width:20px;height:20px;padding:0;border-radius:50%;border:1.5px dashed var(--kr-mut);background:var(--kr-card);cursor:pointer;display:grid;place-items:center}
+li>.kr-btn{left:-52px}
+td>.kr-btn,th>.kr-btn{left:-34px;top:.55em}
+.kr-btn::after{content:"";width:8px;height:4px;border:solid transparent;border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg)}
+.kr-btn.kr-ok{border:0;background:var(--kr-ok)}
+.kr-btn.kr-ok::after{border-color:#fff}
+.kr-btn.kr-chg{border:1.5px solid var(--kr-chg);background:var(--kr-chgbg)}
+.kr-btn.kr-chg::after{border-color:var(--kr-chg)}
+.kr-btn:focus-visible,.kr-svgbtn:focus-visible,.kr-tbtn:focus-visible,.kr-lbtn:focus-visible{outline:2px solid var(--kr-focus);outline-offset:2px}
+p.kr-chg,li.kr-chg,tr.kr-chg>td{background:var(--kr-chgbg)}
+p.kr-chg,li.kr-chg{border-radius:6px;box-shadow:0 0 0 4px var(--kr-chgbg)}
+p.kr-chg::after,li.kr-chg::after{content:" Edited after your review";display:block;font-size:12px;font-weight:600;color:var(--kr-chgt)}
+.kr-block{position:relative}
+.kr-drow{flex:1 0 100%;display:flex;justify-content:flex-end;margin:4px 4px -4px}
+.kit-render .kr-drow{order:1;flex:1 0 auto;margin:4px 0}
+.kr-dbadge{font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;color:var(--kr-mut);background:var(--kr-card);border:1px dashed var(--kr-mut)}
+.kr-dbadge.kr-chgd{color:var(--kr-chgt);border:1px solid var(--kr-chg);background:var(--kr-chgbg)}
+.kr-dbadge.kr-done{color:#fff;background:var(--kr-ok);border:1px solid var(--kr-ok)}
+.kr-block svg{overflow:visible}
+.kr-ring{fill:none;stroke-width:1.6;pointer-events:none}
+.kr-ring.kr-todo{stroke:var(--kr-mut);stroke-dasharray:4 3;opacity:.55}
+.kr-ring.kr-ok{stroke:none}
+.kr-ring.kr-chg{stroke:var(--kr-chg);stroke-width:2.2}
+.kr-svgbtn{cursor:pointer}
+.kr-svgbtn circle{fill:var(--kr-card);stroke:var(--kr-mut);stroke-width:1.4;stroke-dasharray:3 2}
+.kr-svgbtn path{fill:none;stroke:transparent;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kr-svgbtn.kr-ok circle{fill:var(--kr-ok);stroke:var(--kr-ok);stroke-dasharray:none}
+.kr-svgbtn.kr-ok path{stroke:#fff}
+.kr-svgbtn.kr-chg circle{fill:var(--kr-chgbg);stroke:var(--kr-chg);stroke-dasharray:none}
+.kr-svgbtn.kr-chg path{stroke:var(--kr-chg)}
+g.kr-item.kr-chg>path.link{stroke:var(--kr-chg)}
+.kr-lbadge{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;padding:0 7px;border-radius:99px;vertical-align:1px;color:var(--kr-mut);border:1px dashed var(--kr-mut)}
+.kr-lbadge.kr-ok{color:var(--kr-okt);background:var(--kr-okbg);border:1px solid transparent}
+.kr-lbadge.kr-chg{color:var(--kr-chgt);background:var(--kr-chgbg);border:1px solid transparent}
+.kr-only .kr-item.kr-ok,.kr-only g.kr-ov .kr-ok{opacity:.3}
+.kr-off .kr-btn,.kr-off .kr-ov,.kr-off .kr-rings,.kr-off .kr-drow,.kr-off .kr-lbadge{display:none}
+.kr-off p.kr-chg::after,.kr-off li.kr-chg::after{display:none}
+.kr-flash{animation:kr-flash 1.6s ease-out}
+@keyframes kr-flash{0%,40%{outline:3px solid var(--kr-focus);outline-offset:4px}100%{outline:3px solid transparent;outline-offset:4px}}
+@media (max-width:600px){body.kr main{padding-left:30px}.kr-tbtn:first-of-type{margin-left:0}}
+@media (prefers-reduced-motion:reduce){.kr-flash{animation:none}.kr-prog i{transition:none}}
+.kr-note{font-size:12px;color:var(--kr-mut)}
+body.kr-ro .kr-btn,body.kr-ro .kr-svgbtn{cursor:default}
+</style>
+</head>
+<body><svg id="kit-defs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs><marker id="m-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--fg)"/></marker><marker id="open-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--fg)" stroke-width="1.5"/></marker><marker id="tri-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--fg)" stroke-width="1.2"/></marker><marker id="dia-fg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--fg)" stroke-width="1.2"/></marker><marker id="diaf-fg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--fg)"/></marker><marker id="circle-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="m-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--old)"/></marker><marker id="open-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--old)" stroke-width="1.5"/></marker><marker id="tri-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--old)" stroke-width="1.2"/></marker><marker id="dia-old" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--old)" stroke-width="1.2"/></marker><marker id="diaf-old" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--old)"/></marker><marker id="circle-old" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--old)" stroke-width="1.3"/></marker><marker id="m-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--new)"/></marker><marker id="open-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--new)" stroke-width="1.5"/></marker><marker id="tri-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--new)" stroke-width="1.2"/></marker><marker id="dia-new" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--new)" stroke-width="1.2"/></marker><marker id="diaf-new" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--new)"/></marker><marker id="circle-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--new)" stroke-width="1.3"/></marker><marker id="m-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--chg)"/></marker><marker id="open-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--chg)" stroke-width="1.5"/></marker><marker id="tri-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--chg)" stroke-width="1.2"/></marker><marker id="dia-chg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--chg)" stroke-width="1.2"/></marker><marker id="diaf-chg" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--chg)"/></marker><marker id="circle-chg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--chg)" stroke-width="1.3"/></marker><marker id="m-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--rem)"/></marker><marker id="open-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--rem)" stroke-width="1.5"/></marker><marker id="tri-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--rem)" stroke-width="1.2"/></marker><marker id="dia-rem" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--rem)" stroke-width="1.2"/></marker><marker id="diaf-rem" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--rem)"/></marker><marker id="circle-rem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--rem)" stroke-width="1.3"/></marker><marker id="m-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--err)"/></marker><marker id="open-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--err)" stroke-width="1.5"/></marker><marker id="tri-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--err)" stroke-width="1.2"/></marker><marker id="dia-err" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--err)" stroke-width="1.2"/></marker><marker id="diaf-err" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--err)"/></marker><marker id="circle-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--err)" stroke-width="1.3"/></marker><marker id="m-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--focus)"/></marker><marker id="open-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--focus)" stroke-width="1.5"/></marker><marker id="tri-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--focus)" stroke-width="1.2"/></marker><marker id="dia-focus" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--focus)" stroke-width="1.2"/></marker><marker id="diaf-focus" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--focus)"/></marker><marker id="circle-focus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--focus)" stroke-width="1.3"/></marker><marker id="m-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--client)"/></marker><marker id="open-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--client)" stroke-width="1.5"/></marker><marker id="tri-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--client)" stroke-width="1.2"/></marker><marker id="dia-client" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--client)" stroke-width="1.2"/></marker><marker id="diaf-client" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--client)"/></marker><marker id="circle-client" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--client)" stroke-width="1.3"/></marker><marker id="m-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--svc)"/></marker><marker id="open-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--svc)" stroke-width="1.5"/></marker><marker id="tri-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--svc)" stroke-width="1.2"/></marker><marker id="dia-svc" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--svc)" stroke-width="1.2"/></marker><marker id="diaf-svc" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--svc)"/></marker><marker id="circle-svc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--svc)" stroke-width="1.3"/></marker><marker id="m-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--store)"/></marker><marker id="open-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--store)" stroke-width="1.5"/></marker><marker id="tri-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--store)" stroke-width="1.2"/></marker><marker id="dia-store" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--store)" stroke-width="1.2"/></marker><marker id="diaf-store" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--store)"/></marker><marker id="circle-store" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--store)" stroke-width="1.3"/></marker><marker id="m-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ext)"/></marker><marker id="open-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="var(--ext)" stroke-width="1.5"/></marker><marker id="tri-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--card)" stroke="var(--ext)" stroke-width="1.2"/></marker><marker id="dia-ext" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--card)" stroke="var(--ext)" stroke-width="1.2"/></marker><marker id="diaf-ext" viewBox="0 0 20 10" refX="19" refY="5" markerWidth="16" markerHeight="8" orient="auto-start-reverse"><path d="M0 5L10 0L20 5L10 10z" fill="var(--ext)"/></marker><marker id="circle-ext" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><circle cx="5" cy="5" r="3.5" fill="var(--card)" stroke="var(--ext)" stroke-width="1.3"/></marker><marker id="er-one" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M14 2V18M10 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="er-zero-one" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M14 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/><circle cx="7" cy="10" r="3.5" fill="none" stroke="var(--fg)" stroke-width="1.3" style="fill:var(--card)"/></marker><marker id="er-one-many" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M20 10L10 2M20 10L10 18M20 10H0M8 2V18" fill="none" stroke="var(--fg)" stroke-width="1.3"/></marker><marker id="er-zero-many" viewBox="0 0 20 20" refX="20" refY="10" markerWidth="20" markerHeight="20" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M20 10L12 2M20 10L12 18M20 10H0" fill="none" stroke="var(--fg)" stroke-width="1.3"/><circle cx="6" cy="10" r="3.5" fill="none" stroke="var(--fg)" stroke-width="1.3" style="fill:var(--card)"/></marker></defs></svg>
+<main>
+<h1>L2 Container — tgscout</h1>
+<p><a href="../index.html">Index</a> › L2 Container</p>
+
+<h2>L2 Container</h2>
+
+<pre class="kit" data-kind="c4" data-kit-hash="0a1bb569316f" hidden>title: L2 Container
+caption: &#34;One Go process, a config file you write and one SQLite file it writes: 100 chats and 5,000 messages a day need no broker&#34;
+level: container
+nodes:
+  - {id: owner, at: [0, 2], type: person, name: Owner}
+  - {id: cfg, at: [0, 1], type: note, name: tgscout.yaml, tech: config file}
+  - {id: llm, at: [1, 0], type: external, name: LM Studio, tech: &#34;local LLM&#34;}
+  - {id: app, at: [1, 2], type: container, name: tgscout, tech: &#34;Go, CLI&#34;, href: tgscout.html}
+  - {id: tg, at: [1, 4], type: external, name: Telegram, tech: MTProto}
+  - {id: store, at: [2, 2], type: database, name: store, tech: SQLite, href: store.html}
+groups:
+  - {id: system, title: tgscout, members: [app, store]}
+links:
+  - {from: owner, to: cfg, text: &#34;writes requests, chats, settings&#34;}
+  - {from: owner, to: app, text: &#34;runs, watches console&#34;}
+  - {from: owner, to: tg, text: &#34;own account&#34;, via: hv}
+  - {from: app, to: tg, text: &#34;reads chats, sends found messages&#34;, stream: true}
+  - {from: app, to: cfg, text: &#34;reads at start&#34;, via: hv}
+  - {from: app, to: llm, text: &#34;HTTP: does it match?&#34;}
+  - {from: app, to: store, text: &#34;processed IDs, decisions&#34;}</pre>
+<div class="kit-render" id="kit-b1"><div class="kit-anim" style="--cycle:7.2s"><style>.kit-anim{position:relative;display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-anim>*{order:2;flex:0 0 100%}
+.kit-anim>h3{order:0}
+.kit-play,.kit-speed-in{position:absolute;opacity:0;width:1px;height:1px}
+.kit-play-btn{order:1;flex:0 0 auto;display:inline-block;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;margin:4px 0;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-play-btn::before{content:"\25B6  Play"}
+.kit-play:checked+.kit-play-btn::before{content:"\25A0  Stop"}
+.kit-play:focus-visible+.kit-play-btn{outline:2px solid var(--focus)}
+.kit-speed{order:1;flex:0 0 auto;display:inline-flex;margin:4px 0;font-size:11px;color:var(--mut);user-select:none;background:linear-gradient(var(--line),var(--line)) no-repeat 50% 6px/calc(100% - 36px) 2px}
+.kit-speed label{display:inline-flex;flex-direction:column;align-items:center;gap:2px;min-width:36px;cursor:pointer}
+.kit-speed label::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--card)}
+.kit-speed-in:focus-visible~.kit-speed{outline:2px solid var(--focus);outline-offset:2px}
+.kit-dot,.kit-later{opacity:0}
+.kit-anim [data-stream] path{animation:kit-stream .8s linear infinite}
+@keyframes kit-stream{to{stroke-dashoffset:16}}
+.kit-grow{transform-box:fill-box;transform-origin:left center}
+@keyframes kit-blink{to{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.kit-anim *{animation-name:none!important}}
+@keyframes kit-b1-e1-dot{0%{offset-distance:0%;opacity:1}12.5%{offset-distance:100%;opacity:1}12.51%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e1-dash{0%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}12.5%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}12.51%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e1-dot{animation:kit-b1-e1-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e1 path{animation:kit-b1-e1-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e2-dot{0%,12.5%{offset-distance:0%;opacity:0}12.51%{offset-distance:0%;opacity:1}25%{offset-distance:100%;opacity:1}25.01%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e2-dash{0%,12.5%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}12.51%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}25%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}25.01%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e2-dot{animation:kit-b1-e2-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e2 path{animation:kit-b1-e2-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e3-dot{0%,25%{offset-distance:0%;opacity:0}25.01%{offset-distance:0%;opacity:1}37.5%{offset-distance:100%;opacity:1}37.51%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e3-dash{0%,25%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}25.01%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}37.5%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}37.51%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e3-dot{animation:kit-b1-e3-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e3 path{animation:kit-b1-e3-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e4-dot{0%,37.49%{offset-distance:100%;opacity:0}37.5%{offset-distance:100%;opacity:1}43.75%{offset-distance:0%;opacity:1}43.76%,100%{offset-distance:0%;opacity:0}}
+#kit-b1-play:checked ~ * #kit-b1-e4-dot{animation:kit-b1-e4-dot var(--cycle) linear infinite}
+@keyframes kit-b1-e4-dot2{0%,40.62%{offset-distance:100%;opacity:0}40.63%{offset-distance:100%;opacity:1}46.88%{offset-distance:0%;opacity:1}46.89%,100%{offset-distance:0%;opacity:0}}
+#kit-b1-play:checked ~ * #kit-b1-e4-dot2{animation:kit-b1-e4-dot2 var(--cycle) linear infinite}
+@keyframes kit-b1-e4-dot3{0%,43.74%{offset-distance:100%;opacity:0}43.75%{offset-distance:100%;opacity:1}50%{offset-distance:0%;opacity:1}50.01%,100%{offset-distance:0%;opacity:0}}
+#kit-b1-play:checked ~ * #kit-b1-e4-dot3{animation:kit-b1-e4-dot3 var(--cycle) linear infinite}
+@keyframes kit-b1-e5-dot{0%,50%{offset-distance:0%;opacity:0}50.01%{offset-distance:0%;opacity:1}62.5%{offset-distance:100%;opacity:1}62.51%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e5-dash{0%,50%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}50.01%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}62.5%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}62.51%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e5-dot{animation:kit-b1-e5-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e5 path{animation:kit-b1-e5-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e6-dot{0%,62.5%{offset-distance:0%;opacity:0}62.51%{offset-distance:0%;opacity:1}75%{offset-distance:100%;opacity:1}75.01%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e6-dash{0%,62.5%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}62.51%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}75%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}75.01%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e6-dot{animation:kit-b1-e6-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e6 path{animation:kit-b1-e6-dash var(--cycle) linear infinite}
+@keyframes kit-b1-e7-dot{0%,75%{offset-distance:0%;opacity:0}75.01%{offset-distance:0%;opacity:1}87.5%{offset-distance:100%;opacity:1}87.51%,100%{offset-distance:100%;opacity:0}}
+@keyframes kit-b1-e7-dash{0%,75%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}75.01%{stroke-dasharray:8 5;stroke-dashoffset:0;stroke-width:2}87.5%{stroke-dasharray:8 5;stroke-dashoffset:-26;stroke-width:2}87.51%,100%{stroke-dasharray:none;stroke-dashoffset:0;stroke-width:1.6}}
+#kit-b1-play:checked ~ * #kit-b1-e7-dot{animation:kit-b1-e7-dot var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * #kit-b1-e7 path{animation:kit-b1-e7-dash var(--cycle) linear infinite}
+@keyframes kit-b1-n-app{0%{filter:none}18.75%{filter:none}25%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}31.25%{filter:none}43.75%{filter:none}50%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}56.25%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="app"]{animation:kit-b1-n-app var(--cycle) linear infinite}
+@keyframes kit-b1-n-cfg{0%{filter:none}6.25%{filter:none}12.5%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}18.75%{filter:none}56.25%{filter:none}62.5%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}68.75%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="cfg"]{animation:kit-b1-n-cfg var(--cycle) linear infinite}
+@keyframes kit-b1-n-llm{0%{filter:none}68.75%{filter:none}75%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}81.25%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="llm"]{animation:kit-b1-n-llm var(--cycle) linear infinite}
+@keyframes kit-b1-n-store{0%{filter:none}81.25%{filter:none}87.5%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}93.75%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="store"]{animation:kit-b1-n-store var(--cycle) linear infinite}
+@keyframes kit-b1-n-tg{0%{filter:none}31.25%{filter:none}37.5%{filter:drop-shadow(0 0 8px var(--focus)) brightness(1.35)}43.75%{filter:none}100%{filter:none}}
+#kit-b1-play:checked ~ * [data-node="tg"]{animation:kit-b1-n-tg var(--cycle) linear infinite}
+#kit-b1-play:checked ~ * .kit-blink{animation:kit-blink .45s ease-in-out infinite alternate}
+#kit-b1-x05:checked ~ *{--cycle:14.4s}
+#kit-b1-x05:checked ~ .kit-speed label[for="kit-b1-x05"]{color:var(--fg);font-weight:600}
+#kit-b1-x05:checked ~ .kit-speed label[for="kit-b1-x05"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x1:checked ~ *{--cycle:7.2s}
+#kit-b1-x1:checked ~ .kit-speed label[for="kit-b1-x1"]{color:var(--fg);font-weight:600}
+#kit-b1-x1:checked ~ .kit-speed label[for="kit-b1-x1"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x15:checked ~ *{--cycle:4.8s}
+#kit-b1-x15:checked ~ .kit-speed label[for="kit-b1-x15"]{color:var(--fg);font-weight:600}
+#kit-b1-x15:checked ~ .kit-speed label[for="kit-b1-x15"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x2:checked ~ *{--cycle:3.6s}
+#kit-b1-x2:checked ~ .kit-speed label[for="kit-b1-x2"]{color:var(--fg);font-weight:600}
+#kit-b1-x2:checked ~ .kit-speed label[for="kit-b1-x2"]::before{background:var(--focus);border-color:var(--focus)}
+#kit-b1-x3:checked ~ *{--cycle:2.4s}
+#kit-b1-x3:checked ~ .kit-speed label[for="kit-b1-x3"]{color:var(--fg);font-weight:600}
+#kit-b1-x3:checked ~ .kit-speed label[for="kit-b1-x3"]::before{background:var(--focus);border-color:var(--focus)}
+</style><input type="checkbox" class="kit-play" id="kit-b1-play" aria-label="play the animation"><label for="kit-b1-play" class="kit-play-btn"></label><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x05" aria-label="speed 0.5×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x1" checked aria-label="speed 1×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x15" aria-label="speed 1.5×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x2" aria-label="speed 2×"><input type="radio" class="kit-speed-in" name="kit-b1-speed" id="kit-b1-x3" aria-label="speed 3×"><span class="kit-speed" role="group" aria-label="playback speed"><label for="kit-b1-x05">0.5×</label><label for="kit-b1-x1">1×</label><label for="kit-b1-x15">1.5×</label><label for="kit-b1-x2">2×</label><label for="kit-b1-x3">3×</label></span><h3>L2 Container</h3><style>.kit-render{position:relative}
+.kit-render svg a,.kit-render svg a *{cursor:pointer;pointer-events:all}
+.kit-render{--link-hover:.94}
+@media (prefers-color-scheme:dark){.kit-render{--link-hover:1.35}}
+.kit-render svg a:hover :is(rect,path,ellipse,circle,polygon){filter:brightness(var(--link-hover));stroke-width:2.5}
+.kit-render:has(>.kit-full){display:flex;flex-flow:row wrap;align-items:center;column-gap:14px}
+.kit-render:has(>.kit-full)>*{flex:0 0 100%}
+.kit-render:has(>.kit-full)>:not(h3,.kit-full-btn,.kit-view,.kr-drow,.kit-play-btn,.kit-speed){order:2}
+.kit-render:has(>.kit-full)>.kit-view{flex:0 0 auto}
+.kit-render .kit-view{order:1;flex:0 0 auto;margin:4px 0;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);text-decoration:none;white-space:nowrap}
+.kit-render .kit-view:hover{border-color:var(--focus)}
+.kit-render .kit-view::after{content:" \2197"}
+.kit-render:has(>.kit-full)>.kr-drow{flex:1 0 auto;text-align:right}
+.kit-render:has(.kit-full) h3{margin-bottom:2px}
+.kit-render:has(.kit-full) figure{margin-top:4px}
+.kit-full{position:absolute;opacity:0;width:1px;height:1px}
+.kit-render .kit-full-btn{order:1;flex:0 0 auto;margin:4px 0 4px auto;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:2px 12px;font-size:13px;color:var(--fg);background:var(--card);user-select:none}
+.kit-full-btn::before{content:"\2922  Full screen"}
+.kit-full:focus-visible+.kit-full-btn{outline:2px solid var(--focus)}
+.kit-render:has(.kit-full:checked){position:fixed;inset:0;z-index:1000;margin:0;overflow:auto;background:var(--bg);padding:44px 16px 16px}
+.kit-render .kit-full:checked+.kit-full-btn{position:fixed;top:8px;right:16px;z-index:2}
+.kit-full:checked+.kit-full-btn::before{content:"\2715  Close"}
+.kit-render:has(.kit-full:checked) svg{width:100%!important;max-width:none;height:calc(100vh - 140px)}</style><input type="checkbox" class="kit-full" id="kit-b1-full" aria-label="show the picture on the whole screen"><label for="kit-b1-full" class="kit-full-btn"></label><figure><svg viewBox="60 60 1317.02 551.3000000000001" width="1317.02" style="width:1975.53px" role="img" aria-label="L2 Container" font-family="system-ui,-apple-system,sans-serif"><rect x="709.0000000000001" y="216" width="183.60000000000002" height="375.30000000000007" rx="10" fill="none" stroke="var(--old)" stroke-width="1.2" stroke-dasharray="6 4"/><text x="719.0000000000001" y="232" font-size="12" fill="var(--mut)" text-anchor="start" font-weight="600">tgscout</text><g data-node="owner" data-kr="kit-b1/n/owner" data-kr-hash="a005ed36ef" data-kr-kind="box" data-kr-label="Owner"><circle cx="800.8000000000001" cy="88" r="6" fill="var(--clientbg)" stroke="var(--client)" stroke-width="1.5"/><path d="M800.8000000000001 94V106M790.8000000000001 98H810.8000000000001M792.8000000000001 116L800.8000000000001 106L808.8000000000001 116" fill="none" stroke="var(--client)" stroke-width="1.5" stroke-linecap="round"/><text x="800.8000000000001" y="140" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Owner</text><text x="800.8000000000001" y="156" font-size="11" fill="var(--clientt)" text-anchor="middle">[Person]</text></g><g data-node="cfg" data-kr="kit-b1/n/cfg" data-kr-hash="1c6612da1f" data-kr-kind="box" data-kr-label="tgscout.yaml"><path d="M370.64 80H503.12L513.12 90V170H370.64z" fill="var(--chgbg)" stroke="var(--chg)" stroke-width="1.5"/><path d="M503.12 80V90H513.12" fill="none" stroke="var(--chg)" stroke-width="1.5"/><text x="380.64" y="129" font-size="11" fill="var(--fg)" text-anchor="start">tgscout.yaml</text></g><g data-node="llm" data-kr="kit-b1/n/llm" data-kr-hash="31c36208e7" data-kr-kind="box" data-kr-label="LM Studio"><rect x="80" y="250" width="210.64" height="54" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="185.32" y="274" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">LM Studio</text><text x="185.32" y="290" font-size="11" fill="var(--extt)" text-anchor="middle">[External System: local LLM]</text></g><a href="tgscout.html"><g data-node="app" data-kr="kit-b1/n/app" data-kr-hash="dce738ef41" data-kr-kind="box" data-kr-label="tgscout"><rect x="721.0000000000001" y="250" width="159.6" height="54" rx="8" fill="var(--svcbg)" stroke="var(--svc)" stroke-width="1.5"/><text x="800.8000000000001" y="274" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">tgscout</text><text x="800.8000000000001" y="290" font-size="11" fill="var(--svct)" text-anchor="middle">[Container: Go, CLI]</text></g><text class="kit-link-mark" x="860.6000000000001" y="272" font-size="13" fill="var(--mut)" text-anchor="end" aria-hidden="true">↗</text></a><g data-node="tg" data-kr="kit-b1/n/tg" data-kr-hash="ac208a67ab" data-kr-kind="box" data-kr-label="Telegram"><rect x="1159.14" y="250" width="197.88" height="54" rx="8" fill="var(--extbg)" stroke="var(--ext)" stroke-width="1.5"/><text x="1258.0800000000002" y="274" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">Telegram</text><text x="1258.0800000000002" y="290" font-size="11" fill="var(--extt)" text-anchor="middle">[External System: MTProto]</text></g><a href="store.html"><g data-node="store" data-kr="kit-b1/n/store" data-kr-hash="e3dc118dca" data-kr-kind="box" data-kr-label="store"><path d="M721.0000000000001 533.3000000000001a79.8 8 0 0 0 159.6 0v38a79.8 8 0 0 1 -159.6 0z" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><ellipse cx="800.8000000000001" cy="533.3000000000001" rx="79.8" ry="8" fill="var(--storebg)" stroke="var(--store)" stroke-width="1.5"/><text x="800.8000000000001" y="553.3000000000001" font-size="13" fill="var(--fg)" text-anchor="middle" font-weight="600">store</text><text x="800.8000000000001" y="569.3000000000001" font-size="11" fill="var(--storet)" text-anchor="middle">[Database: SQLite]</text></g><text class="kit-link-mark" x="860.6000000000001" y="547.3000000000001" font-size="13" fill="var(--mut)" text-anchor="end" aria-hidden="true">↗</text></a><g id="kit-b1-e1" data-step="1" data-from="owner" data-to="cfg" data-kr="kit-b1/l/owner&gt;cfg" data-kr-hash="68d1e3c8ff" data-kr-kind="arrow" data-kr-label="Owner → tgscout.yaml: writes requests, chats, settings"><path class="link" d="M769.2800000000001 125H513.12" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e1-dot" r="4" fill="var(--fg)" style="offset-path:path('M769.2800000000001 125H513.12')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(769.2800000000001 125) rotate(180)"/><text data-step="1" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="641.2" y="117.25" font-size="11" fill="var(--fg)" text-anchor="middle">writes requests, chats, settings</text><g id="kit-b1-e2" data-step="2" data-from="owner" data-to="app" data-kr="kit-b1/l/owner&gt;app" data-kr-hash="a18e637190" data-kr-kind="arrow" data-kr-label="Owner → tgscout: runs, watches console"><path class="link" d="M800.8000000000001 170V250" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e2-dot" r="4" fill="var(--fg)" style="offset-path:path('M800.8000000000001 170V250')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(800.8000000000001 170) rotate(90)"/><text data-step="2" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="821.8000000000001" y="197.025" font-size="11" fill="var(--fg)" text-anchor="start">runs, watches console</text><g id="kit-b1-e3" data-step="3" data-from="owner" data-to="tg" data-kr="kit-b1/l/owner&gt;tg" data-kr-hash="729978ea97" data-kr-kind="arrow" data-kr-label="Owner → Telegram: own account"><path class="link" d="M832.32 125H1258.0800000000002V250" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e3-dot" r="4" fill="var(--fg)" style="offset-path:path('M832.32 125H1258.0800000000002V250')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(832.32 125) rotate(0)"/><text data-step="3" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1045.2" y="117.25" font-size="11" fill="var(--fg)" text-anchor="middle">own account</text><g id="kit-b1-e4" data-step="4" data-from="app" data-to="tg" data-stream="1" data-kr="kit-b1/l/app&gt;tg" data-kr-hash="a913502451" data-kr-kind="arrow" data-kr-label="tgscout → Telegram: reads chats, sends found messages"><path class="link" d="M880.6000000000001 277H1159.14" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)" stroke-dasharray="5 3"/></g><circle class="kit-dot" id="kit-b1-e4-dot" r="4" fill="var(--fg)" style="offset-path:path('M880.6000000000001 277H1159.14')"/><circle class="kit-dot" id="kit-b1-e4-dot2" r="4" fill="var(--fg)" style="offset-path:path('M880.6000000000001 277H1159.14')"/><circle class="kit-dot" id="kit-b1-e4-dot3" r="4" fill="var(--fg)" style="offset-path:path('M880.6000000000001 277H1159.14')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(880.6000000000001 277) rotate(0)"/><text data-step="4" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="1019.8700000000001" y="269.25" font-size="11" fill="var(--fg)" text-anchor="middle">reads chats, sends found messages</text><g id="kit-b1-e5" data-step="5" data-from="app" data-to="cfg" data-kr="kit-b1/l/app&gt;cfg" data-kr-hash="eead4c797a" data-kr-kind="arrow" data-kr-label="tgscout → tgscout.yaml: reads at start"><path class="link" d="M721.0000000000001 268H441.88V170" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e5-dot" r="4" fill="var(--fg)" style="offset-path:path('M721.0000000000001 268H441.88V170')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(721.0000000000001 268) rotate(180)"/><text data-step="5" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="581.44" y="260.25" font-size="11" fill="var(--fg)" text-anchor="middle">reads at start</text><g id="kit-b1-e6" data-step="6" data-from="app" data-to="llm" data-kr="kit-b1/l/app&gt;llm" data-kr-hash="57d63665d1" data-kr-kind="arrow" data-kr-label="tgscout → LM Studio: HTTP: does it match?"><path class="link" d="M721.0000000000001 286H290.64" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e6-dot" r="4" fill="var(--fg)" style="offset-path:path('M721.0000000000001 286H290.64')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(721.0000000000001 286) rotate(180)"/><text data-step="6" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="505.82000000000005" y="299.8" font-size="11" fill="var(--fg)" text-anchor="middle">HTTP: does it match?</text><g id="kit-b1-e7" data-step="7" data-from="app" data-to="store" data-kr="kit-b1/l/app&gt;store" data-kr-hash="d6c912106c" data-kr-kind="arrow" data-kr-label="tgscout → store: processed IDs, decisions"><path class="link" d="M800.8000000000002 304V525.3000000000001" fill="none" stroke="var(--fg)" stroke-width="1.6" marker-end="url(#m-fg)"/></g><circle class="kit-dot" id="kit-b1-e7-dot" r="4" fill="var(--fg)" style="offset-path:path('M800.8000000000002 304V525.3000000000001')"/><path class="start" d="M0 -3A3 3 0 0 1 0 3Z" fill="var(--fg)" transform="translate(800.8000000000002 304) rotate(90)"/><text data-step="7" stroke="var(--card)" stroke-width="4" paint-order="stroke" x="821.8000000000002" y="417.67500000000007" font-size="11" fill="var(--fg)" text-anchor="start">processed IDs, decisions</text></svg></figure><p class="note">One Go process, a config file you write and one SQLite file it writes: 100 chats and 5,000 messages a day need no broker</p></div></div><!--/kit-render-->
+
+<table>
+<tr><th>Container</th><th>What it is</th><th>Technology</th></tr>
+<tr data-kr="t/l2-container/tr1" data-kr-hash="6ace007df1" data-kr-kind="row" data-kr-label="tgscout | one process: reads Telegram, asks the LLM, sends found messages, writ…"><td>tgscout</td><td>one process: reads Telegram, asks the LLM, sends found messages, writes the console</td><td>Go, CLI</td></tr>
+<tr data-kr="t/l2-container/tr2" data-kr-hash="99adc48440" data-kr-kind="row" data-kr-label="tgscout.yaml | config you write: requests, each with its chats; catch-up depth …"><td>tgscout.yaml</td><td>config you write: requests, each with its chats; catch-up depth (messages, days); LM Studio address and model</td><td>YAML file</td></tr>
+<tr data-kr="t/l2-container/tr3" data-kr-hash="f5bba224ee" data-kr-kind="row" data-kr-label="store | processed IDs, last ID per chat, match decisions (the «yes» ones are th…"><td>store</td><td>processed IDs, last ID per chat, match decisions (the «yes» ones are the found messages)</td><td>SQLite, one local file</td></tr>
+</table>
+
+<h2>Config</h2>
+<p data-kr="t/config/p1" data-kr-hash="4587ced854" data-kr-kind="text" data-kr-label="Settings are hierarchical: set them once at the root, override them for one req…">Settings are hierarchical: set them once at the root, override them for one request, override them again for one chat of that request. The nearest level wins: chat, then request, then root.</p>
+<pre><code>catchup:              # root: for every request and chat
+  messages: 500
+  days: 3
+llm:
+  url: http://localhost:1234/v1
+  model: &lt;model name&gt;
+requests:
+  - name: lego-duplo-train
+    text: |
+      LEGO Duplo with a train and a railway, up to 60 €
+    catchup: {days: 7}        # this request only
+    chats:
+      - kids-market
+      - name: lego-sale
+        catchup: {messages: 2000}   # this chat of this request only
+  - name: kids-bike
+    text: A kids' bike, 16 inch, under 100 €
+    chats: [kids-market]
+</code></pre>
+<p data-kr="t/config/p2" data-kr-hash="525cbe1cfc" data-kr-kind="text" data-kr-label="Secrets are never in this file: the Telegram api_id , api_hash and the session …">Secrets are never in this file: the Telegram <code>api_id</code>, <code>api_hash</code> and the session live in <code>.env</code> and the session file.</p>
+
+
+<h2>Deeper</h2>
+<ul>
+<li data-kr="t/deeper/li1" data-kr-hash="1e88c783b7" data-kr-kind="text" data-kr-label="L3 Component — tgscout — the parts inside the tgscout app"><a href="tgscout.html">L3 Component — tgscout</a> — the parts inside the tgscout app</li>
+</ul>
+
+</main>
+<template id="kit-review-state">{"pages":{"architecture/overview.html":[]},"counts":{"architecture/context.html":{"total":18,"reviewed":0,"edited":0},"architecture/overview.html":{"total":19,"reviewed":0,"edited":0},"architecture/quality-attributes.html":{"total":51,"reviewed":0,"edited":0},"architecture/store.html":{"total":8,"reviewed":0,"edited":0},"architecture/tgscout.html":{"total":91,"reviewed":0,"edited":0},"flows/catch-up.html":{"total":22,"reviewed":0,"edited":0},"flows/message-path.html":{"total":49,"reviewed":0,"edited":0},"flows/start.html":{"total":23,"reviewed":0,"edited":0},"index.html":{"total":16,"reviewed":0,"edited":0}}}</template>
+<script id="kit-review-script">(() => {
+  "use strict";
+  const meta = document.querySelector('meta[name="kit-review"]');
+  if (!meta) return;
+  const path = meta.content;
+  const kinds = { box: "Diagram boxes", arrow: "Diagram arrows", text: "Paragraphs and list items", row: "Table rows" };
+  const svgNS = "http://www.w3.org/2000/svg";
+  const items = [...document.querySelectorAll("[data-kr]")].map((el) => ({
+    el, key: el.dataset.kr, hash: el.dataset.krHash, kind: el.dataset.krKind,
+    label: el.dataset.krLabel || el.dataset.kr, block: el.closest(".kit-render"),
+  }));
+  let stored = new Map();
+  let live = false;
+  let pageCounts = {};
+  let writing = Promise.resolve();
+
+  const read = (key) => { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } };
+  const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage is optional */ } };
+  const setStored = (pairs) => { stored = new Map((pairs || []).filter((p) => Array.isArray(p) && p.length === 2)); };
+  const storedHashes = () => new Set(stored.values());
+
+  // The same rule as reviewState.status in Go: reviewed as it is now (even under another key), edited, or todo.
+  const status = (it, hashes) => {
+    if (stored.get(it.key) === it.hash || hashes.has(it.hash)) return "ok";
+    return stored.has(it.key) ? "chg" : "todo";
+  };
+
+  const counts = () => {
+    const hashes = storedHashes();
+    const out = { total: items.length, reviewed: 0, changed: 0, byKind: {} };
+    for (const it of items) {
+      it.state = status(it, hashes);
+      const k = (out.byKind[it.kind] = out.byKind[it.kind] || { total: 0, reviewed: 0 });
+      k.total++;
+      if (it.state === "ok") { out.reviewed++; k.reviewed++; }
+      if (it.state === "chg") out.changed++;
+    }
+    return out;
+  };
+
+  // The checks live in the repository's checks file: only the kit's local server takes a write.
+  const depth = path.split("/").length - 1;
+  const root = new URL("../".repeat(depth) || "./", location.href);
+  const endpoint = new URL(".kit-review", root);
+  const apply = (state) => {
+    if (!state) return;
+    setStored((state.pages || {})[path]);
+    pageCounts = state.counts || {};
+  };
+  // A template's text sits in its content, not its own children; the kit escapes <, > and & in it.
+  try { apply(JSON.parse((document.getElementById("kit-review-state") || {}).innerHTML || "null")); } catch (e) { /* no baked state */ }
+
+  const save = () => {
+    counts();
+    const pairs = [];
+    for (const it of items) {
+      if (it.state === "ok") pairs.push([it.key, it.hash]);
+      if (it.state === "chg") pairs.push([it.key, stored.get(it.key)]);
+    }
+    // Writes go one after another, and an answer only refreshes the other pages' counts, so a later check
+    // made while an earlier write is on its way is never undone.
+    const body = JSON.stringify({ path, items: pairs });
+    writing = writing
+      .then(() => fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body }))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((state) => { if (state) { pageCounts = state.counts || {}; badges(); } })
+      .catch(() => {});
+  };
+
+  const toggle = (it) => {
+    if (!live) return;
+    if (it.state === "ok") {
+      stored.delete(it.key);
+      for (const [key, hash] of [...stored]) if (hash === it.hash) stored.delete(key);
+    } else {
+      stored.set(it.key, it.hash);
+    }
+    save();
+    render();
+  };
+
+  const el = (tag, cls, text) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  };
+  const svgEl = (tag, attrs) => {
+    const node = document.createElementNS(svgNS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
+    return node;
+  };
+  const onActivate = (node, fn) => {
+    node.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
+    node.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); }
+    });
+  };
+
+  // Bar, drawer and per-item controls.
+  document.body.classList.add("kr");
+  const bar = el("div", "kr-bar");
+  bar.setAttribute("role", "region");
+  bar.setAttribute("aria-label", "Review progress");
+  const pageCheck = el("span", "kr-pagecheck");
+  pageCheck.setAttribute("aria-hidden", "true");
+  const countText = el("span", "kr-count");
+  const prog = el("span", "kr-prog");
+  const progFill = el("i");
+  prog.appendChild(progFill);
+  const chgChip = el("span", "kr-chip");
+  const onlyBtn = el("button", "kr-tbtn", "Only unreviewed");
+  const hideBtn = el("button", "kr-tbtn", "Hide checks");
+  const listBtn = el("button", "kr-tbtn", "Still to review");
+  for (const b of [onlyBtn, hideBtn, listBtn]) b.type = "button";
+  const note = el("span", "kr-note", "Read-only — open with kit report serve to check");
+  bar.append(pageCheck, countText, prog, chgChip, note, onlyBtn, hideBtn, listBtn);
+  const drawer = el("aside", "kr-drawer");
+  drawer.hidden = true;
+  document.body.insertBefore(drawer, document.body.firstChild);
+  document.body.insertBefore(bar, document.body.firstChild);
+  const pref = read("kit-review-view") || {};
+  const applyView = () => {
+    document.body.classList.toggle("kr-only", !!pref.only);
+    document.body.classList.toggle("kr-off", !!pref.off);
+    onlyBtn.setAttribute("aria-pressed", String(!!pref.only));
+    hideBtn.setAttribute("aria-pressed", String(!!pref.off));
+  };
+  onlyBtn.addEventListener("click", () => { pref.only = !pref.only; write("kit-review-view", pref); applyView(); });
+  hideBtn.addEventListener("click", () => { pref.off = !pref.off; write("kit-review-view", pref); applyView(); });
+  listBtn.addEventListener("click", () => { drawer.hidden = !drawer.hidden; listBtn.setAttribute("aria-pressed", String(!drawer.hidden)); });
+  applyView();
+
+  for (const it of items) {
+    if (it.kind === "text" || it.kind === "row") {
+      const host = it.kind === "row" ? it.el.querySelector("td,th") || it.el : it.el;
+      host.classList.add("kr-host");
+      it.el.classList.add("kr-item");
+      const btn = el("button", "kr-btn");
+      btn.type = "button";
+      it.btn = btn;
+      onActivate(btn, () => toggle(it));
+      host.insertBefore(btn, host.firstChild);
+      continue;
+    }
+    const svg = it.el.ownerSVGElement;
+    if (!svg) continue;
+    let layer = svg.querySelector(":scope > g.kr-ov");
+    if (!layer) { layer = svgEl("g", { class: "kr-ov" }); svg.appendChild(layer); }
+    // Rings sit under the drawing, so arrow heads stay on top of a checked box's ring.
+    let rings = svg.querySelector(":scope > g.kr-rings");
+    if (!rings) { rings = svgEl("g", { class: "kr-rings" }); svg.insertBefore(rings, svg.firstChild); }
+    it.el.classList.add("kr-item");
+    let box;
+    try { box = it.el.getBBox(); } catch (e) { continue; }
+    if (it.kind === "box") {
+      it.ring = svgEl("rect", { class: "kr-ring", x: box.x - 4, y: box.y - 4, width: box.width + 8, height: box.height + 8, rx: 10 });
+      rings.appendChild(it.ring);
+      it.btn = svgEl("g", { class: "kr-svgbtn", role: "button", tabindex: "0", transform: `translate(${box.x + box.width + 2} ${box.y - 2})` });
+      it.btn.append(svgEl("circle", { r: 8 }), svgEl("path", { d: "M-3.5 0.2l2.4 2.4l4.6-4.8" }));
+    } else {
+      let x = box.x + box.width / 2, y = box.y + box.height / 2;
+      const step = it.el.getAttribute("data-step");
+      const label = step && svg.querySelector(`text[data-step="${step}"]`);
+      if (label) {
+        try { const lb = label.getBBox(); x = lb.x - 9; y = lb.y + lb.height / 2; } catch (e) { /* keep the middle */ }
+      } else {
+        const line = it.el.querySelector("path");
+        try { const p = line.getPointAtLength(line.getTotalLength() / 2); x = p.x; y = p.y; } catch (e) { /* keep the middle */ }
+      }
+      it.btn = svgEl("g", { class: "kr-svgbtn kr-dot", role: "button", tabindex: "0", transform: `translate(${x} ${y})` });
+      it.btn.append(svgEl("circle", { r: 6 }), svgEl("path", { d: "M-2.6 0.1l1.8 1.8l3.4-3.6" }));
+    }
+    onActivate(it.btn, () => toggle(it));
+    layer.appendChild(it.btn);
+  }
+
+  const blocks = new Map();
+  for (const it of items) {
+    if (!it.block) continue;
+    if (!blocks.has(it.block)) {
+      const badge = el("span", "kr-dbadge");
+      const row = el("div", "kr-drow");
+      row.appendChild(badge);
+      it.block.classList.add("kr-block");
+      // The badge joins the toolbar right above the diagram, just left of «Full screen».
+      const fig = it.block.querySelector(".kit-full") || it.block.querySelector("figure");
+      if (fig) fig.parentNode.insertBefore(row, fig);
+      else it.block.insertBefore(row, it.block.firstChild);
+      blocks.set(it.block, { badge, items: [] });
+    }
+    blocks.get(it.block).items.push(it);
+  }
+
+  const flash = (it) => {
+    it.el.scrollIntoView({ block: "center", behavior: "smooth" });
+    it.el.classList.add("kr-flash");
+    setTimeout(() => it.el.classList.remove("kr-flash"), 1600);
+  };
+
+  const renderDrawer = (c) => {
+    drawer.replaceChildren();
+    drawer.append(el("h2", "kr-dh", "Review progress"));
+    for (const [kind, name] of Object.entries(kinds)) {
+      const k = c.byKind[kind];
+      if (!k) continue;
+      const row = el("div", "kr-krow");
+      const fill = el("i");
+      fill.style.width = (100 * k.reviewed / k.total) + "%";
+      const meter = el("span", "kr-prog");
+      meter.appendChild(fill);
+      row.append(el("span", "kr-kname", name), meter, el("span", "kr-knum", `${k.reviewed} / ${k.total}`));
+      drawer.appendChild(row);
+    }
+    const left = items.filter((it) => it.state !== "ok").sort((a, b) => (a.state === "chg" ? 0 : 1) - (b.state === "chg" ? 0 : 1));
+    drawer.append(el("h2", "kr-dh", left.length ? `Still to review — ${left.length}` : "Everything on this page is reviewed"));
+    const list = el("ol", "kr-left");
+    for (const it of left) {
+      const li = el("li");
+      const b = el("button", "kr-lbtn " + (it.state === "chg" ? "kr-chg" : "kr-todo"));
+      b.type = "button";
+      b.append(el("span", "kr-lkind", it.state === "chg" ? "edited" : it.kind), el("span", "kr-ltext", it.label));
+      b.addEventListener("click", () => flash(it));
+      li.appendChild(b);
+      list.appendChild(li);
+    }
+    drawer.appendChild(list);
+  };
+
+  const render = () => {
+    const c = counts();
+    for (const it of items) {
+      for (const node of [it.el, it.ring, it.btn]) {
+        if (!node) continue;
+        node.classList.remove("kr-ok", "kr-chg", "kr-todo");
+        node.classList.add("kr-" + it.state);
+      }
+      if (it.btn) {
+        const verb = !live ? (it.state === "ok" ? "Reviewed" : "Not reviewed") : it.state === "ok" ? "Unmark" : "Mark reviewed";
+        it.btn.setAttribute("aria-label", `${verb}: ${it.label}`);
+        it.btn.setAttribute("title", it.state === "chg" ? "Edited after review" : verb);
+        it.btn.setAttribute("aria-disabled", String(!live));
+        if ("disabled" in it.btn) it.btn.disabled = !live;
+      }
+    }
+    for (const { badge, items: own } of blocks.values()) {
+      const done = own.filter((it) => it.state === "ok").length;
+      const all = done === own.length;
+      badge.className = "kr-dbadge" + (all ? " kr-done" : own.some((it) => it.state === "chg") ? " kr-chgd" : "");
+      badge.textContent = all ? "✓ Diagram reviewed" : `${done} / ${own.length} reviewed`;
+    }
+    const all = c.total > 0 && c.reviewed === c.total;
+    pageCheck.className = "kr-pagecheck" + (all ? " kr-done" : "");
+    pageCheck.textContent = all ? "✓" : "";
+    countText.textContent = all ? `Page reviewed · ${c.total} items` : `Reviewed ${c.reviewed} / ${c.total}`;
+    progFill.style.width = (c.total ? 100 * c.reviewed / c.total : 0) + "%";
+    chgChip.textContent = `${c.changed} edited`;
+    chgChip.hidden = c.changed === 0;
+    note.hidden = live;
+    document.body.classList.toggle("kr-ro", !live);
+    renderDrawer(c);
+    return c;
+  };
+
+  // A badge with the state of every review page this page links to.
+  const targetOf = (a) => {
+    try {
+      const u = new URL(a.getAttribute("href"), location.href);
+      if (u.origin !== root.origin || !u.pathname.startsWith(root.pathname)) return null;
+      const p = decodeURIComponent(u.pathname.slice(root.pathname.length));
+      return p.endsWith(".html") && p !== path ? p : null;
+    } catch (e) { return null; }
+  };
+  const badges = () => {
+    for (const a of document.querySelectorAll("main [data-kr] a[href]")) {
+      const target = targetOf(a);
+      if (!target) continue;
+      const s = pageCounts[target];
+      let badge = a.nextElementSibling && a.nextElementSibling.classList.contains("kr-lbadge") ? a.nextElementSibling : null;
+      if (!badge) { badge = el("span", "kr-lbadge"); a.after(badge); }
+      if (!s || !s.total) { badge.className = "kr-lbadge kr-todo"; badge.textContent = "not reviewed"; continue; }
+      const left = s.total - s.reviewed;
+      badge.className = "kr-lbadge " + (left === 0 ? "kr-ok" : s.edited ? "kr-chg" : "kr-todo");
+      badge.textContent = left === 0 ? "✓ reviewed" : `${left} left` + (s.edited ? `, ${s.edited} edited` : "");
+    }
+  };
+
+  render();
+  badges();
+
+  fetch(endpoint, { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((state) => {
+      if (!state || typeof state.pages !== "object") return;
+      live = true;
+      apply(state);
+      render();
+      badges();
+    })
+    .catch(() => { /* read-only away from kit report serve */ });
+})();
+</script>
+</body></html>
