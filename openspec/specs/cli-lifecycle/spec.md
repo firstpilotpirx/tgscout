@@ -7,7 +7,7 @@ How the `tgscout` command starts: it checks the config file, opens and migrates 
 
 ### Requirement: Config file at start
 
-`tgscout` SHALL read its config file (`--config`, default `./tgscout.yaml`) before anything else and report a valid file with its path. A missing file SHALL give an error naming the path and a hint to copy the example, exit code 1 and no database. A file that is not valid YAML SHALL give an error naming the path and the line of the problem, and exit code 1. Only YAML validity is checked here; the fields come later.
+`tgscout` SHALL read its config file (`--config`, default `./tgscout.yaml`) before anything else and report a valid file with its path and its summary (the `settings` capability). A missing file SHALL give an error naming the path and a hint to copy the example, exit code 1 and no database. A file that is not valid YAML SHALL give an error naming the path and the line of the problem, and exit code 1. A file with invalid fields SHALL give the errors the `settings` capability lists, exit code 1 and no database.
 
 #### Scenario: the config file is missing
 

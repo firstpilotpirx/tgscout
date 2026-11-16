@@ -1,12 +1,38 @@
-# Example config for tgscout. Copy it to tgscout.yaml next to the binary.
-# The requests and chats below are made up.
+# Example config for tgscout. Copy it to tgscout.yaml and put your own values in.
+# Every request and chat below is made up. Secrets (api_id, api_hash, the
+# session) never go here: they live in .env and the session file.
+
+# The Telegram user tgscout writes to: @username or a numeric ID.
+owner: "@your_username"
+
+# Matcher workers that ask the LLM at the same time (default 2).
+workers: 2
+
+# LM Studio, through its OpenAI-compatible API.
+lm_studio:
+  url: http://localhost:1234/v1   # default
+  model: qwen2.5-7b-instruct      # required: the model LM Studio serves
+  timeout: 60s                    # default
+
+# How far back tgscout reads each chat at start (defaults 500 and 3).
+# A request, and a chat of that request, may override it; the nearest wins.
+catch_up:
+  messages: 500
+  days: 3
+
+# Standing requests: what to look for and in which chats.
+# A chat is "@username", a public "https://t.me/name" link, or the numeric ID
+# of a private chat.
 requests:
   - id: kids-bike
     find: a kids bike, 16 inch, under 100 EUR
+    catch_up: {days: 7}            # this request only
     chats:
       - "@example_flea_market"
+      - ref: "https://t.me/example_neighbours"
+        catch_up: {messages: 2000} # this chat of this request only
   - id: desk-lamp
     find: a desk lamp with a clamp
     chats:
       - "@example_flea_market"
-      - "@example_neighbours"
+      - -1001234567890

@@ -1,5 +1,10 @@
 package application
 
-// SettingsRepository is the driven port that gives the core the settings of tgscout.yaml.
-// It has no methods yet: the hierarchical-settings slice adds the ones it calls.
-type SettingsRepository interface{}
+import "github.com/firstpilotpirx/tgscout/components/matching/core/domain"
+
+// SettingsRepository is the driven port that gives the core the settings of
+// tgscout.yaml, read once at start.
+type SettingsRepository interface {
+	// Settings returns the resolved settings.
+	Settings() domain.Settings
+}

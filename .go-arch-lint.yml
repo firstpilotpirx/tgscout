@@ -10,7 +10,7 @@ excludeFiles:
 
 vendors:
   cobra:   { in: github.com/spf13/cobra }
-  viper:   { in: github.com/spf13/viper }
+  goyaml:  { in: [github.com/goccy/go-yaml, github.com/goccy/go-yaml/**] }
   migrate: { in: [github.com/golang-migrate/migrate/v4, github.com/golang-migrate/migrate/v4/**] }
   sqlite3: { in: github.com/mattn/go-sqlite3 }
   color:   { in: github.com/fatih/color }
@@ -35,4 +35,4 @@ deps:
     mayDependOn: [domain]
   adapters:
     mayDependOn: [application, domain]
-    canUse: [viper, migrate]
+    canUse: [goyaml, migrate]

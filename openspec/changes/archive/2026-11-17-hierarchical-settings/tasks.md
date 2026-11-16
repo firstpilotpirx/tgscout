@@ -24,7 +24,7 @@
 
 - [x] 4.1 Red: unit tests for `console.warn` (`⚠`, `[warn]` when plain) and for the error list format of the mock (`✗ <path>: 3 errors`, `1 error`, aligned `line <n>  <field>  <reason>` lines); verify: they fail
 - [x] 4.2 Green: `console.warn`, the error list printer and `checkConfig` using `LoadSettings`: summary line, warnings, errors; pass the repository to `matching.Ports.Settings`; verify: the 4.1 tests pass
-- [x] 4.3 Red: update the fixtures of `apps/cli` tests to a full valid config; integration tests for `run`: an invalid config gives 1, every error and no database; a valid config prints `[ok] <path>: 1 requests…`; verify: the new tests fail
+- [x] 4.3 Red: update the fixtures of `apps/cli` tests to a full valid config; integration tests for `run`: an invalid config gives 1, every error and no database; a valid config prints `[ok] <path>: 1 request, 1 chat, model …`; verify: the new tests fail
 - [x] 4.4 Green: wire it in `start.go` so the 4.3 tests pass; verify: `go test -race -tags=integration ./apps/...` passes
 - [x] 4.5 Commit the group (`kit ship`)
 
