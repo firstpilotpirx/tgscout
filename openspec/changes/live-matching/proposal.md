@@ -21,9 +21,14 @@ Design pages this slice implements:
 - An LLM call that fails (LM Studio down, timeout) leaves the message unprocessed and prints an error line; the full retry policy is `delivery-resilience`.
 - The notifier of this slice is the console: one line per match with time, request id, chat, link and the start of the text.
 - Each «yes» decision row is a found message; nothing else stores matches (no matches file).
+- An edited message is judged again only for the requests whose earlier decision was «no»; a «yes» is never sent twice for the same request.
+- An LLM answer that is neither yes nor no is asked once more with a stricter prompt; a second unclear answer is saved as «no» and a warning line with the raw answer is printed.
+- The prompt keeps the fixed matching rules in the system message and puts the request text and the message text in the user message.
+- A new root setting `queue_size` (default 1,000, at least 1) sets the queue capacity; when the queue is full, the collector waits (back-pressure).
+- A duplicate is the same chat and message ID seen twice; the same text in another message is judged again.
 
 Current stage: PoC. Target stage: PoC.
-Scope: collector for new messages, the pre-filter, the processed check, the queue, matcher workers, the llm part over the OpenAI-compatible API, decisions, processed marks, the cursor, the console notifier.
+Scope: collector for new messages, the pre-filter, the processed check, the queue, matcher workers, the llm part over the OpenAI-compatible API, decisions, processed marks, the cursor, the console notifier, re-judging edited messages, the `queue_size` setting.
 Acceptance bar: the scenarios below pass as slice tests with a fake Telegram update stream and a fake OpenAI-compatible server; a manual run with LM Studio prints a match on the console for a made-up message posted in a test chat.
 Out of scope: the private Telegram message to the owner (`owner-notification`); history at start (`catch-up`); retries, backoff, graceful drain and reconnects (`delivery-resilience`); latency and load measurement (`quality-targets`); images, video, audio; owner feedback and commands (later, not now).
 Interface: CLI — match lines and error lines on the console.
@@ -67,6 +72,10 @@ Interface: CLI — match lines and error lines on the console.
   - Given messages 10, 11 and 12 of one chat in the queue and two workers
   - When message 12 is processed before message 11
   - Then the cursor of the chat stays at 10 until message 11 is processed, then moves to 12
+- Scenario: an edited message is judged again only where it was «no»
+  - Given a processed message with a «yes» for one request and a «no» for another
+  - When the message is edited
+  - Then the LLM is asked only about the request with «no», and no second match line appears for the other
 
 ## Capabilities
 
@@ -81,11 +90,7 @@ Interface: CLI — match lines and error lines on the console.
 
 ## Open points
 
-- Edited messages: the context page says new and edited messages are watched, but a processed message is skipped by ID. Proposed: an edit of a processed message is judged again only for the requests whose earlier decision was «no»; a «yes» is never sent twice for the same request.
-- An LLM answer that is neither yes nor no: proposed — ask once more with a stricter prompt, then save «no» and print a warning line with the raw answer.
-- Prompt wording and whether the request text goes into the system or the user message: decided at design, with a small made-up test set of matching and non-matching messages.
-- Queue size: proposed — a setting with a default of 1,000 items; when full, the collector waits (back-pressure), and messages it could not take are covered by catch-up after a restart.
-- «Duplicate» in the pre-filter: proposed — the same chat and message ID seen twice; a repost of the same text in another message is judged again.
+None: the points raised earlier are decided in What Changes.
 
 ## Release
 
