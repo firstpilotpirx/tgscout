@@ -1,0 +1,12 @@
+# Example config for tgscout. Copy it to tgscout.yaml next to the binary.
+# The requests and chats below are made up.
+requests:
+  - id: kids-bike
+    find: a kids bike, 16 inch, under 100 EUR
+    chats:
+      - "@example_flea_market"
+  - id: desk-lamp
+    find: a desk lamp with a clamp
+    chats:
+      - "@example_flea_market"
+      - "@example_neighbours"

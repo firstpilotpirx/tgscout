@@ -37,11 +37,11 @@
 
 ## 6. Docs, examples and version
 
-- [ ] 6.1 Add `.env.example` (empty `TG_API_ID`, `TG_API_HASH`, `TG_SESSION_FILE`) and `tgscout.yaml.example` (made-up requests and chats, valid YAML); verify: `tgscout --config tgscout.yaml.example --db <tmp>` starts
-- [ ] 6.2 `README.md`: sections `## Install` (Go, a C compiler for cgo), `## Run (dev)`, `## Run (production)`, `## Test` (`scripts/qa.sh`); verify: the four headings exist
-- [ ] 6.3 `AGENTS.md`: § Gherkin names godog and `e2e/features/`; § How to verify a change names `scripts/qa.sh quick|full` and the Red/Green command; the layout line points to `tgscout/`; verify: read back
-- [ ] 6.4 Bump `VERSION` to 0.1.0; verify: `kit version-check walking-skeleton` passes
-- [ ] 6.5 Commit the group (`kit ship`)
+- [x] 6.1 Add `.env.example` (empty `TG_API_ID`, `TG_API_HASH`, `TG_SESSION_FILE`) and `tgscout.yaml.example` (made-up requests and chats, valid YAML); verify: `tgscout --config tgscout.yaml.example --db <tmp>` starts
+- [x] 6.2 `README.md`: sections `## Install` (Go, a C compiler for cgo), `## Run (dev)`, `## Run (production)`, `## Test` (`scripts/qa.sh`); verify: the four headings exist
+- [x] 6.3 `AGENTS.md`: § Gherkin names godog and `e2e/features/`; § How to verify a change names `scripts/qa.sh quick|full` and the Red/Green command; the layout line points to `tgscout/`; verify: read back
+- [x] 6.4 Bump `VERSION` to 0.1.0; verify: `kit version-check walking-skeleton` passes
+- [x] 6.5 Commit the group (`kit ship`)
 
 ## Manual checks
 
