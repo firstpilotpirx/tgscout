@@ -11,9 +11,12 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 - [x] L1 System Context — [context](architecture/context.html)
 - [x] L2 Container — [overview](architecture/overview.html), [store](architecture/store.html)
 - [x] L3 Component — tgscout — [tgscout](architecture/tgscout.html), [start](flows/start.html), [catch-up](flows/catch-up.html), [message path](flows/message-path.html)
+  - [ ] L4 Code — matching — dialogue — [overview](modules/matching/overview.html)
 - [ ] Quality attributes — [quality attributes](architecture/quality-attributes.html)
 
 ## To discuss
+
+1. Proposal: L4 Code · component overview of matching ([matching](modules/matching/overview.html))
 
 ## Later, not now
 
