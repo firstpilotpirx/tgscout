@@ -1,3 +1,26 @@
 depends_on:
   - change: hierarchical-settings
     why: filed after it, runs after it
+prepared:
+  estimate: 2h30m
+  decisions:
+    - question: "MTProto library?"
+      answer: "github.com/gotd/td (pure Go, MIT)"
+    - question: "First sign-in when stdin is not a terminal?"
+      answer: "Stop with «sign in once from a terminal first»"
+    - question: "A chat of tgscout.yaml the account has not joined, or that does not exist?"
+      answer: "Stop the start with an error that lists every such chat"
+    - question: "FLOOD_WAIT during chat lookup?"
+      answer: "Wait the time Telegram names, print a console line, go on"
+    - question: "How to store the session file?"
+      answer: "gotd file session storage, mode 600, no extra encryption"
+    - question: "How to find the owner?"
+      answer: "@username resolved through Telegram, or numeric ID looked up in the account's contacts (README asks to add the owner)"
+    - question: "How to test sign-in without real Telegram?"
+      answer: "A faked client port (own interface over gotd), no network in tests"
+    - question: "Echo while typing the two-step password?"
+      answer: "Hide the password; phone and login code stay visible"
+    - question: "Scope?"
+      answer: "Keep the proposal scope as is: no login or logout subcommand"
+    - question: "Interface mock: openspec/changes/telegram-sign-in/mock/index.html"
+      answer: "approved"
