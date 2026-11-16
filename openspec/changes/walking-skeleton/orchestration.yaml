@@ -1,0 +1,19 @@
+prepared:
+  estimate: 2h30m
+  decisions:
+    - question: "Command shape: plain tgscout with flags or tgscout run?"
+      answer: "Plain tgscout with flags (--config, --db), one cobra root command, no subcommands"
+    - question: "Default place of tgscout.db?"
+      answer: "Next to the config file; --db overrides it"
+    - question: "Migrations: golang-migrate or an own tiny runner?"
+      answer: "golang-migrate with embedded SQL files (//go:embed + iofs), as the Go tech matrix says"
+    - question: "Gherkin runner?"
+      answer: "godog, with .feature files under e2e/features/"
+    - question: "How to read tgscout.yaml?"
+      answer: "viper, as the Go tech matrix says; a YAML error shows the line number"
+    - question: "The design board review (proceed-design review) was not run: run it first?"
+      answer: "No; fix any mismatch it finds later in the slice it touches"
+    - question: "Widen the scope (GitHub Actions CI, --version flag)?"
+      answer: "No, keep the scope as the proposal states it"
+    - question: "Interface mock: openspec/changes/walking-skeleton/mock/cli.html"
+      answer: "approved"
