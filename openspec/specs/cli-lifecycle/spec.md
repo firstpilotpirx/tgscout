@@ -1,7 +1,7 @@
 # cli-lifecycle Specification
 
 ## Purpose
-TBD - created by archiving change walking-skeleton. Update Purpose after archive.
+How the `tgscout` command starts: it checks the config file, opens and migrates its SQLite database, runs until a stop signal, stops cleanly, and prints its usage on request or on a wrong option.
 
 ## Requirements
 
