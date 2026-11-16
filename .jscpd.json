@@ -2,9 +2,14 @@
   "threshold": 0,
   "minLines": 10,
   "minTokens": 70,
-  "format": ["go"],
-  "pattern": "tgscout/**/*.go,e2e/**/*.go",
-  "ignore": ["**/*_test.go"],
-  "reporters": ["consoleFull"],
+  "format": [
+    "go"
+  ],
+  "ignore": [
+    "**/*_test.go"
+  ],
+  "reporters": [
+    "consoleFull"
+  ],
   "gitignore": true
 }

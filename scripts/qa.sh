@@ -97,7 +97,7 @@ full() {
   step "shellcheck"
   shellcheck "$root"/scripts/*.sh "$root"/.githooks/*
   step "jscpd"
-  (cd "$root" && jscpd --config .jscpd.json --exitCode 1 .)
+  (cd "$root" && jscpd --config .jscpd.json --exit-code 1 tgscout e2e)
   step "integration tests"
   go test -race -tags=integration ./...
   e2e
