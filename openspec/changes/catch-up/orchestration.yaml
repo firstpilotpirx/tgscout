@@ -3,3 +3,20 @@ depends_on:
     why: filed after it, runs after it
   - change: live-matching
     why: reuses the collector, queue, matcher and cursor
+prepared:
+  estimate: 2h30m
+  decisions:
+    - question: Where do matches found in the history go?
+      answer: Each match is its own private message, as in live matching; the summary goes to the console only
+    - question: Both limits set (500 messages and 3 days) — where does reading stop?
+      answer: At whichever limit comes first
+    - question: In which order are chats caught up?
+      answer: As listed in tgscout.yaml
+    - question: A cursor older than the depth window (tgscout off for weeks) — what is read?
+      answer: Only the depth window; the summary counts the chats with a gap
+    - question: How does a chat's cursor move while it is caught up and live messages already arrive?
+      answer: It waits until that chat's catch-up is done, then moves
+    - question: Scope of catch-up?
+      answer: As in the proposal, with the answers above (one console line per chat, errors counted in the summary)
+    - question: "Interface mock: openspec/changes/catch-up/mock/index.html"
+      answer: approved

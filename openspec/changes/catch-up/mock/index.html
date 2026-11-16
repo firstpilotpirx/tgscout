@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catch-up mock</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#6b6a66;--card:#fff;--line:#e4e1da}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--card:#1f1f1d;--line:#34332f}}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif;margin:0;padding:24px 16px}
+main{max-width:900px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:28px 0 8px}
+.sub{color:var(--mut);font-size:14px}
+.note{margin:6px 2px 0;color:var(--mut);font-size:14px}
+.term{background:#1e1e1e;color:#d4d4d4;font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px;border-radius:8px;white-space:pre;overflow-x:auto}
+.term .dim{color:#808080}.term .cy{color:#4ec9b0}.term .ye{color:#dcdcaa}.term .rd{color:#f14c4c;font-weight:bold}
+.term .gr{color:#9e9e9e}.term .ok{color:#6a9955}.term .b{color:#ffffff;font-weight:bold}
+</style></head>
+<body><main>
+<h1>Catch-up — console</h1>
+<div class="sub">tgscout reads what it missed at start. Made-up chats and numbers.</div>
+
+<h2>Normal start after a pause</h2>
+<div class="term"><span class="dim">10:00:02</span> <span class="cy">INFO</span>  catch-up started <span class="gr">· 3 chats · live listening is on</span>
+<span class="dim">10:00:05</span> <span class="cy">INFO</span>  catch-up: Riverside flea market <span class="gr">· 214 messages from the cursor</span>
+<span class="dim">10:01:40</span> <span class="cy">INFO</span>  catch-up: Kids' things swap <span class="gr">· 500 messages · first start, last 3 days</span>
+<span class="dim">10:03:12</span> <span class="ye">WARN</span>  catch-up: Bikes for sale <span class="gr">· off for 12 days, read only the last 3 days</span>
+<span class="dim">10:04:37</span> <span class="cy">INFO</span>  <span class="b">catch-up done in 4m35s</span>
+  <span class="ok">✓</span> chats      3  <span class="gr">(1 with a gap)</span>
+  <span class="ok">✓</span> messages   1,042 read · 18 skipped <span class="gr">(already processed)</span> · 1,024 judged
+  <span class="cy">●</span> matches    2  <span class="gr">(sent to you in Telegram)</span>
+  <span class="ok">✓</span> errors     0
+</div>
+<p class="note">One line per chat while it reads, then the summary. Each match also comes to you as its own private message.</p>
+
+<h2>Nothing missed</h2>
+<div class="term"><span class="dim">10:00:02</span> <span class="cy">INFO</span>  catch-up started <span class="gr">· 3 chats · live listening is on</span>
+<span class="dim">10:00:03</span> <span class="cy">INFO</span>  <span class="b">catch-up done in 1s</span>
+  <span class="ok">✓</span> chats      3
+  <span class="ok">✓</span> messages   0 read
+  <span class="cy">●</span> matches    0
+  <span class="ok">✓</span> errors     0
+</div>
+
+<h2>Errors while judging</h2>
+<div class="term"><span class="dim">10:04:37</span> <span class="cy">INFO</span>  <span class="b">catch-up done in 4m35s</span>
+  <span class="ok">✓</span> chats      3
+  <span class="ok">✓</span> messages   1,042 read · 18 skipped <span class="gr">(already processed)</span> · 1,021 judged
+  <span class="cy">●</span> matches    2  <span class="gr">(sent to you in Telegram)</span>
+  <span class="rd">✗</span> errors     3  <span class="gr">(not marked processed; judged again at next start)</span>
+</div>
+</main></body></html>
