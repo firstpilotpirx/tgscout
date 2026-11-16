@@ -23,11 +23,11 @@
 
 ## 4. The tgscout command
 
-- [ ] 4.1 Red: unit tests for `console.go`: marks and colors, and `[ok]` / `[fail]` when color is off; verify: they fail
-- [ ] 4.2 Green: `apps/cli/console.go` with `fatih/color` and the `FORCE_COLOR` override; verify: the 4.1 tests pass
-- [ ] 4.3 Red: tests for `run` in temp dirs: `--help` gives 0 and the usage; an unknown flag or a stray argument gives 2 and the usage on stderr; a missing config gives 1 and no database; bad YAML gives 1 and line 4; a valid config creates `tgscout.db` beside it, says `created`, and a cancelled context gives 0 and `stopped`; a second start says `schema up to date`; verify: they fail
-- [ ] 4.4 Green: `apps/cli/main.go`, `root_command.go` and `start.go` as design § Command; verify: the 4.3 tests pass
-- [ ] 4.5 Commit the group (`kit ship`)
+- [x] 4.1 Red: unit tests for `console.go`: marks and colors, and `[ok]` / `[fail]` when color is off; verify: they fail
+- [x] 4.2 Green: `apps/cli/console.go` with `fatih/color` and the `FORCE_COLOR` override; verify: the 4.1 tests pass
+- [x] 4.3 Red: tests for `run` in temp dirs: `--help` gives 0 and the usage; an unknown flag or a stray argument gives 2 and the usage on stderr; a missing config gives 1 and no database; bad YAML gives 1 and line 4; a valid config creates `tgscout.db` beside it, says `created`, and a cancelled context gives 0 and `stopped`; a second start says `schema up to date`; verify: they fail
+- [x] 4.4 Green: `apps/cli/main.go`, `root_command.go` and `start.go` as design § Command; verify: the 4.3 tests pass
+- [x] 4.5 Commit the group (`kit ship`)
 
 ## 5. E2E with godog
 
