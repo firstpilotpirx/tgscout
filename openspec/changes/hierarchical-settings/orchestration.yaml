@@ -1,3 +1,24 @@
 depends_on:
   - change: walking-skeleton
     why: filed after it, runs after it
+prepared:
+  estimate: 2h
+  decisions:
+    - question: "Field names in tgscout.yaml: L3 (catch_up, lm_studio, id, find) or L2 (catchup, llm, name, text)?"
+      answer: "L3 names (catch_up, lm_studio, id, find); update the L2 sample on the board"
+    - question: "How does the owner reference a chat?"
+      answer: "@username, a public t.me link, or a numeric ID for a private chat"
+    - question: "Where is the owner set?"
+      answer: "owner in tgscout.yaml as @username or numeric ID; placeholder in the example"
+    - question: "Defaults for workers and lm_studio?"
+      answer: "workers 2, url http://localhost:1234/v1, timeout 60s; model required"
+    - question: "Which YAML library?"
+      answer: "github.com/goccy/go-yaml"
+    - question: "Show all config errors or only the first?"
+      answer: "All errors at once, one line each with its line number"
+    - question: "Add tgscout.yaml to .gitignore?"
+      answer: "Yes"
+    - question: "Scope: what can a request or chat override?"
+      answer: "Only catch_up, as in the design"
+    - question: "Interface mock: openspec/changes/hierarchical-settings/mock/index.html"
+      answer: "approved"
