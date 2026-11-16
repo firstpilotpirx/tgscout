@@ -8,7 +8,7 @@ What the owner writes into the config file: the requests to look for, the chats 
 
 ### Requirement: Config file fields
 
-The config file SHALL hold at the root `owner` (required: `@username` or a numeric ID), `workers` (default 2), `lm_studio` (`url` default `http://localhost:1234/v1`, `model` required, `timeout` default 60s), `catch_up` (`messages`, `days`) and one or more `requests`. A request SHALL hold a unique `id`, the `find` text, one or more `chats` and an optional `catch_up`. A chat SHALL be a chat reference (`@username`, a public `t.me` link or a numeric ID) or an object with `ref` and an optional `catch_up`.
+The config file SHALL hold at the root `owner` (required), `workers` (default 2), `lm_studio` (`url`, `model` required, `timeout`), `catch_up` (`messages`, `days`) and one or more `requests`. A request SHALL hold a unique `id`, the `find` text, one or more `chats` and an optional `catch_up`. A chat SHALL be a chat reference (`@username`, a public `t.me` link or a numeric ID) or an object with `ref` and an optional `catch_up`.
 
 #### Scenario: defaults fill what the file leaves out
 
