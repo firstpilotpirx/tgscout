@@ -3,3 +3,22 @@ depends_on:
     why: filed after it, runs after it
   - change: telegram-sign-in
     why: sends over the shared MTProto client and session
+prepared:
+  estimate: 2h
+  decisions:
+    - question: How does tgscout make sure it can write to the owner (Telegram may block a stranger)?
+      answer: README asks the owner to write «hi» to tgscout's account once and add it to contacts; at start tgscout checks it can open the private chat and stops with a clear error if not
+    - question: How long can the found message's text be inside the notification?
+      answer: shortened to 1,000 characters with «…»; the link is always kept
+    - question: Which link for a private chat without a username?
+      answer: the t.me/c/<id>/<msg> form
+    - question: What does the notification say about the request?
+      answer: the request id and the request's text
+    - question: How long can tgscout wait on a FLOOD_WAIT?
+      answer: as long as Telegram says, with no cap; then send again
+    - question: What does the console show for a match?
+      answer: the same text as the Telegram message (under an INFO line)
+    - question: Scope of owner-notification?
+      answer: as in the proposal, with the answers above; no «tgscout started» message
+    - question: "Interface mock: openspec/changes/owner-notification/mock/index.html"
+      answer: approved
