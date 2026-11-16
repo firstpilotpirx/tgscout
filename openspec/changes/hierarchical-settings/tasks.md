@@ -8,11 +8,11 @@
 
 ## 2. Parse and resolve tgscout.yaml
 
-- [ ] 2.1 Red: unit tests for `yaml.Parse`: the five catch-up scenarios of the `settings` spec (root, request override, chat override, one chat in two requests, built-in defaults), the defaults of workers and LM Studio, and the three forms of chat reference; verify: `go test -race -run TestParse ./components/matching/adapters/secondary/settings/yaml/...` fails
-- [ ] 2.2 Green: `Parse` walking the goccy/go-yaml AST and resolving chat → request → root → default; add `github.com/goccy/go-yaml v1.19.2`; verify: the 2.1 tests pass
-- [ ] 2.3 Red: unit tests for `Parse` errors, each with its line and field: no requests, a request without id, find or chats, a duplicate id (naming the first line), an unknown key at root, request, chat and catch-up level, a wrong kind of value, a zero and a negative depth, a bad `lm_studio.url`, no model, `workers` 0, a missing and a malformed owner, a malformed chat reference, `api_id` / `api_hash` / `session` at any level (not also an unknown key), several errors at once sorted by line; and the warning for 101 distinct chats (none for 100); verify: they fail
-- [ ] 2.4 Green: the validation and the warning in `Parse`; verify: the 2.3 tests pass
-- [ ] 2.5 Commit the group (`kit ship`)
+- [x] 2.1 Red: unit tests for `yaml.Parse`: the five catch-up scenarios of the `settings` spec (root, request override, chat override, one chat in two requests, built-in defaults), the defaults of workers and LM Studio, and the three forms of chat reference; verify: `go test -race -run TestParse ./components/matching/adapters/secondary/settings/yaml/...` fails
+- [x] 2.2 Green: `Parse` walking the goccy/go-yaml AST and resolving chat → request → root → default; add `github.com/goccy/go-yaml v1.19.2`; verify: the 2.1 tests pass
+- [x] 2.3 Red: unit tests for `Parse` errors, each with its line and field: no requests, a request without id, find or chats, a duplicate id (naming the first line), an unknown key at root, request, chat and catch-up level, a wrong kind of value, a zero and a negative depth, a bad `lm_studio.url`, no model, `workers` 0, a missing and a malformed owner, a malformed chat reference, `api_id` / `api_hash` / `session` at any level (not also an unknown key), several errors at once sorted by line; and the warning for 101 distinct chats (none for 100); verify: they fail
+- [x] 2.4 Green: the validation and the warning in `Parse`; verify: the 2.3 tests pass
+- [x] 2.5 Commit the group (`kit ship`)
 
 ## 3. Load the file and replace the viper check
 

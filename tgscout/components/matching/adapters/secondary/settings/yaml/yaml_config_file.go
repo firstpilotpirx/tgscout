@@ -14,23 +14,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// ErrConfigNotFound means there is no config file at the given path.
-var ErrConfigNotFound = errors.New("config file not found")
-
-// ConfigSyntaxError is a config file that is not valid YAML.
-type ConfigSyntaxError struct {
-	Path   string
-	Line   int
-	Reason string
-}
-
-func (e *ConfigSyntaxError) Error() string {
-	if e.Line == 0 {
-		return fmt.Sprintf("config is not valid YAML: %s: %s", e.Path, e.Reason)
-	}
-	return fmt.Sprintf("config is not valid YAML: %s: line %d: %s", e.Path, e.Line, e.Reason)
-}
-
 // yamlLine finds "line N: reason" in the error text of the YAML parser.
 var yamlLine = regexp.MustCompile(`line (\d+): (.+)$`)
 
@@ -46,12 +29,12 @@ func CheckConfigFile(path string) error {
 	reader.SetConfigFile(path)
 	reader.SetConfigType("yaml")
 	if err := reader.ReadInConfig(); err != nil {
-		return syntaxError(path, err)
+		return viperSyntaxError(path, err)
 	}
 	return nil
 }
 
-func syntaxError(path string, err error) *ConfigSyntaxError {
+func viperSyntaxError(path string, err error) *ConfigSyntaxError {
 	match := yamlLine.FindStringSubmatch(err.Error())
 	if match == nil {
 		return &ConfigSyntaxError{Path: path, Reason: err.Error()}
