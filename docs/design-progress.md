@@ -51,6 +51,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — One component, not three: collection, matching and notification are steps of one pipeline (at-least-once ties them), not separate business capabilities; a component is a microservice inside the monolith
 2026-11-16 — Draw the store schema, the queue message, the tgscout.yaml structure and a UML activity per case (L2 Container, L3 Component — tgscout)
 2026-11-16 — Owner approved every diagram; L1 System Context, L2 Container and L3 Component — tgscout accepted
+2026-11-16 — Version 1 plan: 8 slices filed as OpenSpec changes, run in order; the «Later, not now» items (photos, owner feedback) stay out as non-goals (Plan)
 2026-11-16 — L4 Code · component overview of matching accepted: use cases CollectMessage and MatchMessage, five driven ports (L4 Code — matching)
 
 ## Review
@@ -61,3 +62,11 @@ The slice order is drawn in `docs/index.html` § Plan as a `gantt` or `pipeline`
 
 | Slice | Change | Release | Depends on |
 |---|---|---|---|
+| Walking skeleton: workspace, CLI start and stop, SQLite schema, checks | walking-skeleton | 0.1.0 | — |
+| Hierarchical settings: tgscout.yaml, chat → request → root | hierarchical-settings | 0.2.0 | walking-skeleton |
+| Telegram sign-in: own account, private session, chat lookup | telegram-sign-in | 0.3.0 | hierarchical-settings |
+| Live matching: collector → queue → matcher → llm → decision, console | live-matching | 0.4.0 | telegram-sign-in, hierarchical-settings |
+| Owner notification: private message, send then mark | owner-notification | 0.5.0 | live-matching, telegram-sign-in |
+| Catch-up: history from the cursor at start, summary | catch-up | 0.6.0 | owner-notification, live-matching |
+| Delivery resilience: retries, reconnect, graceful stop, crash tests | delivery-resilience | 0.7.0 | catch-up, owner-notification |
+| Quality targets: latency, status line, load, catch-up and size tests | quality-targets | 0.8.0 | delivery-resilience |
