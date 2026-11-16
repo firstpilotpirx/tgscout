@@ -31,9 +31,9 @@
 
 ## 5. E2E with godog
 
-- [ ] 5.1 Red: `e2e/go.mod` (godog, testify, go-sqlite3; no `replace` of the app module), `e2e/features/cli_lifecycle.feature` with the eight spec scenarios tagged `@cli_lifecycle @e2e`, step definitions in `e2e/cli_lifecycle_test.go` driving `SUT_BIN`; run against a binary that does not exist yet in the e2e path; verify: the run fails
-- [ ] 5.2 Green: build the binary, `SUT_BIN=<bin> go test ./...` in `e2e/`; fix any gap the scenarios show in `apps/cli`; verify: all eight scenarios pass
-- [ ] 5.3 Commit the group (`kit ship`)
+- [x] 5.1 Red: `e2e/go.mod` (godog, testify, go-sqlite3; no `replace` of the app module), `e2e/features/cli_lifecycle.feature` with the eight spec scenarios tagged `@cli_lifecycle @e2e`, step definitions in `e2e/cli_lifecycle_test.go` driving `SUT_BIN`; run against a binary that does not exist yet in the e2e path; verify: the run fails
+- [x] 5.2 Green: build the binary, `SUT_BIN=<bin> go test ./...` in `e2e/`; fix any gap the scenarios show in `apps/cli`; verify: all eight scenarios pass
+- [x] 5.3 Commit the group (`kit ship`)
 
 ## 6. Docs, examples and version
 
