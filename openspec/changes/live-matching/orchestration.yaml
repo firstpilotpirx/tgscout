@@ -3,3 +3,18 @@ depends_on:
     why: filed after it, runs after it
   - change: hierarchical-settings
     why: reads the requests, chats and LLM settings
+prepared:
+  estimate: 3h30m
+  decisions:
+    - question: How is an edited message handled?
+      answer: Judged again only for requests whose earlier decision was «no»; a «yes» is never sent twice.
+    - question: What if the LLM answer is neither yes nor no?
+      answer: Ask once more with a stricter prompt, then save «no» and print a warning with the raw answer.
+    - question: Where does the request text go in the LLM call?
+      answer: Fixed rules in the system message; request and message text in the user message.
+    - question: Is the queue size a constant or a setting?
+      answer: A new root setting queue_size (default 1000, at least 1); the collector waits when the queue is full.
+    - question: What counts as a duplicate message?
+      answer: The same chat and message ID seen twice; the same text in another message is judged again.
+    - question: Explore scope — as in the proposal plus edited messages and queue_size?
+      answer: Yes, as proposed plus edited messages and the queue_size setting.
