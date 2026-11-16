@@ -3,3 +3,18 @@ depends_on:
     why: filed after it, runs after it
   - change: owner-notification
     why: builds on the send-then-mark order
+prepared:
+  estimate: 4h
+  decisions:
+    - question: Retry cap and grace time?
+      answer: backoff up to 60s, grace time 10s; both settings in tgscout.yaml with these defaults
+    - question: A message that fails with the LLM forever?
+      answer: after 10 failed tries save «no» with a warning, so the chat's cursor is not stalled
+    - question: Gap read after a Telegram reconnect?
+      answer: our cursor read, the same code as catch-up; not the MTProto library's gap recovery
+    - question: A send to the owner keeps failing?
+      answer: retry without end with growing pauses; the message stays unprocessed until sent
+    - question: Scope of the change?
+      answer: as proposed — LLM and send retries, back-pressure, reconnect with gap read, graceful stop, two crash tests
+    - question: "Interface mock: openspec/changes/delivery-resilience/mock/index.html"
+      answer: approved
