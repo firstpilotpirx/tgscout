@@ -1,0 +1,5 @@
+depends_on:
+  - change: owner-notification
+    why: filed after it, runs after it
+  - change: live-matching
+    why: reuses the collector, queue, matcher and cursor
