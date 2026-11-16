@@ -1,6 +1,7 @@
 # kit config of tgscout (agent-kit README § Project config)
 version_file: VERSION
 checks:
-  build_inputs: ["**/*.go", "go.mod", "go.sum", "go.work", "go.work.sum", "scripts/**", ".golangci.yml", ".go-arch-lint.yml"]
-  # after_group / before_merge: set by the first code change (scripts/qa.sh)
+  build_inputs: ["**/*.go", "go.mod", "go.sum", "go.work", "go.work.sum", "scripts/**", ".githooks/**", "_typos.toml", ".jscpd.json", "metrics/**", "e2e/**", "**/*.sql", "**/*.feature", ".golangci.yml", ".go-arch-lint.yml"]
+  after_group: scripts/qa.sh quick
+  before_merge: scripts/qa.sh
 manual_run: {}

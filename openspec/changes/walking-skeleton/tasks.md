@@ -2,12 +2,12 @@
 
 ## 1. Workspace, ports and checks
 
-- [ ] 1.1 Create `tgscout/go.work` (`use .`) and `tgscout/go.mod` (module `github.com/firstpilotpirx/tgscout`, Go 1.25.11) with the pinned versions of design § Versions; verify: `go mod tidy -diff` prints nothing
-- [ ] 1.2 Red: unit tests for `NewCollectMessage`, `NewMatchMessage` and `NewMatchingConfig` keeping their ports; verify: they fail to compile (types missing)
-- [ ] 1.3 Green: the five method-less driven ports, the two use cases in `core/application` and `MatchingConfig` with its `Ports` struct; verify: `go test -race ./components/...` passes
-- [ ] 1.4 Add `.golangci.yml` (tech matrix lint configuration), `.go-arch-lint.yml`, `_typos.toml`, `.jscpd.json`, `metrics/cyclomatic.tsv`, `scripts/check-complexity-ratchet.sh` and `scripts/qa.sh [quick|full]` with the pinned-version guard (design § Checks); set `after_group` and `before_merge` in `.claude/kit.yaml`; verify: `scripts/qa.sh quick` passes and a wrong pinned version makes it fail
-- [ ] 1.5 Add `.githooks/pre-commit` running `gitleaks git --redact` and set `git config core.hooksPath .githooks`; verify: the next `kit ship` runs the hook
-- [ ] 1.6 Commit the group (`kit ship`)
+- [x] 1.1 Create `tgscout/go.work` (`use .`) and `tgscout/go.mod` (module `github.com/firstpilotpirx/tgscout`, Go 1.25.11) with the pinned versions of design § Versions; verify: `go mod tidy -diff` prints nothing
+- [x] 1.2 Red: unit tests for `NewCollectMessage`, `NewMatchMessage` and `NewMatchingConfig` keeping their ports; verify: they fail to compile (types missing)
+- [x] 1.3 Green: the five method-less driven ports, the two use cases in `core/application` and `MatchingConfig` with its `Ports` struct; verify: `go test -race ./components/...` passes
+- [x] 1.4 Add `.golangci.yml` (tech matrix lint configuration), `.go-arch-lint.yml`, `_typos.toml`, `.jscpd.json`, `metrics/cyclomatic.tsv`, `scripts/check-complexity-ratchet.sh` and `scripts/qa.sh [quick|full]` with the pinned-version guard (design § Checks); set `after_group` and `before_merge` in `.claude/kit.yaml`; verify: `scripts/qa.sh quick` passes and a wrong pinned version makes it fail
+- [x] 1.5 Add `.githooks/pre-commit` running `gitleaks git --redact` and set `git config core.hooksPath .githooks`; verify: the next `kit ship` runs the hook
+- [x] 1.6 Commit the group (`kit ship`)
 
 ## 2. Config file check
 

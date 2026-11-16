@@ -1,0 +1,38 @@
+# Hexagon of matching: dependencies point inwards (docs/architecture/tgscout.html § Folders and layers).
+# Run by scripts/qa.sh with --project-path tgscout.
+version: 3
+allow:
+  depOnAnyVendor: false
+  ignoreNotFoundComponents: true
+
+excludeFiles:
+  - "^.*_test\\.go$"
+
+vendors:
+  cobra:   { in: github.com/spf13/cobra }
+  viper:   { in: github.com/spf13/viper }
+  migrate: { in: [github.com/golang-migrate/migrate/v4, github.com/golang-migrate/migrate/v4/**] }
+  sqlite3: { in: github.com/mattn/go-sqlite3 }
+  color:   { in: github.com/fatih/color }
+
+components:
+  app:         { in: apps/** }
+  infra:       { in: infra/** }
+  config:      { in: components/matching }
+  application: { in: components/matching/core/application/** }
+  domain:      { in: components/matching/core/domain/** }
+  adapters:    { in: components/matching/adapters/** }
+
+deps:
+  app:
+    anyProjectDeps: true
+    canUse: [cobra, color]
+  infra:
+    canUse: [sqlite3]
+  config:
+    mayDependOn: [application, domain]
+  application:
+    mayDependOn: [domain]
+  adapters:
+    mayDependOn: [application, domain]
+    canUse: [viper, migrate]

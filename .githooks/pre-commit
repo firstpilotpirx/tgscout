@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Scans the history for secrets before every commit (AGENTS.md § Open source and secrets).
+set -euo pipefail
+gitleaks git --redact
