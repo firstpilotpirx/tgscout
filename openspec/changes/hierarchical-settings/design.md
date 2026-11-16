@@ -58,8 +58,8 @@ Follows the agreed mock: the config line becomes `✓ <path>: <n> requests, <m> 
 | Scenario | Level |
 |---|---|
 | defaults fill what the file leaves out | unit (`Parse`) |
-| every form of chat reference is accepted | unit (`Parse`, `NewChatRef`) |
-| the root depth applies when nothing overrides it | unit (`Parse`) |
+| every form of chat reference is accepted | unit (`Parse`, `NewChatRef`) and E2E |
+| the root depth applies when nothing overrides it | unit (`Parse`); the feature file holds the Rule with a note, since no console output shows a depth yet |
 | a request overrides the root | unit (`Parse`) |
 | a chat overrides its request | unit (`Parse`) |
 | the same chat in two requests keeps two depths | unit (`Parse`) |

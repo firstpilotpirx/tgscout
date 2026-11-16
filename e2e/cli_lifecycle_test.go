@@ -24,7 +24,9 @@ type world struct {
 	schema string
 }
 
-const validConfig = "requests:\n  - id: bike\n    find: a kids bike, 16 inch, under 100 EUR\n    chats: ['@made_up_market']\n"
+// validConfig is a made-up config with every required field.
+const validConfig = "owner: '@made_up_owner'\nlm_studio:\n  model: example-model\n" +
+	"requests:\n  - id: bike\n    find: a kids bike, 16 inch, under 100 EUR\n    chats: ['@made_up_market']\n"
 
 func TestFeatures(t *testing.T) {
 	suite := godog.TestSuite{
@@ -35,7 +37,7 @@ func TestFeatures(t *testing.T) {
 		},
 	}
 	if suite.Run() != 0 {
-		t.Fatal("cli_lifecycle scenarios failed")
+		t.Fatal("scenarios failed")
 	}
 }
 
@@ -55,6 +57,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	givenSteps(sc, w)
 	whenSteps(sc, w)
 	thenSteps(sc, w)
+	settingsSteps(sc, w)
 }
 
 func givenSteps(sc *godog.ScenarioContext, w *world) {

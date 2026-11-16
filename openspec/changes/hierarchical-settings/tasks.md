@@ -30,9 +30,9 @@
 
 ## 5. E2E scenarios
 
-- [ ] 5.1 Red: `e2e/features/settings.feature` (`@settings @e2e`) with the scenarios of the `settings` spec at E2E level (the invalid-config outline, every problem at once, too many chats, the summary), their steps, and the full valid config in the `cli_lifecycle` steps; verify: `SUT_BIN=<old binary> go test -race -count=1 ./...` in `e2e/` fails on the new scenarios
-- [ ] 5.2 Green: build the new binary; verify: `SUT_BIN=<new binary> go test -race -count=1 ./...` passes
-- [ ] 5.3 Commit the group (`kit ship`)
+- [x] 5.1 Red: `e2e/features/settings.feature` (`@settings @e2e`) with the scenarios of the `settings` spec at E2E level (the invalid-config outline, every problem at once, too many chats, the summary), their steps, and the full valid config in the `cli_lifecycle` steps; verify: `SUT_BIN=<old binary> go test -race -count=1 ./...` in `e2e/` fails on the new scenarios
+- [x] 5.2 Green: build the new binary; verify: `SUT_BIN=<new binary> go test -race -count=1 ./...` passes
+- [x] 5.3 Commit the group (`kit ship`)
 
 ## 6. Example, docs and version
 
