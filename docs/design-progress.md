@@ -11,12 +11,11 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 - [x] L1 System Context — [context](architecture/context.html)
 - [x] L2 Container — [overview](architecture/overview.html), [store](architecture/store.html)
 - [x] L3 Component — tgscout — [tgscout](architecture/tgscout.html), [start](flows/start.html), [catch-up](flows/catch-up.html), [message path](flows/message-path.html)
-  - [ ] L4 Code — matching — dialogue — [overview](modules/matching/overview.html)
+  - [x] L4 Code — matching — [overview](modules/matching/overview.html)
 - [ ] Quality attributes — [quality attributes](architecture/quality-attributes.html)
 
 ## To discuss
 
-1. Proposal: L4 Code · component overview of matching ([matching](modules/matching/overview.html))
 
 ## Later, not now
 
@@ -52,6 +51,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-15 — One component, not three: collection, matching and notification are steps of one pipeline (at-least-once ties them), not separate business capabilities; a component is a microservice inside the monolith
 2026-11-16 — Draw the store schema, the queue message, the tgscout.yaml structure and a UML activity per case (L2 Container, L3 Component — tgscout)
 2026-11-16 — Owner approved every diagram; L1 System Context, L2 Container and L3 Component — tgscout accepted
+2026-11-16 — L4 Code · component overview of matching accepted: use cases CollectMessage and MatchMessage, five driven ports (L4 Code — matching)
 
 ## Review
 
