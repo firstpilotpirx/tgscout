@@ -78,6 +78,7 @@ Interface: CLI — `tgscout.yaml` format, start errors and the summary line on t
 - Field names: the L3 names (`catch_up`, `lm_studio`, `id`, `find`); the L2 sample on the board is updated in this change.
 - Chat reference: `@username` or a public link, a numeric ID for a private chat; the lookup itself is in `telegram-sign-in`.
 - Owner: `owner` in `tgscout.yaml` as `@username` or numeric ID; the example holds a placeholder.
+- YAML library: `github.com/goccy/go-yaml` (the owner's answer), replacing viper (the tech-matrix "Config / env" pick and the walking-skeleton choice) for line numbers and every error at once; a later slice that reads `.env` picks its own reader.
 - When both `messages` and `days` are set, which limit wins is decided in `catch-up`; this slice only stores both.
 
 ## Release
