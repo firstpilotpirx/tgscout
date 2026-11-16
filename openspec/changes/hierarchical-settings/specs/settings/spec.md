@@ -8,7 +8,7 @@ What the owner writes into the config file: the requests to look for, the chats 
 
 ### Requirement: Config file fields
 
-The config file SHALL hold, at the root: `owner` (required; `@username` or a numeric ID), `workers` (number of matcher workers, at least 1, default 2), `lm_studio` with `url` (default `http://localhost:1234/v1`), `model` (required) and `timeout` (a duration, default 60s), `catch_up` with `messages` and `days` (defaults 500 and 3), and `requests` (one or more). Each request SHALL hold `id` (unique), `find` (the text the LLM compares a message with), `chats` (one or more) and an optional `catch_up`. Each chat SHALL be a chat reference — `@username`, a public `t.me` link or a numeric ID — or an object with `ref` and an optional `catch_up`. Only `catch_up` MAY be set on a request or a chat. tgscout SHALL read the file once, at start. Secrets SHALL never be in this file.
+The config file SHALL hold at the root `owner` (required: `@username` or a numeric ID), `workers` (default 2), `lm_studio` (`url` default `http://localhost:1234/v1`, `model` required, `timeout` default 60s), `catch_up` (`messages`, `days`) and one or more `requests`. A request SHALL hold a unique `id`, the `find` text, one or more `chats` and an optional `catch_up`. A chat SHALL be a chat reference (`@username`, a public `t.me` link or a numeric ID) or an object with `ref` and an optional `catch_up`.
 
 #### Scenario: defaults fill what the file leaves out
 
@@ -25,7 +25,7 @@ The config file SHALL hold, at the root: `owner` (required; `@username` or a num
 
 ### Requirement: Catch-up depth override
 
-For every pair of a request and one of its chats, tgscout SHALL resolve the catch-up depth field by field: the chat's value, else the request's value, else the root value, else the built-in default (500 messages, 3 days). The same chat bound to two requests SHALL keep a depth per request.
+For every pair of a request and one of its chats, tgscout SHALL resolve the catch-up depth field by field: the chat's value, else the request's value, else the root value, else the built-in default (500 messages, 3 days). The same chat bound to two requests SHALL keep a depth per request. Only `catch_up` MAY be set on a request or a chat; tgscout SHALL read the file once, at start.
 
 #### Scenario: the root depth applies when nothing overrides it
 
@@ -60,7 +60,7 @@ For every pair of a request and one of its chats, tgscout SHALL resolve the catc
 
 ### Requirement: Config validation
 
-tgscout SHALL check the whole config before it opens the database and SHALL list every problem at once, one line each, with the line number and the field, then exit with code 1. A problem is: no requests; a request without `id`, `find` or chats; two requests with the same `id`; an unknown key; a value of the wrong kind; a zero or negative depth; an `lm_studio.url` that is not an http or https address; a missing `lm_studio.model`; `workers` below 1; a missing or malformed owner; a malformed chat reference; a secret key (`api_id`, `api_hash`, `session`) anywhere in the file.
+tgscout SHALL check the whole config before it opens the database, list every problem at once, one line each with its line and field, and exit with code 1. A problem is: no requests; a request without `id`, `find` or chats; a duplicate `id`; an unknown key; a wrong kind of value; a depth below 1; an `lm_studio.url` that is not http or https; no `lm_studio.model`; `workers` below 1; a missing or malformed owner or chat reference; a secret key (`api_id`, `api_hash`, `session`) anywhere.
 
 #### Scenario Outline: an invalid config stops the start
 
