@@ -19,6 +19,12 @@ Design pages this slice implements:
 - A message that is already processed is skipped, so a restart repeats nothing; a message that arrives live while its chat is being caught up is judged once.
 - When every chat is read and every caught-up message is processed, tgscout prints the summary on the console: chats read, messages read, skipped, judged, matches, and the time it took.
 - Telegram's FLOOD_WAIT during history reads is waited out and the read goes on.
+- Chats are caught up in the order of `tgscout.yaml`; the console prints one line per chat as it is read.
+- When both limits are set, reading stops at whichever comes first.
+- A cursor older than the depth window: only the depth window is read; the summary counts the chats with a gap.
+- Each history match reaches the owner as its own private message, as in live matching; the summary goes to the console only; the context page line about «one summary message» is fixed on the board.
+- While a chat is being caught up, its cursor does not move past the caught-up range because of live messages; it moves once that chat's catch-up is done, so a crash in the middle loses nothing.
+- The summary also counts judging errors; such messages stay unprocessed and are judged again at the next start.
 
 Current stage: MVP. Target stage: MVP.
 Scope: history read at start from the cursor within the effective depth, the depth rules, running beside live listening, the summary line.
@@ -71,12 +77,14 @@ Interface: CLI — the summary line; matches go to the owner as in live matching
 
 - Changed: `adapters/primary/collect/telegram` (history reader), `CollectMessage` (requests filtered by depth), `apps/cli/main.go` (the fork of the start flow).
 
-## Open points
+## Decisions
 
-- Where history matches go: the context page says «history matches come as one summary message», the decisions say every found message goes to the owner as a plain private message, and the catch-up flow prints the summary on the console. Proposed: each history match is its own private message, as in live matching, and the summary goes to the console only; the context page line is fixed on the board in this change.
-- Both limits set: proposed — stop at whichever limit comes first (500 messages or 3 days, whichever is fewer messages).
-- Order of chats: proposed — as listed in `tgscout.yaml`.
-- A cursor older than the depth window (tgscout off for weeks): proposed — read only the depth window and say in the summary how many chats had a gap.
+- History matches: each its own private message; the summary on the console only.
+- Both limits set: stop at whichever comes first.
+- Order of chats: as listed in `tgscout.yaml`.
+- A cursor older than the depth window: read only the window; the summary counts the chats with a gap.
+- Cursor during catch-up: waits until the chat's catch-up is done.
+- Console look: [mock](mock/index.html).
 
 ## Release
 
