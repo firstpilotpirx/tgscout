@@ -11,19 +11,21 @@ Design pages this slice implements:
 ## What Changes
 
 - Each match line shows its latency: from the message's time in the chat to the confirmed send to the owner.
-- Every few minutes, and at stop, the console shows one status line: messages in, judged, matches, queue length, p95 latency, p95 LLM call time; a warning when the queue keeps growing (the local model cannot keep up).
+- Every `status_interval` (a new root setting in `tgscout.yaml`, default `5m`, at least `10s`), and at stop, the console shows one status line: messages in, judged, matches, queue length, p95 latency and p95 LLM call time over the last interval (the stop line covers the whole run), each p95 marked against its target; a warning when the queue length grew in 3 status lines in a row (the local model cannot keep up).
 - The catch-up summary shows its time against the 15-minute target.
-- A load test in `e2e/` with a fake Telegram and a fake LLM (with a set answer time) runs 100 chats, a peak of 10 messages per second, and a day's worth of 5,000 messages, and checks p95 ≤ 10 s from message to send.
-- A catch-up test runs 100 chats × 500 messages and checks it ends within 15 minutes with the fake LLM's answer time.
-- A size test fills the store with a year of decisions (5,000 messages a day × the requests of their chats) and checks the file stays under 10 GB.
-- Privacy: at start tgscout warns when `lm_studio.url` is not on this machine (chat texts would leave it); the session file mode 600 check from `telegram-sign-in` stays; no message text goes into logs beyond the console match line.
-- `README.md` gets a short «Targets» section: what the numbers are and how to read the status line.
+- A load test in `e2e/` with a fake Telegram and a fake LLM answering in 0.5 s with 4 workers runs 100 chats and a peak burst of 10 messages per second for 10 s inside a day's flow, and checks p95 ≤ 10 s from message to send; the day's 5,000 messages run with time scaled down.
+- A catch-up test runs 100 chats × 500 messages with time scaled 60 times (15 minutes → 15 s, the fake LLM's answer time scaled the same way) and checks the summary comes within the scaled 15 minutes.
+- A size test fills the store with 100,000 made-up decisions, measures bytes per row and projects a year (5,000 messages a day × the requests of their chats) under 10 GB.
+- Privacy: at start tgscout warns (and keeps running) when the host of `lm_studio.url` is not `localhost`, `127.0.0.1` or `::1` (chat texts would leave it); the session file mode 600 check from `telegram-sign-in` stays; no message text goes into logs beyond the console match line.
+- `README.md` gets a short «Targets» section: what the numbers are, how to read the status line, and the real-model condition: p95 ≤ 10 s needs a model that answers within about 2 s, and with a local model the 15-minute catch-up holds only for about 2,000 judged messages.
+- The load, catch-up and size tests run only in the before-merge level of `scripts/qa.sh`; together they take under a minute.
+- Interface mock: [mock/index.html](mock/index.html), agreed at preparation.
 
 Current stage: MVP. Target stage: MVP.
-Scope: latency and queue metrics on the console, the status line, load, catch-up and size tests, the non-local LLM warning, the README targets section.
+Scope: latency and queue metrics on the console, the status line and its `status_interval` setting, load, catch-up and size tests, the non-local LLM warning, the README targets section.
 Acceptance bar: the three tests pass in `e2e/` (load, catch-up, size); a manual run shows the status line and latency per match with LM Studio.
 Out of scope: metrics export (Prometheus, OpenTelemetry), dashboards, alerts; tuning the real model; a TUI or GUI (version 1.x and later).
-Interface: CLI — the status line, latency on match lines, the start warning.
+Interface: CLI — the status line, latency on match lines, the catch-up target mark, the start warning; config — the `status_interval` key.
 
 ## Acceptance scenarios
 
@@ -67,13 +69,16 @@ Interface: CLI — the status line, latency on match lines, the start warning.
 - New: metrics in the core (latency, queue length), the status line printer, `e2e/` load, catch-up and size tests.
 - Changed: match line format, catch-up summary, start checks, `README.md`.
 
-## Open points
+## Decided at preparation
 
-- The fake LLM's answer time in the tests: the p95 ≤ 10 s target depends on the real model. Proposed: 1 s per call with 4 workers in the load test, and the README states the real-model condition (a model that answers within about 2 s on the owner's Mac).
-- Non-local LLM: warn or refuse. Proposed: warn, since the `llm` adapter is built to also reach OpenAI or OpenRouter when the owner chooses it.
-- Status interval: proposed — 5 minutes, a setting.
-- Load tests may be slow for `scripts/qa.sh`: proposed — they run in the before-merge level only, with a shortened day (time scaled) so they finish in under a minute.
-- Version 1 done: after this slice, whether to tag `1.0.0` instead of `0.8.0` is the owner's call at its proposal.
+- Fake LLM in the load test: 0.5 s per call, 4 workers, a 10 s peak burst at 10 messages per second.
+- Catch-up test: time scaled 60 times; the README states the real-model limit.
+- Heavy tests: before-merge level only, under a minute together.
+- Non-local LLM: warn and keep running.
+- Status interval: setting `status_interval`, default 5 minutes; p95 over the last interval.
+- «Model is behind»: the queue grew in 3 status lines in a row.
+- Size test: a 100,000-row sample projected to a year.
+- Version: 0.8.0; 1.0.0 comes later, after the owner's manual run.
 
 ## Release
 

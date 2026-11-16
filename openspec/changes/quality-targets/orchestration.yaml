@@ -1,3 +1,26 @@
 depends_on:
   - change: delivery-resilience
     why: filed after it, runs after it
+prepared:
+  estimate: 3h
+  decisions:
+    - question: "Fake LLM in the load test (peak 10 msgs/s, p95 <= 10 s)?"
+      answer: "0.5 s per call, 4 workers, a 10 s peak burst at 10 msgs/s inside the day's flow"
+    - question: "Catch-up test: 50,000 LLM calls cannot fit 15 min with a local model; what to do?"
+      answer: "Time scaled 60x (15 min -> 15 s); README states the real-model limit (about 2,000 judged messages)"
+    - question: "When do the load, catch-up and size tests run?"
+      answer: "Only in the before-merge level of scripts/qa.sh, under a minute together"
+    - question: "lm_studio.url is not on this machine: warn or stop?"
+      answer: "Warn and keep running; local hosts are localhost, 127.0.0.1, ::1"
+    - question: "Status line interval?"
+      answer: "Root setting status_interval in tgscout.yaml, default 5m, at least 10s; also at stop"
+    - question: "p95 in the status line over which messages?"
+      answer: "The last interval; counters since start; the stop line covers the whole run"
+    - question: "When to warn that the model is behind?"
+      answer: "When the queue length grew in 3 status lines in a row"
+    - question: "Size test: how to measure a year of data?"
+      answer: "Fill 100,000 made-up rows, measure bytes per row, project a year under 10 GB"
+    - question: "Scope and version?"
+      answer: "As in the proposal plus the answers above (status_interval setting); version 0.8.0"
+    - question: "Interface mock: openspec/changes/quality-targets/mock/index.html"
+      answer: "approved"
