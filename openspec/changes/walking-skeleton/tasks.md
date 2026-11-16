@@ -11,9 +11,9 @@
 
 ## 2. Config file check
 
-- [ ] 2.1 Red: integration tests for `CheckConfigFile`: a missing path gives `ErrConfigNotFound`; broken YAML on line 4 gives `ConfigSyntaxError` with line 4; a valid file gives no error; verify: `go test -race -tags=integration -run TestCheckConfigFile ./components/...` fails
-- [ ] 2.2 Green: `secondary/settings/yaml/yaml_config_file.go` with viper; verify: the 2.1 tests pass
-- [ ] 2.3 Commit the group (`kit ship`)
+- [x] 2.1 Red: integration tests for `CheckConfigFile`: a missing path gives `ErrConfigNotFound`; broken YAML on line 4 gives `ConfigSyntaxError` with line 4; a valid file gives no error; verify: `go test -race -tags=integration -run TestCheckConfigFile ./components/...` fails
+- [x] 2.2 Green: `secondary/settings/yaml/yaml_config_file.go` with viper; verify: the 2.1 tests pass
+- [x] 2.3 Commit the group (`kit ship`)
 
 ## 3. Database and first migration
 
