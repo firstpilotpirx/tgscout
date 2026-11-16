@@ -22,7 +22,7 @@ See proposal.md § Why. The repository holds only the design board and OpenSpec 
 ```
 tgscout/                                   # workspace: go.work (use .) + go.mod module github.com/firstpilotpirx/tgscout
   apps/cli/                                # package main
-    main.go                                # os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
+    main.go                                # signal.NotifyContext, then os.Exit(run(ctx, os.Args[1:], os.Stdout, os.Stderr, plain))
     root_command.go                        # cobra root command, flags, exit codes
     start.go                               # the start flow: config → database → wait for a signal → stop
     console.go                             # ✓ ✗ ● → lines, color and [ok]/[fail] fallback

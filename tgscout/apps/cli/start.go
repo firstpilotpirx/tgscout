@@ -31,13 +31,13 @@ func start(ctx context.Context, opts options, con *console) int {
 	existed := statErr == nil
 	db, err := sqlitedb.Open(path)
 	if err != nil {
-		con.fail(fmt.Sprintf("database %s: %v", path, err), "")
+		con.fail(fmt.Sprintf("database %s: %v", path, err), "", path)
 		return exitError
 	}
 	result, err := sqlite.Migrate(db)
 	if err != nil {
 		_ = db.Close() // the migration error is the one to report
-		con.fail(fmt.Sprintf("database %s: %v", path, err), "")
+		con.fail(fmt.Sprintf("database %s: %v", path, err), "", path)
 		return exitError
 	}
 	con.ok("database", path, databaseDetail(result, existed))
@@ -46,7 +46,7 @@ func start(ctx context.Context, opts options, con *console) int {
 	<-ctx.Done()
 	con.step("stopping…")
 	if err := db.Close(); err != nil {
-		con.fail(fmt.Sprintf("database %s: close: %v", path, err), "")
+		con.fail(fmt.Sprintf("database %s: close: %v", path, err), "", path)
 		return exitError
 	}
 	con.done("stopped")
@@ -61,9 +61,9 @@ func checkConfig(path string, con *console) bool {
 		con.ok("config", path, "")
 		return true
 	case errors.Is(err, yaml.ErrConfigNotFound):
-		con.fail("config file not found: "+path, "copy tgscout.yaml.example there, or pass --config <path>")
+		con.fail("config file not found: "+path, "copy tgscout.yaml.example there, or pass --config <path>", path)
 	case errors.As(err, &syntaxErr):
-		con.fail("config is not valid YAML: "+path, lineHint(syntaxErr))
+		con.fail("config is not valid YAML: "+path, lineHint(syntaxErr), path)
 	default:
 		con.fail(err.Error(), "")
 	}

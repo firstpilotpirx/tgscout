@@ -57,7 +57,7 @@ e2e/then_steps_test.go	stderrHas	1
 e2e/then_steps_test.go	stdoutHas	1
 e2e/then_steps_test.go	thenSteps	1
 tgscout/apps/cli/console.go	done	1
-tgscout/apps/cli/console.go	fail	2
+tgscout/apps/cli/console.go	fail	3
 tgscout/apps/cli/console.go	newConsole	4
 tgscout/apps/cli/console.go	ok	2
 tgscout/apps/cli/console.go	plainOutput	2
@@ -90,8 +90,8 @@ tgscout/apps/cli/start_integration_test.go	TestDatabaseInMissingFolderGivesCode1
 tgscout/apps/cli/start_integration_test.go	TestFirstStartCreatesTheDatabaseAndStops	1
 tgscout/apps/cli/start_integration_test.go	TestMissingConfigGivesCode1AndNoDatabase	1
 tgscout/apps/cli/start_integration_test.go	TestSecondStartSaysSchemaUpToDate	1
+tgscout/apps/cli/start_integration_test.go	stopped	1
 tgscout/apps/cli/start_test.go	TestDefaultDatabaseSitsNextToTheConfig	1
-tgscout/apps/cli/start_test.go	stopped	1
 tgscout/apps/cli/start_test.go	writeValidConfig	1
 tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator.go	Migrate	6
 tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator.go	result	3

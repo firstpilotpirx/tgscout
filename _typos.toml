@@ -1,2 +1,2 @@
 [files]
-extend-exclude = ["docs/**/*.html", "openspec/changes/*/mock/*.html", "*.sum"]
+extend-exclude = ["docs/**/*.html", "openspec/changes/*/mock/*.html", "*.sum", "go.mod"]

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -69,8 +70,12 @@ func (c *console) step(text string) { c.println(c.out, c.cyan.Sprint(c.marks.ste
 
 func (c *console) done(text string) { c.println(c.out, c.green.Sprint(c.marks.ok)+" "+text) }
 
-// fail prints an error line and its hint to errOut.
-func (c *console) fail(text, hint string) {
+// fail prints an error line and its hint to errOut; each path in paths is
+// shown red inside the text.
+func (c *console) fail(text, hint string, paths ...string) {
+	for _, path := range paths {
+		text = strings.ReplaceAll(text, path, c.red.Sprint(path))
+	}
 	c.println(c.errOut, c.red.Sprint(c.marks.fail)+" "+text)
 	if hint != "" {
 		c.println(c.errOut, "  "+c.dim.Sprint(hint))

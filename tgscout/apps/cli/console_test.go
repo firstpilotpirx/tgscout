@@ -19,7 +19,7 @@ func TestConsoleMarksWithSymbols(t *testing.T) {
 	c.running()
 	c.step("stopping…")
 	c.done("stopped")
-	c.fail("config file not found: ./bikes.yaml", "copy tgscout.yaml.example there")
+	c.fail("config file not found: ./bikes.yaml", "copy tgscout.yaml.example there", "./bikes.yaml")
 
 	assert.Contains(t, out.String(), "✓")
 	assert.Contains(t, out.String(), "config")
@@ -29,6 +29,8 @@ func TestConsoleMarksWithSymbols(t *testing.T) {
 	assert.Contains(t, out.String(), "→")
 	assert.Contains(t, out.String(), "\x1b[", "colored")
 	assert.Contains(t, errOut.String(), "✗")
+	assert.Contains(t, errOut.String(), "\x1b[31;1m./bikes.yaml", "the offending path is red")
+	assert.Contains(t, out.String(), "\x1b[36m./tgscout.yaml", "paths are cyan")
 	assert.Contains(t, errOut.String(), "\n  ")
 	assert.Contains(t, errOut.String(), "copy tgscout.yaml.example there")
 }
