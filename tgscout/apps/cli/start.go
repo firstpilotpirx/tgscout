@@ -86,4 +86,3 @@ func databaseDetail(result sqlite.MigrationResult, existed bool) string {
 	}
 	return fmt.Sprintf("schema up to date · migration %d", result.Version)
 }
-

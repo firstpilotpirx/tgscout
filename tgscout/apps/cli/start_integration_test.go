@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,6 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// stopped is a context that is already cancelled: tgscout stops right after it starts.
+func stopped() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	return ctx
+}
 
 func TestMissingConfigGivesCode1AndNoDatabase(t *testing.T) {
 	dir := t.TempDir()
@@ -72,4 +80,3 @@ func TestDatabaseInMissingFolderGivesCode1(t *testing.T) {
 	assert.Equal(t, 1, code)
 	assert.Contains(t, errOut, "[fail] database "+db)
 }
-
