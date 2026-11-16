@@ -1,0 +1,3 @@
+depends_on:
+  - change: delivery-resilience
+    why: filed after it, runs after it
