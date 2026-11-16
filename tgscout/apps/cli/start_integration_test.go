@@ -4,8 +4,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,7 +42,7 @@ func TestBrokenYamlGivesCode1AndTheLine(t *testing.T) {
 
 	assert.Equal(t, 1, code)
 	assert.Contains(t, errOut, "[fail] config is not valid YAML: "+config)
-	assert.Contains(t, errOut, "line 4: mapping values are not allowed in this context")
+	assert.Contains(t, errOut, "line 4: mapping value is not allowed in this context")
 }
 
 func TestFirstStartCreatesTheDatabaseAndStops(t *testing.T) {
@@ -51,7 +53,7 @@ func TestFirstStartCreatesTheDatabaseAndStops(t *testing.T) {
 
 	assert.Equal(t, 0, code, errOut)
 	assert.FileExists(t, filepath.Join(dir, "tgscout.db"))
-	assert.Contains(t, out, "[ok] config   "+config)
+	assert.Contains(t, out, "[ok] "+config+": 1 request, 1 chat, model example-model")
 	assert.Contains(t, out, "[ok] database "+filepath.Join(dir, "tgscout.db")+" created · migration 1 · 3 tables")
 	assert.Contains(t, out, "[run] running — press Ctrl+C to stop")
 	assert.Contains(t, out, "-> stopping…")
@@ -79,4 +81,37 @@ func TestDatabaseInMissingFolderGivesCode1(t *testing.T) {
 
 	assert.Equal(t, 1, code)
 	assert.Contains(t, errOut, "[fail] database "+db)
+}
+
+func TestInvalidConfigGivesCode1EveryErrorAndNoDatabase(t *testing.T) {
+	dir := t.TempDir()
+	config := filepath.Join(dir, "tgscout.yaml")
+	require.NoError(t, os.WriteFile(config, []byte("owner: '@made_up_owner'\nlm_studio: {model: m}\n"+
+		"requests:\n  - id: bike\n    find: x\n    chats: []\napi_hash: x\n"), 0o600))
+
+	code, out, errOut := runTgscout(stopped(), "--config", config)
+
+	assert.Equal(t, 1, code)
+	assert.NotContains(t, out, "[ok]")
+	assert.Contains(t, errOut, "[fail] "+config+": 2 errors")
+	assert.Contains(t, errOut, "line 6  requests[0].chats  a request needs at least one chat")
+	assert.Contains(t, errOut, "line 7  api_hash           secrets go to .env, not to tgscout.yaml")
+	assert.NoFileExists(t, filepath.Join(dir, "tgscout.db"))
+}
+
+func TestTooManyChatsWarnsAndStarts(t *testing.T) {
+	dir := t.TempDir()
+	config := filepath.Join(dir, "tgscout.yaml")
+	chats := make([]string, 0, 101)
+	for i := range 101 {
+		chats = append(chats, fmt.Sprintf("'%d'", 1000+i))
+	}
+	require.NoError(t, os.WriteFile(config, []byte("owner: '@made_up_owner'\nlm_studio: {model: m}\n"+
+		"requests:\n  - id: bike\n    find: x\n    chats: ["+strings.Join(chats, ", ")+"]\n"), 0o600))
+
+	code, out, errOut := runTgscout(stopped(), "--config", config)
+
+	assert.Equal(t, 0, code, errOut)
+	assert.Contains(t, errOut, "[warn] "+config+": 101 chats; the design maximum is 100")
+	assert.Contains(t, out, "[ok] "+config+": 1 request, 101 chats, model m")
 }

@@ -10,11 +10,11 @@ import (
 
 // marks are the status marks of one line; plainMarks replace the symbols
 // when color is off (terminal-output.md).
-type marks struct{ ok, fail, run, step string }
+type marks struct{ ok, fail, warn, run, step string }
 
 var (
-	symbolMarks = marks{ok: "✓", fail: "✗", run: "●", step: "→"}
-	plainMarks  = marks{ok: "[ok]", fail: "[fail]", run: "[run]", step: "->"}
+	symbolMarks = marks{ok: "✓", fail: "✗", warn: "⚠", run: "●", step: "→"}
+	plainMarks  = marks{ok: "[ok]", fail: "[fail]", warn: "[warn]", run: "[run]", step: "->"}
 )
 
 // console writes the status lines of tgscout: results to out, errors to errOut.
@@ -23,6 +23,7 @@ type console struct {
 	marks       marks
 	green, red  *color.Color
 	cyan, dim   *color.Color
+	yellow      *color.Color
 }
 
 // plainOutput tells whether output goes without color: color.NoColor covers a
@@ -39,8 +40,9 @@ func newConsole(out, errOut io.Writer, plain bool) *console {
 		out: out, errOut: errOut, marks: symbolMarks,
 		green: color.New(color.FgGreen), red: color.New(color.FgRed, color.Bold),
 		cyan: color.New(color.FgCyan), dim: color.New(color.Faint),
+		yellow: color.New(color.FgYellow),
 	}
-	for _, each := range []*color.Color{c.green, c.red, c.cyan, c.dim} {
+	for _, each := range []*color.Color{c.green, c.red, c.cyan, c.dim, c.yellow} {
 		if plain {
 			each.DisableColor()
 		} else {

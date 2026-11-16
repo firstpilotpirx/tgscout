@@ -23,7 +23,8 @@ func databasePath(config, db string) string {
 
 // start walks the start flow: config, database, wait for a stop, close.
 func start(ctx context.Context, opts options, con *console) int {
-	if !checkConfig(opts.config, con) {
+	settings, ok := loadConfig(opts.config, con)
+	if !ok {
 		return exitError
 	}
 	path := databasePath(opts.config, opts.db)
@@ -41,7 +42,7 @@ func start(ctx context.Context, opts options, con *console) int {
 		return exitError
 	}
 	con.ok("database", path, databaseDetail(result, existed))
-	_ = matching.NewMatchingConfig(matching.Ports{}) // the next slices pass their adapters here
+	_ = matching.NewMatchingConfig(matching.Ports{Settings: settings}) // the next slices pass their other adapters here
 	con.running()
 	<-ctx.Done()
 	con.step("stopping…")
@@ -53,21 +54,38 @@ func start(ctx context.Context, opts options, con *console) int {
 	return exitOK
 }
 
-func checkConfig(path string, con *console) bool {
-	_, err := yaml.LoadSettings(path)
+// loadConfig reads tgscout.yaml and prints its warnings and summary, or
+// every problem it has.
+func loadConfig(path string, con *console) (*yaml.YamlSettingsRepository, bool) {
+	repository, err := yaml.LoadSettings(path)
 	var syntaxErr *yaml.ConfigSyntaxError
+	var configErrs *yaml.ConfigErrors
 	switch {
 	case err == nil:
-		con.ok("config", path, "")
-		return true
+		for _, warning := range repository.Warnings() {
+			con.warn(path, warning)
+		}
+		settings := repository.Settings()
+		con.summary(path, len(settings.Requests), settings.DistinctChats(), settings.LmStudio.Model)
+		return repository, true
 	case errors.Is(err, yaml.ErrConfigNotFound):
 		con.fail("config file not found: "+path, "copy tgscout.yaml.example there, or pass --config <path>", path)
 	case errors.As(err, &syntaxErr):
 		con.fail("config is not valid YAML: "+path, lineHint(syntaxErr), path)
+	case errors.As(err, &configErrs):
+		con.failList(path, listRows(configErrs.Errors))
 	default:
 		con.fail(err.Error(), "")
 	}
-	return false
+	return nil, false
+}
+
+func listRows(errs []yaml.FieldError) []listRow {
+	rows := make([]listRow, 0, len(errs))
+	for _, each := range errs {
+		rows = append(rows, listRow{line: each.Line, field: each.Field, reason: each.Reason})
+	}
+	return rows
 }
 
 func lineHint(err *yaml.ConfigSyntaxError) string {
