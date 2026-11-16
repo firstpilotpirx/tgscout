@@ -16,9 +16,9 @@
 
 ## 3. Load the file and replace the viper check
 
-- [ ] 3.1 Red: integration tests for `LoadSettings`: a missing path gives `ErrConfigNotFound`; broken YAML on line 4 gives `ConfigSyntaxError` with line 4; an invalid file gives `ConfigErrors` with its path; a valid file gives the resolved settings and its warnings; verify: `go test -race -tags=integration -run TestLoadSettings ./components/...` fails
-- [ ] 3.2 Green: `LoadSettings` and `YamlSettingsRepository`; delete `CheckConfigFile` and its tests; drop viper from `go.mod`, `go.sum` and `.go-arch-lint.yml`, add goccy to the adapters' vendors; verify: the 3.1 tests pass and `go mod tidy -diff` prints nothing
-- [ ] 3.3 Commit the group (`kit ship`)
+- [x] 3.1 Red: integration tests for `LoadSettings`: a missing path gives `ErrConfigNotFound`; broken YAML on line 4 gives `ConfigSyntaxError` with line 4; an invalid file gives `ConfigErrors` with its path; a valid file gives the resolved settings and its warnings; verify: `go test -race -tags=integration -run TestLoadSettings ./components/...` fails
+- [x] 3.2 Green: `LoadSettings` and `YamlSettingsRepository`; delete `CheckConfigFile` and its tests; drop viper from `go.mod`, `go.sum` and `.go-arch-lint.yml`, add goccy to the adapters' vendors; verify: the 3.1 tests pass and `go mod tidy -diff` prints nothing
+- [x] 3.3 Commit the group (`kit ship`)
 
 ## 4. Start: summary, errors and warning on the console
 

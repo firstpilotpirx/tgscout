@@ -54,7 +54,7 @@ func start(ctx context.Context, opts options, con *console) int {
 }
 
 func checkConfig(path string, con *console) bool {
-	err := yaml.CheckConfigFile(path)
+	_, err := yaml.LoadSettings(path)
 	var syntaxErr *yaml.ConfigSyntaxError
 	switch {
 	case err == nil:
