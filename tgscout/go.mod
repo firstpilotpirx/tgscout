@@ -2,6 +2,8 @@ module github.com/firstpilotpirx/tgscout
 
 go 1.25.11
 
+toolchain go1.27.4
+
 require (
 	github.com/fatih/color v1.19.0
 	github.com/golang-migrate/migrate/v4 v4.20.1

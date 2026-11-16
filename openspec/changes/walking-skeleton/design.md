@@ -97,7 +97,7 @@ scripts/qa.sh
 
 ### Versions
 
-Go 1.25.11 in `go.mod` (the floor golang-migrate v4.20.1 sets; the tech matrix asks 1.23+), cobra v1.10.2, viper v1.21.0, migrate v4.20.1, go-sqlite3 v1.14.52 (v1.14.53 is under two weeks old), godog v0.16.0, testify v1.12.1, color v1.19.0.
+Go 1.25.11 in `go.mod` (the floor golang-migrate v4.20.1 sets; the tech matrix asks 1.23+) and `toolchain go1.27.4` in `go.work` and both `go.mod` files (`govulncheck` finds GO-2026-6859 in the 1.27.3 standard library; the go command downloads the pinned toolchain), cobra v1.10.2, viper v1.21.0, migrate v4.20.1, go-sqlite3 v1.14.52 (v1.14.53 is under two weeks old), godog v0.16.0, testify v1.12.1, color v1.19.0.
 
 ## Interface mock
 

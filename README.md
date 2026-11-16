@@ -4,7 +4,7 @@ tgscout watches chosen Telegram chats and writes to you when a message matches a
 
 ## Install
 
-- Go 1.25.11 or later.
+- Go 1.25.11 or later; the go command then downloads the pinned toolchain (`toolchain go1.27.4`).
 - A C compiler (cgo builds the SQLite driver): Xcode command line tools on macOS, `gcc` on Linux.
 - Run once after the clone, so every commit is scanned for secrets:
 

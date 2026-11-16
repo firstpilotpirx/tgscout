@@ -2,6 +2,8 @@ module github.com/firstpilotpirx/tgscout/e2e
 
 go 1.25.11
 
+toolchain go1.27.4
+
 require (
 	github.com/cucumber/godog v0.16.0
 	github.com/mattn/go-sqlite3 v1.14.52
