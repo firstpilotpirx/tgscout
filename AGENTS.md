@@ -2,7 +2,7 @@
 
 ## What this project is
 
-tgscout reads chosen Telegram chats from its own ordinary Telegram account (MTProto, a second account, not the owner's) and writes to the owner from that account when a message matches a standing request ("a kids' bike, 16 inch, under 100 €"). A local LLM judge (LM Studio through its OpenAI-compatible API) decides each match. Version 1 is a console program: real time plus a short catch-up of recent history. Written in Go; the layout follows `~/.claude/rules-custom/architecture-go.md` and is set by the first code change.
+tgscout reads chosen Telegram chats from its own ordinary Telegram account (MTProto, a second account, not the owner's) and writes to the owner from that account when a message matches a standing request ("a kids' bike, 16 inch, under 100 €"). A local LLM judge (LM Studio through its OpenAI-compatible API) decides each match. Version 1 is a console program: real time plus a short catch-up of recent history. Written in Go; the code lives in `tgscout/` (Go workspace, module `github.com/firstpilotpirx/tgscout`) with the layout of `~/.claude/rules-custom/architecture-go.md`; the E2E tests are the separate module `e2e/`.
 
 **Product lifecycle stage:** PoC.
 
@@ -60,14 +60,14 @@ Every behavior change in stage 5 is test-first (`tdd` skill):
 
 ## Gherkin
 
-None in this repository yet: the first code change decides the Gherkin runner and where `.feature` files live (`~/.claude/rules-custom/testing-*-go.md`). Each `.feature` scenario matches a spec scenario by meaning (`~/.claude/rules-custom/gherkin.md`); the design of each change names the test level of every scenario.
+The runner is godog, called from `go test` in the `e2e/` module; `.feature` files live in `e2e/features/`, tagged with the capability and the level (`@cli_lifecycle @e2e`); `@wip` is skipped. The steps drive the built binary named by `SUT_BIN`. Each `.feature` scenario matches a spec scenario by meaning (`~/.claude/rules-custom/gherkin.md`); the design of each change names the test level of every scenario.
 
 ## How to verify a change
 
 | When | Command |
 |---|---|
-| At TDD Red and Green, on the new test | `go test -race -run '<TestName>' ./<package>/...` |
-| Once per change, after the last task group | `scripts/qa.sh`, set up by the first code change (`kit verify` in the background runs the level `kit checks-needed` names) |
+| At TDD Red and Green, on the new test | in `tgscout/`: `go test -race -run '<TestName>' ./<package>/...` (add `-tags=integration` for an integration test); in `e2e/`: `SUT_BIN=<built binary> go test -race -count=1 ./...` |
+| Once per change, after the last task group | `scripts/qa.sh quick` (vet, lint, architecture, unit tests) or `scripts/qa.sh full` (the default: adds every other check, integration and E2E); `kit verify` in the background runs the level `kit checks-needed` names |
 | Before merge | `scripts/qa.sh` and `gitleaks git` |
 
 No check after an edit or a task group beyond the tests `tdd` writes; the checks run once per change.

@@ -22,7 +22,7 @@ See proposal.md § Why. The repository holds only the design board and OpenSpec 
 ```
 tgscout/                                   # workspace: go.work (use .) + go.mod module github.com/firstpilotpirx/tgscout
   apps/cli/                                # package main
-    main.go                                # os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
+    main.go                                # signal.NotifyContext, then os.Exit(run(ctx, os.Args[1:], os.Stdout, os.Stderr, plain))
     root_command.go                        # cobra root command, flags, exit codes
     start.go                               # the start flow: config → database → wait for a signal → stop
     console.go                             # ✓ ✗ ● → lines, color and [ok]/[fail] fallback
@@ -97,7 +97,7 @@ scripts/qa.sh
 
 ### Versions
 
-Go 1.25.11 in `go.mod` (the floor golang-migrate v4.20.1 sets; the tech matrix asks 1.23+), cobra v1.10.2, viper v1.21.0, migrate v4.20.1, go-sqlite3 v1.14.52 (v1.14.53 is under two weeks old), godog v0.16.0, testify v1.12.1, color v1.19.0.
+Go 1.25.11 in `go.mod` (the floor golang-migrate v4.20.1 sets; the tech matrix asks 1.23+) and `toolchain go1.27.4` in `go.work` and both `go.mod` files (`govulncheck` finds GO-2026-6859 in the 1.27.3 standard library; the go command downloads the pinned toolchain), cobra v1.10.2, viper v1.21.0, migrate v4.20.1, go-sqlite3 v1.14.52 (v1.14.53 is under two weeks old), godog v0.16.0, testify v1.12.1, color v1.19.0.
 
 ## Interface mock
 

@@ -1,0 +1,128 @@
+path	function	value
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		1
+e2e/cli_lifecycle_test.go		2
+e2e/cli_lifecycle_test.go		2
+e2e/cli_lifecycle_test.go		2
+e2e/cli_lifecycle_test.go	TestFeatures	2
+e2e/cli_lifecycle_test.go	dbPath	1
+e2e/cli_lifecycle_test.go	earlierStartWithRows	6
+e2e/cli_lifecycle_test.go	givenSteps	1
+e2e/cli_lifecycle_test.go	initializeScenario	1
+e2e/cli_lifecycle_test.go	openDB	2
+e2e/cli_lifecycle_test.go	schemaOf	4
+e2e/cli_lifecycle_test.go	start	3
+e2e/cli_lifecycle_test.go	whenSteps	1
+e2e/cli_lifecycle_test.go	writeConfig	1
+e2e/process_test.go	String	1
+e2e/process_test.go	Write	1
+e2e/process_test.go	exited	3
+e2e/process_test.go	output	1
+e2e/process_test.go	settle	6
+e2e/process_test.go	signal	2
+e2e/process_test.go	startProcess	3
+e2e/process_test.go	stop	2
+e2e/process_test.go	wait	2
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		1
+e2e/then_steps_test.go		2
+e2e/then_steps_test.go	exitCode	3
+e2e/then_steps_test.go	has	3
+e2e/then_steps_test.go	holdsTables	4
+e2e/then_steps_test.go	rowsStillThere	4
+e2e/then_steps_test.go	schemaUnchanged	4
+e2e/then_steps_test.go	stderrHas	1
+e2e/then_steps_test.go	stdoutHas	1
+e2e/then_steps_test.go	thenSteps	1
+tgscout/apps/cli/console.go	done	1
+tgscout/apps/cli/console.go	fail	3
+tgscout/apps/cli/console.go	newConsole	4
+tgscout/apps/cli/console.go	ok	2
+tgscout/apps/cli/console.go	plainOutput	2
+tgscout/apps/cli/console.go	println	1
+tgscout/apps/cli/console.go	running	1
+tgscout/apps/cli/console.go	step	1
+tgscout/apps/cli/console_test.go	TestConsoleMarksWithSymbols	1
+tgscout/apps/cli/console_test.go	TestConsolePlainUsesTextMarksAndNoColor	1
+tgscout/apps/cli/console_test.go	TestPlainOutputFollowsNoColorAndForceColor	1
+tgscout/apps/cli/console_test.go	newTestConsole	1
+tgscout/apps/cli/main.go	main	1
+tgscout/apps/cli/root_command.go		1
+tgscout/apps/cli/root_command.go		1
+tgscout/apps/cli/root_command.go		1
+tgscout/apps/cli/root_command.go		2
+tgscout/apps/cli/root_command.go	Error	1
+tgscout/apps/cli/root_command.go	newRootCommand	1
+tgscout/apps/cli/root_command.go	run	3
+tgscout/apps/cli/root_command_test.go	TestHelpPrintsUsageWithEveryFlag	1
+tgscout/apps/cli/root_command_test.go	TestStrayArgumentGivesCode2	1
+tgscout/apps/cli/root_command_test.go	TestUnknownFlagGivesUsageOnStderrAndCode2	1
+tgscout/apps/cli/root_command_test.go	runTgscout	1
+tgscout/apps/cli/start.go	checkConfig	4
+tgscout/apps/cli/start.go	databaseDetail	3
+tgscout/apps/cli/start.go	databasePath	2
+tgscout/apps/cli/start.go	lineHint	2
+tgscout/apps/cli/start.go	start	5
+tgscout/apps/cli/start_integration_test.go	TestBrokenYamlGivesCode1AndTheLine	1
+tgscout/apps/cli/start_integration_test.go	TestDatabaseInMissingFolderGivesCode1	1
+tgscout/apps/cli/start_integration_test.go	TestFirstStartCreatesTheDatabaseAndStops	1
+tgscout/apps/cli/start_integration_test.go	TestMissingConfigGivesCode1AndNoDatabase	1
+tgscout/apps/cli/start_integration_test.go	TestSecondStartSaysSchemaUpToDate	1
+tgscout/apps/cli/start_integration_test.go	stopped	1
+tgscout/apps/cli/start_test.go	TestDefaultDatabaseSitsNextToTheConfig	1
+tgscout/apps/cli/start_test.go	writeValidConfig	1
+tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator.go	Migrate	6
+tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator.go	result	3
+tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator_integration_test.go		1
+tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator_integration_test.go	TestMigrateNewFileGetsTheSchema	2
+tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator_integration_test.go	TestMigrateSecondRunKeepsRows	1
+tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator_integration_test.go	openTemp	1
+tgscout/components/matching/adapters/secondary/persistence/sqlite/sqlite_migrator_test.go	TestMigrationsHoldUpAndDownOfEveryStep	1
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file.go	CheckConfigFile	4
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file.go	Error	2
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file.go	syntaxError	3
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file_integration_test.go	TestCheckConfigFileBrokenYamlNamesTheLine	1
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file_integration_test.go	TestCheckConfigFileMissingPath	1
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file_integration_test.go	TestCheckConfigFileValidYaml	1
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file_integration_test.go	writeConfig	1
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file_test.go	TestConfigSyntaxErrorNamesPathAndLine	1
+tgscout/components/matching/adapters/secondary/settings/yaml/yaml_config_file_test.go	TestConfigSyntaxErrorWithoutLine	1
+tgscout/components/matching/core/application/collect_message.go	NewCollectMessage	1
+tgscout/components/matching/core/application/collect_message_test.go	TestNewCollectMessageBuildsTheUseCase	1
+tgscout/components/matching/core/application/llm_test.go	TestLlmAcceptsAnAdapter	1
+tgscout/components/matching/core/application/match_message.go	NewMatchMessage	1
+tgscout/components/matching/core/application/match_message_test.go	TestNewMatchMessageBuildsTheUseCase	1
+tgscout/components/matching/core/application/message_queue_test.go	TestMessageQueueAcceptsAnAdapter	1
+tgscout/components/matching/core/application/message_repository_test.go	TestMessageRepositoryAcceptsAnAdapter	1
+tgscout/components/matching/core/application/notifier_test.go	TestNotifierAcceptsAnAdapter	1
+tgscout/components/matching/core/application/settings_repository_test.go	TestSettingsRepositoryAcceptsAnAdapter	1
+tgscout/components/matching/matching_config.go	NewMatchingConfig	1
+tgscout/components/matching/matching_config_test.go	TestNewMatchingConfigWiresBothUseCases	1
+tgscout/infra/sqlite/sqlite_database.go	DSN	1
+tgscout/infra/sqlite/sqlite_database.go	Open	3
+tgscout/infra/sqlite/sqlite_database_integration_test.go		1
+tgscout/infra/sqlite/sqlite_database_integration_test.go	TestOpenCreatesTheFile	1
+tgscout/infra/sqlite/sqlite_database_integration_test.go	TestOpenInMissingFolderNamesThePath	1
+tgscout/infra/sqlite/sqlite_database_test.go	TestDSNTurnsOnForeignKeysAndWal	1

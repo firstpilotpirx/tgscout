@@ -1,0 +1,15 @@
+{
+  "threshold": 0,
+  "minLines": 10,
+  "minTokens": 70,
+  "format": [
+    "go"
+  ],
+  "ignore": [
+    "**/*_test.go"
+  ],
+  "reporters": [
+    "consoleFull"
+  ],
+  "gitignore": true
+}
