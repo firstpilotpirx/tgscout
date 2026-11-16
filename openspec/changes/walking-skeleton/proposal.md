@@ -65,11 +65,7 @@ Interface: CLI — the `tgscout` command, its console output and exit codes.
 
 ## Open points
 
-- Command shape: plain `tgscout` or `tgscout run`. Proposed: plain `tgscout` with flags (`--config`, `--db`), since version 1 has one mode.
-- Default place of `tgscout.db`: next to the config file. Proposed: next to the config file, overridable by a flag.
-- Migrations: an embedded SQL file with a tiny runner, or `golang-migrate`. Proposed: embedded SQL files (`embed`) with a version table; check the kit tech matrix at design.
-- Gherkin runner: proposed `godog`, with `.feature` files under `e2e/features/` and slice tests next to their component; settle at design with `testing-*-go.md`.
-- Gap in the design board: the plan's review step (`proceed-design review`) was not run before filing; any mismatch it finds goes into the slice it touches.
+Settled at preparation (`orchestration.yaml` § prepared) and in `design.md`: plain `tgscout` with `--config` and `--db`; `tgscout.db` next to the config file; golang-migrate with embedded SQL; godog with `.feature` files under `e2e/features/`; viper for the YAML file; the design board review stays for later slices.
 
 ## Release
 
