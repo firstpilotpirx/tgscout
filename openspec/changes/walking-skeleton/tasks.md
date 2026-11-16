@@ -17,9 +17,9 @@
 
 ## 3. Database and first migration
 
-- [ ] 3.1 Red: integration tests for `infra/sqlite.Open` (opens a new file in a temp dir, pings it; a path in a missing folder gives an error naming it) and for `Migrate` (a new file gets version 1 and the three tables; a second run reports up to date and keeps a row); verify: they fail
-- [ ] 3.2 Green: `infra/sqlite/sqlite_database.go`, `persistence/sqlite/sqlite_migrator.go` and `migrations/000001_init.{up,down}.sql` with the store schema; verify: the 3.1 tests pass
-- [ ] 3.3 Commit the group (`kit ship`)
+- [x] 3.1 Red: integration tests for `infra/sqlite.Open` (opens a new file in a temp dir, pings it; a path in a missing folder gives an error naming it) and for `Migrate` (a new file gets version 1 and the three tables; a second run reports up to date and keeps a row); verify: they fail
+- [x] 3.2 Green: `infra/sqlite/sqlite_database.go`, `persistence/sqlite/sqlite_migrator.go` and `migrations/000001_init.{up,down}.sql` with the store schema; verify: the 3.1 tests pass
+- [x] 3.3 Commit the group (`kit ship`)
 
 ## 4. The tgscout command
 

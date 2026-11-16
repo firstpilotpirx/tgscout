@@ -3,6 +3,8 @@ module github.com/firstpilotpirx/tgscout
 go 1.25.11
 
 require (
+	github.com/golang-migrate/migrate/v4 v4.20.1
+	github.com/mattn/go-sqlite3 v1.14.52
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 )
@@ -18,6 +20,6 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 )
