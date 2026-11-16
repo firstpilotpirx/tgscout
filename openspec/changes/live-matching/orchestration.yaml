@@ -1,0 +1,5 @@
+depends_on:
+  - change: telegram-sign-in
+    why: filed after it, runs after it
+  - change: hierarchical-settings
+    why: reads the requests, chats and LLM settings
