@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/cucumber/godog"
@@ -39,6 +40,10 @@ func ownerSteps(sc *godog.ScenarioContext, w *world) {
 		return w.runToIdle()
 	})
 	sc.Step(`^tgscout runs$`, w.runToIdle)
+	ownerThenSteps(sc, w)
+}
+
+func ownerThenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^the owner gets one private message with the request, the chat and a link to the message$`, func() error {
 		return w.ownerGot("Match: kids-bike — " + bikeFind + "\nChat: " + marketTitle +
 			"\nhttps://t.me/made_up_market/4211\n" + bikeText)
@@ -60,6 +65,11 @@ func ownerSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^tgscout does not answer and writes nothing to that person$`, func() error {
 		return errors.Join(w.ownerGot(), w.askedTimes(bikeFind, 0))
 	})
+	sc.Step(`^tgscout stops with an error that it cannot write to the owner and a hint to write «hi» to its account once$`,
+		func() error {
+			return w.stderrHas("[fail] cannot write to the owner",
+				"write «hi» to tgscout's account once and add it to contacts (README → Setup → First contact)")
+		})
 }
 
 // fakeSend is one line of the fake Telegram's sent file.
@@ -71,38 +81,44 @@ type fakeSend struct {
 // ownerGot checks the fake Telegram sent exactly these texts, in any order,
 // all of them to the owner and to nobody else.
 func (w *world) ownerGot(want ...string) error {
-	data, err := os.ReadFile(filepath.Join(w.dir, sentFileName))
-	if errors.Is(err, os.ErrNotExist) {
-		data, err = nil, nil
-	}
+	got, err := w.sentTexts()
 	if err != nil {
-		return fmt.Errorf("sent file: %w", err)
-	}
-	var got []string
-	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
-		if line == "" {
-			continue
-		}
-		var send fakeSend
-		if err := json.Unmarshal([]byte(line), &send); err != nil {
-			return fmt.Errorf("sent file: %w", err)
-		}
-		if send.To != "@made_up_owner" {
-			return fmt.Errorf("tgscout wrote to %s", send.To)
-		}
-		got = append(got, send.Text)
+		return err
 	}
 	if len(got) != len(want) {
 		return fmt.Errorf("the owner got %d messages, want %d: %q", len(got), len(want), got)
 	}
 	for _, text := range want {
-		found := false
-		for _, each := range got {
-			found = found || each == text
-		}
-		if !found {
+		if !slices.Contains(got, text) {
 			return fmt.Errorf("the owner never got %q; got %q", text, got)
 		}
 	}
 	return nil
+}
+
+// sentTexts reads the fake Telegram's sent file; a send to anyone but the
+// owner is an error.
+func (w *world) sentTexts() ([]string, error) {
+	data, err := os.ReadFile(filepath.Join(w.dir, sentFileName))
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("sent file: %w", err)
+	}
+	var got []string
+	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
+		if line == "" {
+			continue
+		}
+		var send fakeSend
+		if err := json.Unmarshal([]byte(line), &send); err != nil {
+			return nil, fmt.Errorf("sent file: %w", err)
+		}
+		if send.To != "@made_up_owner" {
+			return nil, fmt.Errorf("tgscout wrote to %s", send.To)
+		}
+		got = append(got, send.Text)
+	}
+	return got, nil
 }
