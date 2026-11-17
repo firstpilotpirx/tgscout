@@ -1,9 +1,9 @@
 ## 1. Domain and settings
 
-- [ ] 1.1 Red: unit tests for `Cursor` and `MessageTracker` — an in-flight key begins once; out-of-order finish of 10, 11, 12 keeps the cursor at 10 until 11 finishes, then 12; a failed key blocks the cursor and its copies; keys of two chats do not mix
-- [ ] 1.2 Green: `core/domain` `MessageKey`, `Message`, `QueueItem`, `Decision`, `Judgment`, `Match`, `Cursor`, `MessageTracker`
-- [ ] 1.3 Red: unit tests for `Settings.RequestsOf` (link and @username of one chat give the same requests, config order) and the parser — `queue_size` default 1000, a given value, below 1 is an error on its line
-- [ ] 1.4 Green: `Settings.QueueSize`, `RequestsOf`, `queue_size` in `settings_parser.go`; `tgscout.yaml.example`
+- [x] 1.1 Red: unit tests for `Cursor` and `MessageTracker` — an in-flight key begins once; out-of-order finish of 10, 11, 12 keeps the cursor at 10 until 11 finishes, then 12; a failed key blocks the cursor and its copies; keys of two chats do not mix
+- [x] 1.2 Green: `core/domain` `MessageKey`, `Message`, `QueueItem`, `Decision`, `Judgment`, `Match`, `Cursor`, `MessageTracker`
+- [x] 1.3 Red: unit tests for `Settings.RequestsOf` (link and @username of one chat give the same requests, config order) and the parser — `queue_size` default 1000, a given value, below 1 is an error on its line
+- [x] 1.4 Green: `Settings.QueueSize`, `RequestsOf`, `queue_size` in `settings_parser.go`; `tgscout.yaml.example`
 - [ ] 1.5 Commit (`kit ship`)
 
 ## 2. Use cases
