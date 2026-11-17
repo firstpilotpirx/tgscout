@@ -62,6 +62,7 @@ The gotd update mapping already drops every message of a private chat with a use
 | a match reaches the owner | E2E | `e2e/features/owner_notification.feature` (`@owner_notification @e2e`): the fake Telegram records every send in the scenario's `sent_file` |
 | two requests match one message | E2E | same feature |
 | a long message text is cut | unit | `domain.NotificationText` test (1,500 characters; the link and the request stay whole); the console and Telegram get the same text, so no E2E run is needed for the cut |
+| a chat without a username | unit | the collector's link test of a private chat (`telegram_collector_test.go`, unchanged) and `NotificationText` keeping the link whole |
 | the message is marked processed only after the send | slice | `components/matching/tests/features/slice/owner_notification.feature` (`@owner_notification @slice`): real `MatchMessage` and `TelegramNotifierClient`, a stub client whose send blocks until the stop, the memory repository: the stop inside a send cannot be timed from outside the binary |
 | Telegram asks to wait | slice | same slice feature: the stub client answers FLOOD_WAIT 5s once; the injected sleep records 5s without waiting it |
 | a send fails | E2E | owner feature: the fake fails every send (`send_fails`) |
