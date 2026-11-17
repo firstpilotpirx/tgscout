@@ -17,12 +17,13 @@ import (
 	"github.com/firstpilotpirx/tgscout/infra/telegram"
 )
 
-// live is the matching part of a running start: the wired use cases, the
-// queue between them and how many workers judge at once.
+// live is the matching part of a running start: the resolved settings, the
+// wired use cases, the queue between them and how many workers judge at once.
 type live struct {
-	config  *matching.MatchingConfig
-	queue   match.Receiver
-	workers int
+	settings domain.Settings
+	config   *matching.MatchingConfig
+	queue    match.Receiver
+	workers  int
 }
 
 // newLive wires the matching component over the database and LM Studio.
@@ -36,7 +37,7 @@ func newLive(settings application.SettingsRepository, db *sql.DB, con *console) 
 		Llm:      openai.NewOpenAiLlmClient(resolved.LmStudio),
 		Notifier: notify.NewConsoleNotifier(con),
 	})
-	return live{config: config, queue: messages, workers: resolved.Workers}
+	return live{settings: resolved, config: config, queue: messages, workers: resolved.Workers}
 }
 
 // serve starts the workers, says it is running, then listens to the found

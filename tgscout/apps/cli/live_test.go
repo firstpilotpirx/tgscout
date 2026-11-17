@@ -89,7 +89,7 @@ func newTestLive(t *testing.T, con *console, messages *memoryMessages) live {
 		Settings: liveSettings{settings}, Messages: messages, Queue: items,
 		Llm: yesLlm{}, Notifier: notify.NewConsoleNotifier(con),
 	})
-	return live{config: config, queue: items, workers: settings.Workers}
+	return live{settings: settings, config: config, queue: items, workers: settings.Workers}
 }
 
 var marketFound = map[string]telegram.ChatInfo{"@made_up_market": {State: telegram.ChatJoined, ID: 7001, Username: "made_up_market"}}

@@ -33,7 +33,7 @@ func start(ctx context.Context, opts options, con *console, deps startDeps) int 
 		return exitError
 	}
 	matcher := newLive(repository, db, con)
-	if watch(ctx, con, deps, opts.config, repository.Settings(), matcher) != exitOK {
+	if watch(ctx, con, deps, opts.config, matcher) != exitOK {
 		_ = db.Close() // the Telegram error is the one to report
 		return exitError
 	}
