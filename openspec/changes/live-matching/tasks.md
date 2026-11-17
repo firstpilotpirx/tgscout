@@ -12,18 +12,18 @@
 - [x] 2.2 Green: ports `MessageRepository`, `MessageQueue`, `Llm`, `Notifier`; `CollectMessage.Collect`
 - [x] 2.3 Red: unit tests for `MatchMessage` — one judgment and one decision per request; a «yes» notified then marked sent; a saved but unsent «yes» judged and sent again; a `Notify` error leaves the message unprocessed and unsent; processed and cursor only after the last request; an LLM error leaves the message unprocessed, the cursor in place and returns the key; an unclear judgment saved as «no» and listed in the outcome; an edit skips a request with a sent «yes» and never moves the cursor; out-of-order finishes move the cursor as the tracker says
 - [x] 2.4 Green: `MatchMessage.Match` with the per-key lock; `NewMatchingConfig` wires the tracker
-- [ ] 2.5 Commit (`kit ship`)
+- [x] 2.5 Commit (`kit ship`)
 
 ## 3. Secondary adapters
 
-- [ ] 3.1 Red: integration tests for `SqliteMessageRepository` on a temp file — save and replace a decision, sent requests (only rows with `sent_at`), mark sent, mark processed, is processed, cursor upsert never moves back
-- [ ] 3.2 Green: `adapters/secondary/persistence/sqlite/sqlite_message_repository.go`
-- [ ] 3.3 Red: integration tests for `OpenAiLlmClient` against an `httptest` server — request body (model, system and user messages, temperature 0), yes, no, `Yes.`, `<think>` removed, unclear then yes, unclear twice, 503, timeout
-- [ ] 3.4 Green: `adapters/secondary/llm/openai/openai_llm_client.go`
-- [ ] 3.5 Red: integration tests for `ChannelMessageQueue` — put and receive in order; put blocks while full and goes on when a place frees up; both end with `ctx`
-- [ ] 3.6 Green: `adapters/secondary/queue/channel/channel_message_queue.go`
-- [ ] 3.7 Red: integration test for `ConsoleNotifier` with a real `MatchPrinter` writing to a buffer
-- [ ] 3.8 Green: `adapters/secondary/notify/console/console_notifier.go`
+- [x] 3.1 Red: integration tests for `SqliteMessageRepository` on a temp file — save and replace a decision, sent requests (only rows with `sent_at`), mark sent, mark processed, is processed, cursor upsert never moves back
+- [x] 3.2 Green: `adapters/secondary/persistence/sqlite/sqlite_message_repository.go`
+- [x] 3.3 Red: integration tests for `OpenAiLlmClient` against an `httptest` server — request body (model, system and user messages, temperature 0), yes, no, `Yes.`, `<think>` removed, unclear then yes, unclear twice, 503, timeout
+- [x] 3.4 Green: `adapters/secondary/llm/openai/openai_llm_client.go`
+- [x] 3.5 Red: integration tests for `ChannelMessageQueue` — put and receive in order; put blocks while full and goes on when a place frees up; both end with `ctx`
+- [x] 3.6 Green: `adapters/secondary/queue/channel/channel_message_queue.go`
+- [x] 3.7 Red: integration test for `ConsoleNotifier` with a real `MatchPrinter` writing to a buffer
+- [x] 3.8 Green: `adapters/secondary/notify/console/console_notifier.go`
 - [ ] 3.9 Commit (`kit ship`)
 
 ## 4. Telegram and primary adapters
