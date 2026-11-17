@@ -52,8 +52,8 @@
 
 ## 7. Docs and version
 
-- [ ] 7.1 `README.md`: what the console shows while running (match, warning, error lines) and the `queue_size` setting
-- [ ] 7.2 Bump `VERSION` to 0.4.0
-- [ ] 7.3 Commit (`kit ship`)
+- [x] 7.1 `README.md`: what the console shows while running (match, warning, error lines) and the `queue_size` setting
+- [x] 7.2 Bump `VERSION` to 0.4.0
+- [x] 7.3 Commit (`kit ship`)
 
 Manual checks by the user: none for this run (`manual_run` lists no area); the owner's run with LM Studio of the acceptance bar stays for the owner.
