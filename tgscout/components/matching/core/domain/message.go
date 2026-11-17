@@ -20,6 +20,9 @@ type Message struct {
 	Text      string
 	Link      string
 	Edited    bool
+	// Live is a new message of the live listener, not an edit and not a
+	// history read: only its latency counts.
+	Live bool
 }
 
 // QueueItem is a message with the requests it is judged against, so the

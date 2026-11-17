@@ -50,7 +50,7 @@ The latency of a message SHALL run from its time in the chat to the end of its j
 
 ### Requirement: Model behind warning
 
-When the queue length grew in 3 status lines in a row (each line's queue longer than the line before it), tgscout SHALL print a warning after the third line: the model is behind, the three queue lengths, and a hint to use a faster model or more workers. The warning SHALL come again only after the queue grew in 3 more lines in a row.
+When the queue lengths of 3 status lines in a row rise each time (such as 97 → 214 → 388), tgscout SHALL print a warning after the third line: the model is behind, the three queue lengths, and a hint to use a faster model or more workers. The warning SHALL come again only after 3 more lines in a row show rising queue lengths.
 
 #### Scenario: the model cannot keep up
 

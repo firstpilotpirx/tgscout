@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -26,6 +27,7 @@ type console struct {
 	green, red  *color.Color
 	cyan, dim   *color.Color
 	yellow      *color.Color
+	now         func() time.Time // the clock of the latency on a match line
 }
 
 // plainOutput tells whether output goes without color: color.NoColor covers a
@@ -43,6 +45,7 @@ func newConsole(out, errOut io.Writer, plain bool) *console {
 		green: color.New(color.FgGreen), red: color.New(color.FgRed, color.Bold),
 		cyan: color.New(color.FgCyan), dim: color.New(color.Faint),
 		yellow: color.New(color.FgYellow),
+		now:    time.Now,
 	}
 	for _, each := range []*color.Color{c.green, c.red, c.cyan, c.dim, c.yellow} {
 		if plain {

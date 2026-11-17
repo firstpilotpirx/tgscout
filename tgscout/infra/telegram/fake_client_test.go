@@ -4,6 +4,7 @@ package telegram
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -82,14 +83,24 @@ func newTestFake(t *testing.T, scenario string) (*fakeClient, string) {
 
 func TestFakeSendToOwnerWritesEachSendToTheSentFile(t *testing.T) {
 	fake, sent := newTestFake(t, `{"contacts": ["@made_up_owner"]}`)
+	before := time.Now().UnixNano()
 
 	require.NoError(t, fake.SendToOwner(context.Background(), "@made_up_owner", "Match: one\nline two"))
 	require.NoError(t, fake.SendToOwner(context.Background(), "@made_up_owner", "Match: two"))
 
 	data, err := os.ReadFile(sent)
 	require.NoError(t, err)
-	assert.Equal(t, `{"to":"@made_up_owner","text":"Match: one\nline two"}`+"\n"+
-		`{"to":"@made_up_owner","text":"Match: two"}`+"\n", string(data))
+	lines := strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
+	require.Len(t, lines, 2)
+	var sends []fakeSend
+	for _, line := range lines {
+		var send fakeSend
+		require.NoError(t, json.Unmarshal([]byte(line), &send))
+		assert.GreaterOrEqual(t, send.At, before, "the send time")
+		send.At = 0
+		sends = append(sends, send)
+	}
+	assert.Equal(t, []fakeSend{{To: "@made_up_owner", Text: "Match: one\nline two"}, {To: "@made_up_owner", Text: "Match: two"}}, sends)
 }
 
 func TestFakeSendToOwnerFailsWhenTheScenarioSaysSo(t *testing.T) {

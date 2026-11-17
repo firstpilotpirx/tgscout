@@ -11,7 +11,7 @@ Design pages this slice implements:
 ## What Changes
 
 - Each match line shows its latency: from the message's time in the chat to the confirmed send to the owner.
-- Every `status_interval` (a new root setting in `tgscout.yaml`, default `5m`, at least `10s`), and at stop, the console shows one status line: messages in, judged, matches, queue length, p95 latency and p95 LLM call time over the last interval (the stop line covers the whole run), each p95 marked against its target; a warning when the queue length grew in 3 status lines in a row (the local model cannot keep up).
+- Every `status_interval` (a new root setting in `tgscout.yaml`, default `5m`, at least `10s`), and at stop, the console shows one status line: messages in, judged, matches, queue length, p95 latency and p95 LLM call time over the last interval (the stop line covers the whole run), the p95 latency marked against its target; a warning when the queue length grew in 3 status lines in a row (the local model cannot keep up).
 - The catch-up summary shows its time against the 15-minute target.
 - A load test in `e2e/` with a fake Telegram and a fake LLM answering in 0.5 s with 4 workers runs 100 chats and a peak burst of 10 messages per second for 10 s inside a day's flow, and checks p95 ≤ 10 s from message to send; the day's flow runs at its average rate (5,000 a day) scaled up 20 times, 10 s before and 10 s after the peak.
 - A catch-up test runs 100 chats × 500 messages with time scaled 60 times (15 minutes → 15 s; the fake LLM answers at once, so the test proves tgscout's own work fits) and checks the summary comes within the scaled 15 minutes.

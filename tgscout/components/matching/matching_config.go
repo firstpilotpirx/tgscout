@@ -18,6 +18,8 @@ type Ports struct {
 	Notifier application.Notifier
 	// Delivery is how judging and sending retry: the pauses, the sleep, the reports.
 	Delivery application.Delivery
+	// Stats counts the run for the status line; nil counts nothing.
+	Stats *domain.RunStats
 }
 
 // MatchingConfig holds the wired use cases of the component.
@@ -33,9 +35,12 @@ type MatchingConfig struct {
 func NewMatchingConfig(ports Ports) *MatchingConfig {
 	tracker := domain.NewMessageTracker()
 	collect := application.NewCollectMessage(ports.Settings, ports.Messages, ports.Queue, tracker)
+	collect.Counting(ports.Stats)
+	match := application.NewMatchMessage(ports.Messages, ports.Llm, ports.Notifier, tracker, ports.Delivery)
+	match.Counting(ports.Stats)
 	return &MatchingConfig{
 		CollectMessage: collect,
-		MatchMessage:   application.NewMatchMessage(ports.Messages, ports.Llm, ports.Notifier, tracker, ports.Delivery),
+		MatchMessage:   match,
 		CatchUp:        application.NewCatchUp(ports.Settings, ports.Messages, collect, tracker, time.Now),
 	}
 }

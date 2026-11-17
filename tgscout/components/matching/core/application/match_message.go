@@ -51,6 +51,7 @@ type MatchMessage struct {
 	delivery Delivery
 	health   llmHealth
 	locks    keyLocks
+	stats    *domain.RunStats
 }
 
 // NewMatchMessage builds the use case from its ports, the shared tracker and
@@ -61,6 +62,10 @@ func NewMatchMessage(messages MessageRepository, llm Llm, notifier Notifier, tra
 		locks: keyLocks{held: map[domain.MessageKey]*keyLock{}}}
 }
 
+// Counting makes the use case record its LLM calls, judged messages and
+// matches in stats.
+func (m *MatchMessage) Counting(stats *domain.RunStats) { m.stats = stats }
+
 // Match judges one queued message. On an error the message stays
 // unprocessed, the cursor stays and a new message stays in flight.
 func (m *MatchMessage) Match(ctx context.Context, item domain.QueueItem) (Outcome, error) {
@@ -68,10 +73,23 @@ func (m *MatchMessage) Match(ctx context.Context, item domain.QueueItem) (Outcom
 	unlock := m.locks.lock(key)
 	defer unlock()
 	outcome, err := m.match(ctx, item)
+	if err == nil {
+		m.stats.Judged(latency(item.Message))
+	}
 	if !item.Message.Edited {
 		m.tracker.Tally().Settle(key, outcome.Matches, err != nil)
 	}
 	return outcome, err
+}
+
+// latency is the time from the message in the chat to now, for a live
+// message only.
+func latency(message domain.Message) *time.Duration {
+	if !message.Live {
+		return nil
+	}
+	took := time.Since(message.SentAt)
+	return &took
 }
 
 func (m *MatchMessage) match(ctx context.Context, item domain.QueueItem) (Outcome, error) {
@@ -132,6 +150,7 @@ func (m *MatchMessage) judge(ctx context.Context, item domain.QueueItem) (Outcom
 			return outcome, &MatchError{Key: key, Stage: StageStore, Err: err}
 		}
 		outcome.Matches++
+		m.stats.Matched()
 	}
 	return outcome, nil
 }
@@ -142,7 +161,9 @@ func (m *MatchMessage) ask(ctx context.Context, item domain.QueueItem, request d
 	key := item.Message.Key
 	rejected := 0
 	for try := 1; ; try++ {
+		started := time.Now()
 		judgment, err := m.llm.Judge(ctx, request.Find, item.Message.Text)
+		m.stats.LlmCall(time.Since(started))
 		if err == nil {
 			if m.health.answered() {
 				m.delivery.reporter().LlmBack()

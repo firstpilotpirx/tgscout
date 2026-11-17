@@ -89,7 +89,7 @@ func TestCatchUpSummary(t *testing.T) {
 		Counts: domain.CatchUpCounts{Read: 1042, Skipped: 18, Judged: 1024, Matches: 2}})
 
 	assert.Equal(t,
-		"✓ catch-up done in 4m35s\n"+
+		"✓ catch-up done in 4m35s · ✓ ≤ 15m\n"+
 			"  ✓ chats      3  (1 with a gap)\n"+
 			"  ✓ messages   1,042 read · 18 skipped · 1,024 judged\n"+
 			"  ● matches    2  (sent to you in Telegram)\n"+
@@ -104,7 +104,7 @@ func TestCatchUpSummaryWithErrors(t *testing.T) {
 		Counts: domain.CatchUpCounts{Read: 3, Judged: 3, Errors: 3}})
 
 	assert.Equal(t,
-		"[ok] catch-up done in 2s\n"+
+		"[ok] catch-up done in 2s · [ok] ≤ 15m\n"+
 			"  [ok] chats      1\n"+
 			"  [ok] messages   3 read · 0 skipped · 3 judged\n"+
 			"  [run] matches    0  (sent to you in Telegram)\n"+

@@ -19,11 +19,15 @@ const (
 	matchTimeFmt = "15:04"
 )
 
-// PrintMatch shows a match Telegram confirmed: the time, the request, then
-// the text the owner got, every line indented.
+// PrintMatch shows a match Telegram confirmed: the time, the request, the
+// latency of a live message, then the text the owner got, every line indented.
 func (c *console) PrintMatch(match domain.Match, text string) error {
-	lines := []string{fmt.Sprintf("%s match sent  %s  %s", c.green.Sprint(c.marks.ok),
-		match.Message.SentAt.Local().Format(matchTimeFmt), match.Request.ID)}
+	head := fmt.Sprintf("%s match sent  %s  %s", c.green.Sprint(c.marks.ok),
+		match.Message.SentAt.Local().Format(matchTimeFmt), match.Request.ID)
+	if match.Message.Live && !match.Message.Edited {
+		head += " · latency " + tenths(c.now().Sub(match.Message.SentAt))
+	}
+	lines := []string{head}
 	for _, line := range strings.Split(text, "\n") {
 		lines = append(lines, matchIndent+line)
 	}

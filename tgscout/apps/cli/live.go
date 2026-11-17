@@ -29,6 +29,7 @@ type live struct {
 	workers  int
 	sleep    func(context.Context, time.Duration) error
 	stopping *atomic.Bool // serve printed the stopping line
+	stats    *domain.RunStats
 }
 
 // newLive wires the matching adapters over the database and LM Studio.
@@ -36,8 +37,11 @@ func newLive(settings application.SettingsRepository, db *sql.DB,
 	sleep func(context.Context, time.Duration) error) live {
 	resolved := settings.Settings()
 	messages := queue.NewChannelMessageQueue(resolved.QueueSize)
+	stats := domain.NewRunStats(time.Now())
 	return live{settings: resolved, queue: messages, workers: resolved.Workers, sleep: sleep, stopping: &atomic.Bool{},
+		stats: stats,
 		ports: matching.Ports{
+			Stats:    stats,
 			Settings: settings,
 			Messages: sqlite.NewSqliteMessageRepository(db),
 			Queue:    messages,
@@ -95,6 +99,7 @@ func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 			Report: match.ReportFuncs{OnUnclear: con.Unclear, OnFailed: con.Failed}, Busy: busy})
 	})
 	con.running()
+	wait.Go(func() { l.printStatus(stopCtx, con) })
 	readers := l.readHistory(stopCtx, con, client, config, inConfigOrder(l.settings, found))
 	collector := collect.NewTelegramCollector(watchedByID(found), config.CollectMessage, con.collectFailed)
 	err := collector.Listen(stopCtx, client)
@@ -109,6 +114,20 @@ func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 	}
 	return err
 }
+
+// printStatus prints the status line every status_interval until the stop
+// (design D4).
+func (l live) printStatus(stop context.Context, con *console) {
+	if l.settings.StatusInterval <= 0 {
+		return
+	}
+	ticker := time.NewTicker(l.settings.StatusInterval)
+	defer ticker.Stop()
+	con.runStatus(stop, ticker.C, func(now time.Time) domain.Status { return l.stats.Cut(l.queue.Len(), now) })
+}
+
+// total is the status since start.
+func (l live) total() domain.Status { return l.stats.Total(l.queue.Len(), time.Now()) }
 
 // stopInTwoSteps gives the work context of the workers: it ends stop_grace
 // after ctx ends, once the stopping line is out. announced waits for that

@@ -53,8 +53,8 @@ func ownerThenSteps(sc *godog.ScenarioContext, w *world) {
 			"\nhttps://t.me/made_up_market/4211\n" + bikeText)
 	})
 	sc.Step(`^the console shows the same match$`, func() error {
-		return w.allStdoutHas("  kids-bike\n  Match: kids-bike — " + bikeFind + "\n  Chat: " + marketTitle +
-			"\n  https://t.me/made_up_market/4211\n  " + bikeText + "\n")
+		return w.allStdoutHas("  kids-bike · latency ", "s\n  Match: kids-bike — "+bikeFind+"\n  Chat: "+marketTitle+
+			"\n  https://t.me/made_up_market/4211\n  "+bikeText+"\n")
 	})
 	sc.Step(`^the owner gets two private messages, one per request$`, func() error {
 		return w.ownerGot(
@@ -80,6 +80,7 @@ func ownerThenSteps(sc *godog.ScenarioContext, w *world) {
 type fakeSend struct {
 	To   string `json:"to"`
 	Text string `json:"text"`
+	At   int64  `json:"at"` // Unix nanoseconds
 }
 
 // ownerGot checks the fake Telegram sent exactly these texts, in any order,

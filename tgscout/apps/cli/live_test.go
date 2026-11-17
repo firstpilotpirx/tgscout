@@ -118,9 +118,11 @@ func ownerRef(t *testing.T) domain.Owner {
 
 func TestServeSaysRunningThenSendsAndPrintsTheMatchesOfTheWatchedChats(t *testing.T) {
 	c, out, errOut := newTestConsole(true)
+	posted := time.Date(2026, 11, 17, 14, 2, 0, 0, time.Local)
+	c.now = func() time.Time { return posted.Add(2500 * time.Millisecond) }
 	messages := &memoryMessages{}
 	client := &fakeTelegram{updates: []telegram.Update{
-		{ChatID: 7001, MessageID: 4211, Date: time.Date(2026, 11, 17, 14, 2, 0, 0, time.Local), Text: "Selling a 16-inch kids' bike, 80 €"},
+		{ChatID: 7001, MessageID: 4211, Date: posted, Text: "Selling a 16-inch kids' bike, 80 €"},
 		{ChatID: 9999, MessageID: 1, Date: time.Now(), Text: "a chat nobody watches"},
 	}}
 	ctx, stop := context.WithCancel(context.Background())
@@ -136,7 +138,7 @@ func TestServeSaysRunningThenSendsAndPrintsTheMatchesOfTheWatchedChats(t *testin
 	assert.Equal(t, []string{"@made_up_owner: " + text}, client.sends())
 	assert.True(t, strings.HasPrefix(out.String(), "[run] running — press Ctrl+C to stop\n"), out.String())
 	assert.Contains(t, out.String(),
-		"[ok] match sent  14:02  kids-bike\n"+
+		"[ok] match sent  14:02  kids-bike · latency 2.5s\n"+
 			"  Match: kids-bike — a kids' bike\n"+
 			"  Chat: Made-up market\n"+
 			"  https://t.me/made_up_market/4211\n"+
