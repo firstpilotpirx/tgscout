@@ -22,6 +22,7 @@ type fakeTelegram struct {
 	chats      map[string]telegram.ChatState
 	owners     []string
 	everyChat  bool // every chat counts as joined
+	updates    []telegram.Update
 }
 
 func (f *fakeTelegram) Run(ctx context.Context, fn func(context.Context) error) error { return fn(ctx) }
@@ -47,11 +48,20 @@ func (f *fakeTelegram) Self(context.Context) (telegram.Account, error) {
 	return telegram.Account{Name: "Made Up Reader"}, nil
 }
 
-func (f *fakeTelegram) ResolveChat(_ context.Context, ref string) (telegram.ChatState, error) {
+func (f *fakeTelegram) ResolveChat(_ context.Context, ref string) (telegram.ChatInfo, error) {
+	state := f.chats[ref]
 	if f.everyChat {
-		return telegram.ChatJoined, nil
+		state = telegram.ChatJoined
 	}
-	return f.chats[ref], nil
+	return telegram.ChatInfo{State: state, ID: int64(len(ref)), Username: strings.TrimPrefix(ref, "@")}, nil
+}
+
+func (f *fakeTelegram) Listen(ctx context.Context, fn func(context.Context, telegram.Update)) error {
+	for _, update := range f.updates {
+		fn(ctx, update)
+	}
+	<-ctx.Done()
+	return ctx.Err()
 }
 
 func (f *fakeTelegram) FindOwner(_ context.Context, owner string) (bool, error) {
@@ -98,7 +108,7 @@ func runConnect(t *testing.T, client *fakeTelegram, firstRun bool, typed string,
 		sessionPath: "/made/up/tgscout.session",
 		sleep:       func(context.Context, time.Duration) error { return nil },
 	}
-	r.err = connect(context.Background(), link, con, chats, "@made_up_owner")
+	_, r.err = connect(context.Background(), link, con, chats, "@made_up_owner")
 	return r
 }
 

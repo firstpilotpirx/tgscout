@@ -49,7 +49,7 @@ func watch(ctx context.Context, con *console, deps startDeps, config string, set
 		return exitError
 	}
 	err := link.client.Run(ctx, func(ctx context.Context) error {
-		if err := connect(ctx, link, con, watchedChats(settings), settings.Owner.String()); err != nil {
+		if _, err := connect(ctx, link, con, watchedChats(settings), settings.Owner.String()); err != nil {
 			return err
 		}
 		con.running()

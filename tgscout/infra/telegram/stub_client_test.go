@@ -3,6 +3,7 @@ package telegram
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type stubClient struct {
 	contacts   map[string]bool
 	floods     map[string]time.Duration
 	calls      []string
+	updates    []Update
 }
 
 func (c *stubClient) Run(ctx context.Context, f func(context.Context) error) error { return f(ctx) }
@@ -51,16 +53,27 @@ func (c *stubClient) Self(context.Context) (Account, error) {
 	return Account{Name: "Made Up Scout"}, nil
 }
 
-func (c *stubClient) ResolveChat(_ context.Context, ref string) (ChatState, error) {
+func (c *stubClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error) {
 	if wait, ok := c.floods[ref]; ok {
 		delete(c.floods, ref)
-		return ChatMissing, &FloodWait{Wait: wait}
+		return ChatInfo{}, &FloodWait{Wait: wait}
 	}
 	state, ok := c.chats[ref]
 	if !ok {
-		return ChatMissing, nil
+		return ChatInfo{}, nil
 	}
-	return state, nil
+	if strings.HasPrefix(ref, "@") {
+		return ChatInfo{State: state, ID: 7, Username: ref[1:]}, nil
+	}
+	return ChatInfo{State: state, ID: bareChatID(ref)}, nil
+}
+
+func (c *stubClient) Listen(ctx context.Context, f func(context.Context, Update)) error {
+	for _, update := range c.updates {
+		f(ctx, update)
+	}
+	<-ctx.Done()
+	return ctx.Err()
 }
 
 func (c *stubClient) FindOwner(_ context.Context, owner string) (bool, error) {

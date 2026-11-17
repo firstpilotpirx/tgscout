@@ -36,5 +36,5 @@ deps:
   application:
     mayDependOn: [domain]
   adapters:
-    mayDependOn: [application, domain]
+    mayDependOn: [application, domain, infra]
     canUse: [goyaml, migrate]

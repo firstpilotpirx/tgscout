@@ -22,24 +22,27 @@ type telegramLink struct {
 }
 
 // connect signs in and finds the watched chats and the owner, printing each
-// step; on a problem it prints it and returns errReported.
-func connect(ctx context.Context, link telegramLink, con *console, chats []string, owner string) error {
+// step; it returns the found chats by their config text. On a problem it
+// prints it and returns errReported.
+func connect(ctx context.Context, link telegramLink, con *console, chats []string,
+	owner string) (map[string]telegram.ChatInfo, error) {
 	firstRun := link.session.FirstRun()
 	account, err := telegram.SignIn(ctx, link.client, link.prompter, link.session)
 	if err != nil {
-		return reportSignIn(con, err, link.sessionPath)
+		return nil, reportSignIn(con, err, link.sessionPath)
 	}
 	con.signedIn(account.Name, !firstRun)
 	if firstRun {
 		con.sessionSaved(link.sessionPath)
 	}
 	lookup := telegram.Lookup{Client: link.client, Waiting: con.floodWait, Sleep: link.sleep}
-	if err := lookup.Find(ctx, chats, owner); err != nil {
-		return reportLookup(con, err)
+	found, err := lookup.Find(ctx, chats, owner)
+	if err != nil {
+		return nil, reportLookup(con, err)
 	}
 	con.ownerFound(owner)
 	con.watching(len(chats))
-	return nil
+	return found, nil
 }
 
 func reportSignIn(con *console, err error, path string) error {

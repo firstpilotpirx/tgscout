@@ -24,16 +24,16 @@
 - [x] 3.6 Green: `adapters/secondary/queue/channel/channel_message_queue.go`
 - [x] 3.7 Red: integration test for `ConsoleNotifier` with a real `MatchPrinter` writing to a buffer
 - [x] 3.8 Green: `adapters/secondary/notify/console/console_notifier.go`
-- [ ] 3.9 Commit (`kit ship`)
+- [x] 3.9 Commit (`kit ship`)
 
 ## 4. Telegram and primary adapters
 
-- [ ] 4.1 Red: unit tests for the gotd update mapping on `tg` values (new and edited messages of a channel and a group, a service message, a caption) and for `ResolveChat`/`Lookup` returning the chat IDs and usernames; update the existing lookup and fake-client tests
-- [ ] 4.2 Green: `infra/telegram` `Update`, `ChatInfo`, `Client.Listen`; `gotdClient` over gotd's updates manager and dispatcher; the fake client plays the scenario's `updates`
-- [ ] 4.3 Red: `components/matching/tests/features/slice/message_matching.feature` (`@message_matching @slice`) and its godog runner in `components/matching/tests`; the collector scenarios through the real `CollectMessage` with faked secondary adapters): a service message is dropped, a message with no text is dropped, a photo caption counts as text; an integration test for the collector (a stub `Client` plays updates through `Listen`, mocked use case); unit tests for the link of a public and of a private chat, an update of an unwatched chat, an edit passed as edited, a collect error reported; add godog v0.16.0 to `tgscout/go.mod`
-- [ ] 4.4 Green: `adapters/primary/collect/telegram`; `.go-arch-lint.yml` lets `adapters` depend on `infra`
-- [ ] 4.5 Red: the matcher scenario in the same slice feature: a full queue holds new messages back (a real `ChannelMessageQueue` of size 1, one worker, a slow fake `Llm`, the real `MatchMessage`); an integration test for the workers (real queue, mocked use case): an error and a warning reported, workers stop with `ctx`
-- [ ] 4.6 Green: `adapters/primary/match/channel`
+- [x] 4.1 Red: unit tests for the gotd update mapping on `tg` values (new and edited messages of a channel and a group, a service message, a caption) and for `ResolveChat`/`Lookup` returning the chat IDs and usernames; update the existing lookup and fake-client tests
+- [x] 4.2 Green: `infra/telegram` `Update`, `ChatInfo`, `Client.Listen`; `gotdClient` over gotd's updates manager and dispatcher; the fake client plays the scenario's `updates`
+- [x] 4.3 Red: `components/matching/tests/features/slice/message_matching.feature` (`@message_matching @slice`) and its godog runner in `components/matching/tests`; the collector scenarios through the real `CollectMessage` with faked secondary adapters): a service message is dropped, a message with no text is dropped, a photo caption counts as text; an integration test for the collector (a stub `Client` plays updates through `Listen`, mocked use case); unit tests for the link of a public and of a private chat, an update of an unwatched chat, an edit passed as edited, a collect error reported; add godog v0.16.0 to `tgscout/go.mod`
+- [x] 4.4 Green: `adapters/primary/collect/telegram`; `.go-arch-lint.yml` lets `adapters` depend on `infra`
+- [x] 4.5 Red: the matcher scenario in the same slice feature: a full queue holds new messages back (a real `ChannelMessageQueue` of size 1, one worker, a slow fake `Llm`, the real `MatchMessage`); an integration test for the workers (real queue, mocked use case): an error and a warning reported, workers stop with `ctx`
+- [x] 4.6 Green: `adapters/primary/match/channel`
 - [ ] 4.7 Commit (`kit ship`)
 
 ## 5. CLI

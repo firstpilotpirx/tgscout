@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"os"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -24,6 +26,30 @@ type fakeScenario struct {
 	Chats            map[string]string `json:"chats"`
 	Contacts         []string          `json:"contacts"`
 	FloodWaitSeconds int               `json:"flood_wait_seconds"`
+	Updates          []fakeUpdate      `json:"updates"`
+}
+
+// fakeUpdate is a made-up message the fake plays after Listen starts; Chat
+// is the config text of a watched chat.
+type fakeUpdate struct {
+	Chat    string `json:"chat"`
+	ID      int    `json:"id"`
+	Text    string `json:"text"`
+	Service bool   `json:"service"`
+	Edited  bool   `json:"edited"`
+	AfterMs int    `json:"after_ms"`
+}
+
+// info gives a chat its state and a made-up ID: a numeric reference keeps
+// its own, a username gets one from its name.
+func (s fakeScenario) info(ref string) ChatInfo {
+	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
+		return ChatInfo{State: s.state(ref), ID: bareChatID(ref)}
+	}
+	name := strings.ToLower(ref[strings.LastIndexAny(ref, "@/")+1:])
+	hash := fnv.New32a()
+	_, _ = hash.Write([]byte(name))
+	return ChatInfo{State: s.state(ref), ID: 9_000_000_000 + int64(hash.Sum32()), Username: name}
 }
 
 func parseFakeScenario(data []byte) (fakeScenario, error) {
@@ -108,12 +134,25 @@ func (c *fakeClient) Self(context.Context) (Account, error) {
 	return Account{Name: c.scenario.Account}, nil
 }
 
-func (c *fakeClient) ResolveChat(_ context.Context, ref string) (ChatState, error) {
+func (c *fakeClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error) {
 	if wait := c.scenario.floodWait(); wait > 0 && !c.flooded {
 		c.flooded = true
-		return ChatMissing, &FloodWait{Wait: wait}
+		return ChatInfo{}, &FloodWait{Wait: wait}
 	}
-	return c.scenario.state(ref), nil
+	return c.scenario.info(ref), nil
+}
+
+// Listen plays the scenario's updates in order, then waits for the stop.
+func (c *fakeClient) Listen(ctx context.Context, f func(context.Context, Update)) error {
+	for _, update := range c.scenario.Updates {
+		if err := SleepContext(ctx, time.Duration(update.AfterMs)*time.Millisecond); err != nil {
+			return err
+		}
+		f(ctx, Update{ChatID: c.scenario.info(update.Chat).ID, MessageID: update.ID, Date: time.Now(),
+			Text: update.Text, Service: update.Service, Edited: update.Edited})
+	}
+	<-ctx.Done()
+	return ctx.Err()
 }
 
 func (c *fakeClient) FindOwner(_ context.Context, owner string) (bool, error) {
