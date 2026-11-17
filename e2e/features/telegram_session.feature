@@ -88,6 +88,12 @@ Feature: telegram-session — how tgscout signs in to its Telegram account and f
       Then tgscout prints an error that says to add the owner to the account's contacts
       And it exits with a non-zero code
 
+    Scenario: the owner never wrote to tgscout's account
+      Given a config whose owner Telegram knows but who never wrote to tgscout's account
+      When the owner starts tgscout
+      Then tgscout stops with an error that it cannot write to the owner and a hint to write «hi» to its account once
+      And it exits with a non-zero code
+
   Rule: Secrets stay out of the output
 
     Scenario: secrets never reach the console

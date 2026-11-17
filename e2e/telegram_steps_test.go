@@ -44,6 +44,10 @@ func telegramGivenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^a config whose owner is a numeric ID that is not among the account's contacts$`, func() error {
 		return w.writeConfig(numericOwner)
 	})
+	sc.Step(`^a config whose owner Telegram knows but who never wrote to tgscout's account$`, func() error {
+		w.tg.fake.OwnerChatClosed = true
+		return w.writeConfig(validConfig)
+	})
 }
 
 func telegramWhenSteps(sc *godog.ScenarioContext, w *world) {
@@ -61,6 +65,11 @@ func telegramWhenSteps(sc *godog.ScenarioContext, w *world) {
 }
 
 func telegramThenSteps(sc *godog.ScenarioContext, w *world) {
+	sc.Step(`^tgscout stops with an error that it cannot write to the owner and a hint to write «hi» to its account once$`,
+		func() error {
+			return w.stderrHas("[fail] cannot write to the owner",
+				"write «hi» to tgscout's account once and add it to contacts (README → Setup → First contact)")
+		})
 	sc.Step(`^tgscout prints an error that names the missing api hash$`, func() error {
 		return w.stderrHas("[fail] TG_API_HASH is not set", ".env.example")
 	})

@@ -151,7 +151,8 @@ func consoleThenSteps(sc *godog.ScenarioContext, w *world) {
 			`answer: "`+unclearReply+`"`)
 	})
 	sc.Step(`^the console shows a match line with the request, the chat and a link to the message$`, func() error {
-		return w.allStdoutHas("kids-bike  @made_up_market  https://t.me/made_up_market/4211\n         " + bikeText)
+		return w.allStdoutHas("[ok] match sent  ", "  kids-bike\n  Match: kids-bike — "+bikeFind+"\n  Chat: "+marketTitle+
+			"\n  https://t.me/made_up_market/4211\n  "+bikeText+"\n")
 	})
 	sc.Step(`^the console shows no match line$`, func() error { return w.matchLines("", 0) })
 	sc.Step(`^the console shows an error line$`, func() error {
@@ -273,7 +274,7 @@ func (w *world) allStderrHas(want ...string) error { return has("stderr", w.allO
 func (w *world) matchLines(request string, want int) error {
 	got := 0
 	for _, line := range strings.Split(w.allOut(false), "\n") {
-		if strings.HasPrefix(line, "[ok] match  ") && strings.Contains(line, "  "+request) {
+		if strings.HasPrefix(line, "[ok] match sent  ") && strings.Contains(line, "  "+request) {
 			got++
 		}
 	}

@@ -26,9 +26,9 @@
 
 ## 5. E2E
 
-- [ ] 5.1 Red: `e2e/features/owner_notification.feature` (`@owner_notification @e2e`), one `Rule:` per requirement, every E2E scenario of design § Test levels; the world's fake Telegram gets `sent_file`, `send_fails`, `titles`, `owner_chat_closed` and `private` updates; the owner-chat row in `e2e/features/telegram_session.feature`; the match line steps of `message_matching.feature` follow the new line
-- [ ] 5.2 Green: fix what the scenarios find
-- [ ] 5.3 Commit (`kit ship`)
+- [x] 5.1 Red: `e2e/features/owner_notification.feature` (`@owner_notification @e2e`), one `Rule:` per requirement, every E2E scenario of design § Test levels; the world's fake Telegram gets `sent_file`, `send_fails`, `titles`, `owner_chat_closed` and `private` updates; the owner-chat row in `e2e/features/telegram_session.feature`; the match line steps of `message_matching.feature` follow the new line
+- [x] 5.2 Green: fix what the scenarios find
+- [x] 5.3 Commit (`kit ship`)
 
 ## 6. Docs and version
 

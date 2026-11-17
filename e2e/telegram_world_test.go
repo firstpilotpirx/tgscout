@@ -19,6 +19,8 @@ const (
 	madeUpSession    = "made-up fake session"
 	madeUpAccount    = "Made Up Reader"
 	fakeScenarioFile = "fake-telegram.json"
+	sentFileName     = "fake-telegram-sent.jsonl"
+	marketTitle      = "Made-up market"
 	sessionFileName  = "tgscout.session"
 )
 
@@ -32,6 +34,10 @@ type fakeTelegram struct {
 	Contacts         []string          `json:"contacts"`
 	FloodWaitSeconds int               `json:"flood_wait_seconds"`
 	Updates          []fakeUpdate      `json:"updates"`
+	Titles           map[string]string `json:"titles"`
+	OwnerChatClosed  bool              `json:"owner_chat_closed"`
+	SendFails        bool              `json:"send_fails"`
+	SentFile         string            `json:"sent_file"`
 }
 
 // fakeUpdate is a made-up message the fake Telegram plays after the start.
@@ -40,6 +46,7 @@ type fakeUpdate struct {
 	ID      int    `json:"id"`
 	Text    string `json:"text"`
 	Edited  bool   `json:"edited"`
+	Private bool   `json:"private"`
 	AfterMs int    `json:"after_ms"`
 }
 
@@ -57,6 +64,7 @@ func defaultTelegram() telegramWorld {
 		fake: fakeTelegram{
 			SessionValid: true, Account: madeUpAccount, Code: madeUpCode,
 			Chats: map[string]string{"*": "joined"}, Contacts: []string{"@made_up_owner"},
+			Titles: map[string]string{"@made_up_market": marketTitle},
 		},
 		session: true, sessionMode: 0o600,
 	}
@@ -64,6 +72,7 @@ func defaultTelegram() telegramWorld {
 
 // write puts the fake scenario and the session file into dir and returns the environment.
 func (t telegramWorld) write(dir string) ([]string, error) {
+	t.fake.SentFile = filepath.Join(dir, sentFileName)
 	data, err := json.Marshal(t.fake) //nolint:gosec // G117: a made-up password of the fake Telegram
 	if err != nil {
 		return nil, fmt.Errorf("fake scenario: %w", err)
