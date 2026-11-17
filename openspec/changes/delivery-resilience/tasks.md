@@ -2,9 +2,9 @@
 
 ## 1. Domain and settings
 
-- [ ] 1.1 Red: unit tests for `domain.Backoff.Pause` (1, 2, 4 s, capped at `Max`, no overflow at a large try); the settings parser (`retry_max_pause` and `stop_grace` read, defaults 60 s and 10 s, a value that is not a positive duration refused with field and line)
-- [ ] 1.2 Green: `core/domain/backoff.go`, `Settings.RetryMaxPause` and `StopGrace`, the YAML parser; `tgscout.yaml.example` names both fields
-- [ ] 1.3 Commit (`kit ship`)
+- [x] 1.1 Red: unit tests for `domain.Backoff.Pause` (1, 2, 4 s, capped at `Max`, no overflow at a large try); the settings parser (`retry_max_pause` and `stop_grace` read, defaults 60 s and 10 s, a value that is not a positive duration refused with field and line)
+- [x] 1.2 Green: `core/domain/backoff.go`, `Settings.RetryMaxPause` and `StopGrace`, the YAML parser; `tgscout.yaml.example` names both fields
+- [x] 1.3 Commit (`kit ship`)
 
 ## 2. Retries in the match use case
 
