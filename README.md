@@ -34,6 +34,26 @@ cp tgscout.yaml.example tgscout.yaml
 
 `tgscout --help` lists the options. The database `tgscout.db` is created next to the config; `--db <path>` puts it elsewhere. Press Ctrl+C to stop.
 
+### Catch-up at start
+
+While live listening is already on, tgscout reads what each watched chat posted while it was off, chat by chat in config order. It reads from the chat's cursor (the last processed message); on a first start, or after a pause longer than the depth, it reads only the depth (`catch_up` in the config). Each history match goes to you as its own private message; the summary goes only to the console (made-up example):
+
+```text
+→ catch-up started · 3 chats · live listening is on
+✓ catch-up: Riverside flea market · 214 messages from the cursor
+✓ catch-up: Kids' things swap · 500 messages · first start, last 3 days
+⚠ catch-up: Bikes for sale · 500 messages · off for 12 days, read only the last 3 days
+✓ catch-up done in 4m35s
+  ✓ chats      3  (1 with a gap)
+  ✓ messages   1,042 read · 18 skipped · 1,024 judged
+  ● matches    2  (sent to you in Telegram)
+  ✓ errors     0
+```
+
+- A message already processed is skipped; a message that is in the history and also arrives live is judged once.
+- A chat's cursor waits until that chat's history is handed to the judge.
+- A message whose judging fails stays unprocessed and is counted in «errors»; the next start judges it again.
+
 ### While it runs
 
 After `running`, tgscout judges every new or edited message of the watched chats with the LLM, once per request of that chat. Each match goes to you, the owner, as a private Telegram message from tgscout's account:

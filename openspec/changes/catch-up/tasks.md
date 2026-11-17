@@ -36,8 +36,8 @@
 
 ## 7. Docs and version
 
-- [ ] 7.1 `docs/architecture/context.html` and `quality-attributes.html` (design § D6); `README.md`: catch-up at start, its console lines
-- [ ] 7.2 Bump `VERSION` to 0.6.0
-- [ ] 7.3 Commit (`kit ship`)
+- [x] 7.1 `docs/architecture/context.html` and `quality-attributes.html` (design § D6); `README.md`: catch-up at start, its console lines
+- [x] 7.2 Bump `VERSION` to 0.6.0
+- [x] 7.3 Commit (`kit ship`)
 
 Manual checks by the user: none for this run (`manual_run` lists no area); the owner's run of the acceptance bar after a pause stays for the owner.
