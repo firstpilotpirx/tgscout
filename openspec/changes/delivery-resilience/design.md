@@ -77,6 +77,7 @@ Decided by the prepared run: the approved mock shows the lines with a time and a
 | connection lost | `⚠ Telegram connection lost · reconnecting` | stderr |
 | connection back | `✓ Telegram connection back · reading 3 chats from their cursors` | stdout |
 | gap read done | `✓ gap read done · 42 messages to judge` | stdout |
+| gap read failed for a chat | `✗ gap read: Made-up market · cannot read the history: <reason>`, hint `next start reads it again` (the cursor stays held, D8) | stderr |
 | stopping | `→ stopping · finishing 2 messages in work · up to 10s · Ctrl+C again to stop now` | stdout |
 | stopped | `✓ stopped · 18 messages in the queue left unprocessed, catch-up reads them next start` | stdout |
 
@@ -97,7 +98,7 @@ The match line stays owner-notification's `✓ match sent  HH:MM  <id>`. The moc
 | the connection to Telegram drops | E2E | feature: the fake plays `connection_lost`, a `lost` update, `connection_back`; the lost message is judged |
 | a message processed during the drop is not judged twice | slice | `tests/features/slice/catch_up.feature`: the gap read over a stub client whose history holds a processed message |
 | the owner stops tgscout during work | E2E | feature: the fake LM Studio answers after 1 s; Ctrl+C while it judges; exit 0, the stopping line |
-| a judgment longer than the grace time | E2E | feature: `stop_grace: 1s`, the fake LM Studio answers after 5 s; exit 0 in under 3 s, not processed |
+| a judgment longer than the grace time | E2E | feature: `stop_grace: 1s`, the fake LM Studio answers after 5 s; exit 0 in under 2 s (about the grace time plus the process exit), not processed |
 | a retry pause ends at the stop | E2E | feature: the fake LM Studio answers 503; Ctrl+C after the not-answering line; exit 0 in under 1 s, not processed |
 | a second Ctrl+C stops at once | E2E | feature: the fake LM Studio answers after 5 s; two SIGINTs; exit 130 |
 | a crash between send and mark | E2E | feature: the fake Telegram holds `send_hang_ms` after it wrote the sent line; SIGKILL; the restart's history holds the message; two sends of it |
@@ -109,12 +110,12 @@ The match line stays owner-notification's `✓ match sent  HH:MM  <id>`. The moc
 | an invalid config stops the start | E2E | unchanged `settings.feature` outline |
 | every problem is listed at once | E2E | unchanged `settings.feature` |
 | a new message does not move the cursor past unread history | unit | unchanged `Cursor` / `MessageTracker` tests |
-| tgscout starts and stops cleanly | E2E | unchanged `cli_lifecycle.feature`; the stopped line still holds «stopped» |
+| tgscout starts and stops cleanly | E2E | unchanged `cli_lifecycle.feature`; the stopped line still holds «stopped»; the count of messages left in the queue runs as a `live` unit test (a stop with three messages, one worker) |
 | tgscout stops on a terminate signal | E2E | unchanged `cli_lifecycle.feature` |
 | defaults fill what the file leaves out | unit | settings parser test: 60 s and 10 s added |
 | every form of chat reference is accepted | unit | unchanged settings parser test |
 | a retry cap that is not a duration is refused | unit | settings parser test |
-| a failed history read keeps the cursor | unit | `HistoryCollector` test over a stub client whose read fails |
+| a failed history read keeps the cursor | integration + unit | `HistoryCollector` integration test over a stub client whose read fails (the chat is never closed); the `CatchUp` unit test that an open chat's cursor does not move when a live message finishes |
 | catch-up: judging errors are counted | unit | `MatchMessage` settling test with a failing repository (a failed database write) |
 | catch-up: the summary waits for LM Studio | E2E | `catch_up.feature`: the old «judging errors» scenario, now no summary while the fake answers 503 |
 

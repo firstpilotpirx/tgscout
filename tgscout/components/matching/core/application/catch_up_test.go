@@ -143,6 +143,7 @@ func TestCollectCountsARepositoryErrorAsAnError(t *testing.T) {
 	assert.ErrorIs(t, err, errBoom)
 	counts, _ := f.catchUp.Wait(context.Background())
 	assert.Equal(t, 1, counts.Errors)
+	assert.Empty(t, f.repository.processed, "the failed message is not marked processed")
 }
 
 func TestTheCursorWaitsUntilTheChatIsClosed(t *testing.T) {

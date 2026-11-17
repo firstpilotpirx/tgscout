@@ -82,7 +82,7 @@ func TestServeEndsTheMessageInWorkAfterTheGraceTime(t *testing.T) {
 	stop()
 
 	require.NoError(t, <-done)
-	assert.Less(t, time.Since(started), 2*time.Second)
+	assert.Less(t, time.Since(started), time.Second, "about the grace time")
 	assert.Zero(t, messages.processedCount(), "a message not finished in the grace time stays unprocessed")
 }
 
@@ -151,4 +151,30 @@ func TestServeSaysWhenTheQueueIsFull(t *testing.T) {
 
 	require.NoError(t, <-done)
 	assert.Equal(t, 1, strings.Count(errOut.String(), "[warn] queue is full (10) · reading new messages paused\n"))
+}
+
+func TestTheStoppedLineCountsTheMessagesLeftInTheQueue(t *testing.T) {
+	c, out, _ := newTestConsole(true)
+	messages := &memoryMessages{}
+	llm := newHeldLlm()
+	matcher := newTestLive(t, c, messages)
+	matcher.ports.Llm = llm
+	matcher.workers = 1
+	matcher.settings.StopGrace = 50 * time.Millisecond
+	client := &fakeTelegram{}
+	for id := 1; id <= 3; id++ {
+		client.updates = append(client.updates, telegram.Update{ChatID: 7001, MessageID: id, Date: time.Now(), Text: "a kids' bike"})
+	}
+	ctx, stop := context.WithCancel(context.Background())
+	done := make(chan error)
+
+	go func() { done <- matcher.serve(ctx, c, client, marketFound) }()
+	<-llm.entered
+	require.Eventually(t, func() bool { return matcher.queued() == 2 }, 5*time.Second, 5*time.Millisecond)
+	stop()
+	require.NoError(t, <-done)
+	c.stopped(matcher.queued())
+
+	assert.True(t, matcher.announcedStop())
+	assert.Contains(t, out.String(), "[ok] stopped · 2 messages in the queue left unprocessed, catch-up reads them next start\n")
 }

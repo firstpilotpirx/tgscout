@@ -85,7 +85,7 @@ When the connection to Telegram is back, tgscout SHALL print one line saying so 
 
 #### Scenario: a message processed during the drop is not judged twice
 
-- **GIVEN** a message reached tgscout and was processed just before the connection dropped
+- **GIVEN** a message reached tgscout before the connection dropped and was processed during the drop
 - **WHEN** the connection is back and tgscout reads the gap
 - **THEN** that message is not judged again
 

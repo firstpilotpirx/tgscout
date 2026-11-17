@@ -51,7 +51,7 @@ Feature: delivery — no message is lost when LM Studio, Telegram or tgscout its
     Scenario: a judgment longer than the grace time
       Given a grace time of 1 second and LM Studio that answers after 5 seconds
       When the owner presses Ctrl+C while a message is judged
-      Then tgscout exits with code 0 within 3 seconds
+      Then tgscout exits with code 0 within 2 seconds
       And the message is not marked processed and the cursor does not move past it
 
   Rule: End of a stop
