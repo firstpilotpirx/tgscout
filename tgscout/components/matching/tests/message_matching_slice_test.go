@@ -36,6 +36,7 @@ type slice struct {
 	repository *memoryRepository
 	llm        *slowLlm
 	queue      *queue.ChannelMessageQueue
+	puts       countingQueue
 	workers    int
 	settings   domain.Settings
 }
@@ -59,7 +60,8 @@ func (s *slice) steps(sc *godog.ScenarioContext) {
 		s.queue, s.workers, s.llm.delay = queue.NewChannelMessageQueue(1), 1, 30*time.Millisecond
 	})
 	sc.Step(`^someone joins the chat$`, func() error {
-		return s.play(telegram.Update{ChatID: watchedChatID, MessageID: 1, Service: true})
+		// a text too, so only the service flag drops it
+		return s.play(telegram.Update{ChatID: watchedChatID, MessageID: 1, Text: "Made Up Reader joined", Service: true})
 	})
 	sc.Step(`^a photo without a caption appears in it$`, func() error {
 		return s.play(telegram.Update{ChatID: watchedChatID, MessageID: 1})
@@ -93,7 +95,8 @@ func (s *slice) steps(sc *godog.ScenarioContext) {
 // until the queue is empty and the last judgment is done.
 func (s *slice) play(updates ...telegram.Update) error {
 	tracker := domain.NewMessageTracker()
-	collectUseCase := application.NewCollectMessage(staticSettings{s.settings}, s.repository, s.queue, tracker)
+	s.puts.queue = s.queue
+	collectUseCase := application.NewCollectMessage(staticSettings{s.settings}, s.repository, &s.puts, tracker)
 	matchUseCase := application.NewMatchMessage(s.repository, s.llm, nopNotifier{}, tracker)
 	collector := collect.NewTelegramCollector(map[int64]collect.Chat{watchedChatID: {Ref: s.settings.Requests[0].Chats[0].Ref,
 		Username: "made_up_market"}}, collectUseCase, func(domain.Message, error) {})
@@ -130,6 +133,9 @@ func (s *slice) textCount(updates []telegram.Update) int {
 }
 
 func (s *slice) notAsked() error {
+	if puts := s.puts.count(); puts > 0 {
+		return fmt.Errorf("%d messages were queued for the LLM", puts)
+	}
 	if calls := s.llm.texts(); len(calls) > 0 {
 		return fmt.Errorf("the LLM was asked about %q", calls)
 	}
@@ -235,4 +241,25 @@ func (r *memoryRepository) empty() error {
 		return fmt.Errorf("%d decisions and %d processed marks were saved", r.decisions, len(r.processed))
 	}
 	return nil
+}
+
+// countingQueue counts what the collect use case puts in the real queue, so a
+// message wrongly queued shows even when no worker took it yet.
+type countingQueue struct {
+	queue *queue.ChannelMessageQueue
+	mu    sync.Mutex
+	puts  int
+}
+
+func (q *countingQueue) Put(ctx context.Context, item domain.QueueItem) error {
+	q.mu.Lock()
+	q.puts++
+	q.mu.Unlock()
+	return q.queue.Put(ctx, item)
+}
+
+func (q *countingQueue) count() int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return q.puts
 }

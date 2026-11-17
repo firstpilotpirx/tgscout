@@ -22,6 +22,7 @@ import (
 type call struct {
 	Model       string  `json:"model"`
 	Temperature float64 `json:"temperature"`
+	MaxTokens   int     `json:"max_tokens"`
 	Messages    []struct {
 		Role    string `json:"role"`
 		Content string `json:"content"`
@@ -69,6 +70,7 @@ func TestJudgeSendsTheModelTheRulesAndTheTextsApart(t *testing.T) {
 	require.Len(t, calls, 1)
 	assert.Equal(t, "example-model", calls[0].Model)
 	assert.Zero(t, calls[0].Temperature)
+	assert.Equal(t, 256, calls[0].MaxTokens)
 	require.Len(t, calls[0].Messages, 2)
 	assert.Equal(t, "system", calls[0].Messages[0].Role)
 	assert.NotContains(t, calls[0].Messages[0].Content, "desk lamp")

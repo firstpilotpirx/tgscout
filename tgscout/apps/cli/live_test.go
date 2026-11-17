@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -119,12 +120,36 @@ func TestServeSaysRunningThenPrintsTheMatchesOfTheWatchedChats(t *testing.T) {
 
 func TestServeReturnsOnlyAfterTheWorkersStopped(t *testing.T) {
 	c, _, _ := newTestConsole(true)
+	llm := &blockingLlm{entered: make(chan struct{})}
+	matcher := newTestLive(t, c, &memoryMessages{})
+	matcher.config = matching.NewMatchingConfig(matching.Ports{
+		Settings: liveSettings{matcher.settings}, Messages: &memoryMessages{}, Queue: matcher.queue.(*queue.ChannelMessageQueue),
+		Llm: llm, Notifier: notify.NewConsoleNotifier(notify.PrintFunc(c.PrintMatch)),
+	})
+	client := &fakeTelegram{updates: []telegram.Update{{ChatID: 7001, MessageID: 4211, Date: time.Now(), Text: "a kids' bike"}}}
 	ctx, stop := context.WithCancel(context.Background())
+	done := make(chan error)
+
+	go func() { done <- matcher.serve(ctx, c, client, marketFound) }()
+	<-llm.entered
 	stop()
 
-	err := newTestLive(t, c, &memoryMessages{}).serve(ctx, c, &fakeTelegram{}, marketFound)
+	require.NoError(t, <-done, "the stop is no error")
+	assert.True(t, llm.left.Load(), "the worker left the LLM call before serve returned")
+}
 
-	assert.NoError(t, err, "the stop is no error")
+// blockingLlm holds a judgment until the context ends.
+type blockingLlm struct {
+	entered chan struct{}
+	left    atomic.Bool
+}
+
+func (l *blockingLlm) Judge(ctx context.Context, _, _ string) (domain.Judgment, error) {
+	close(l.entered)
+	<-ctx.Done()
+	time.Sleep(20 * time.Millisecond) // a slow exit shows when serve does not wait
+	l.left.Store(true)
+	return domain.Judgment{}, ctx.Err()
 }
 
 func TestServeGivesTheListenerError(t *testing.T) {

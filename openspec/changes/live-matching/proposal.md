@@ -21,7 +21,7 @@ Design pages this slice implements:
 - An LLM call that fails (LM Studio down, timeout) leaves the message unprocessed and prints an error line; the full retry policy is `delivery-resilience`.
 - The notifier of this slice is the console: one line per match with time, request id, chat, link and the start of the text.
 - Each «yes» decision row is a found message; nothing else stores matches (no matches file).
-- An edited message is judged again only for the requests whose earlier decision was «no»; a «yes» is never sent twice for the same request.
+- An edited message is judged again only for the requests with no «yes» shown yet; a «yes» saved but not shown is judged and shown again; a shown «yes» is never shown twice for the same request.
 - An LLM answer that is neither yes nor no is asked once more with a stricter prompt; a second unclear answer is saved as «no» and a warning line with the raw answer is printed.
 - The prompt keeps the fixed matching rules in the system message and puts the request text and the message text in the user message.
 - A new root setting `queue_size` (default 1,000, at least 1) sets the queue capacity; when the queue is full, the collector waits (back-pressure).
@@ -29,7 +29,7 @@ Design pages this slice implements:
 
 Current stage: PoC. Target stage: PoC.
 Scope: collector for new messages, the pre-filter, the processed check, the queue, matcher workers, the llm part over the OpenAI-compatible API, decisions, processed marks, the cursor, the console notifier, re-judging edited messages, the `queue_size` setting.
-Acceptance bar: the scenarios below pass as slice tests with a fake Telegram update stream and a fake OpenAI-compatible server; a manual run with LM Studio prints a match on the console for a made-up message posted in a test chat.
+Acceptance bar: the scenarios below pass at the levels design § Test levels names (E2E with a fake Telegram update stream and a fake OpenAI-compatible server, slice, unit); a manual run with LM Studio prints a match on the console for a made-up message posted in a test chat.
 Test override: the E2E scenarios talk to a made-up OpenAI-compatible server (`httptest`) instead of LM Studio, overriding `testing-e2e-go.md` «External deps: Real or production-equivalent. No httptest» for the LLM only; decided by the prepared run on the owner's order of 2026-11-17 (decide and finish).
 Out of scope: the private Telegram message to the owner (`owner-notification`); history at start (`catch-up`); retries, backoff, graceful drain and reconnects (`delivery-resilience`); latency and load measurement (`quality-targets`); images, video, audio; owner feedback and commands (later, not now).
 Interface: CLI — match lines and error lines on the console.

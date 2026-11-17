@@ -18,9 +18,16 @@ import (
 	"github.com/firstpilotpirx/tgscout/components/matching/core/domain"
 )
 
-type scriptedMatcher struct{}
+// scriptedMatcher answers per message ID and records the IDs it was given.
+type scriptedMatcher struct {
+	mu   sync.Mutex
+	seen []int
+}
 
-func (scriptedMatcher) Match(_ context.Context, item domain.QueueItem) (application.Outcome, error) {
+func (m *scriptedMatcher) Match(_ context.Context, item domain.QueueItem) (application.Outcome, error) {
+	m.mu.Lock()
+	m.seen = append(m.seen, item.Message.Key.MessageID)
+	m.mu.Unlock()
 	switch item.Message.Key.MessageID {
 	case 1:
 		return application.Outcome{Unclear: []application.Unclear{{Request: domain.Request{ID: "bike"}, Raw: "maybe"}}}, nil
@@ -61,13 +68,19 @@ func TestWorkersReportWarningsAndErrorsAndStopWithTheContext(t *testing.T) {
 		require.NoError(t, items.Put(ctx, domain.QueueItem{Message: domain.Message{Key: domain.MessageKey{ChatID: 7, MessageID: id}}}))
 	}
 	reporter := &recordingReporter{}
+	matcher := &scriptedMatcher{}
 	done := make(chan struct{})
 
 	go func() {
-		match.RunWorkers(ctx, 2, items, scriptedMatcher{}, reporter)
+		match.RunWorkers(ctx, 1, items, matcher, reporter)
 		close(done)
 	}()
-	assert.Eventually(t, func() bool { u, f := reporter.counts(); return u == 1 && f == 1 }, time.Second, 10*time.Millisecond)
+	assert.Eventually(t, func() bool {
+		matcher.mu.Lock()
+		defer matcher.mu.Unlock()
+		u, f := reporter.counts()
+		return u == 1 && f == 1 && len(matcher.seen) == 3
+	}, time.Second, 10*time.Millisecond)
 	cancel()
 
 	select {
@@ -77,4 +90,5 @@ func TestWorkersReportWarningsAndErrorsAndStopWithTheContext(t *testing.T) {
 	}
 	assert.Equal(t, []string{"maybe"}, reporter.unclear)
 	assert.Equal(t, []int{2}, reporter.failed)
+	assert.Equal(t, []int{1, 2, 3}, matcher.seen, "the worker goes on with the next message after a failure")
 }

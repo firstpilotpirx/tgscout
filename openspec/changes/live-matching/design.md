@@ -2,7 +2,7 @@
 
 `walking-skeleton`, `hierarchical-settings` and `telegram-sign-in` built the start: config → SQLite (tables `chat_cursor`, `processed_message`, `decision`) → sign-in → lookup of the chats and the owner → «running» until Ctrl+C. The matching component already has the empty use cases `CollectMessage`, `MatchMessage` and the empty ports `MessageRepository`, `MessageQueue`, `Llm`, `Notifier`. `infra/telegram` holds the `Client` port over gotd v0.163.0, built with `NoUpdates: true`, and a fake client under the build tag `telegramfake` that the E2E build reads from a JSON scenario.
 
-This slice fills the message path of the [message-path flow](../../../docs/flows/message-path.html) and the [L4 matching overview](../../../docs/modules/matching/overview.html). The preparation recorded: edits judged again only where the decision was «no»; an unclear answer asked once more, then «no» with a warning; rules in the system message, request and message in the user message; a root setting `queue_size` (default 1000, at least 1) with a waiting collector; a duplicate is the same chat and message ID.
+This slice fills the message path of the [message-path flow](../../../docs/flows/message-path.html) and the [L4 matching overview](../../../docs/modules/matching/overview.html). The preparation recorded: edits judged again only where no «yes» was shown yet (a «yes» saved but not shown is judged and shown again, as the spec says); an unclear answer asked once more, then «no» with a warning; rules in the system message, request and message in the user message; a root setting `queue_size` (default 1000, at least 1) with a waiting collector; a duplicate is the same chat and message ID.
 
 ## Goals / Non-Goals
 
