@@ -34,9 +34,9 @@
 
 ## 6. CLI: console, stop, wiring
 
-- [ ] 6.1 Red: unit tests for the console lines of design § D10 (each line, with and without color, thousands); `live.serve`: the stopping line with the busy count, workers finish on the work context within the grace time, the pause sleep ends at the stop, the reconnector wired; `start`: the stopped line with and without queued messages
-- [ ] 6.2 Green: `apps/cli/console_delivery.go`, `live.go`, `start.go`, `start_telegram.go` (Telegram run detached from the stop), `main.go` (first signal stops, second exits 130)
-- [ ] 6.3 Commit (`kit ship`)
+- [x] 6.1 Red: unit tests for the console lines of design § D10 (each line, with and without color, thousands); `live.serve`: the stopping line with the busy count, workers finish on the work context within the grace time, the pause sleep ends at the stop, the reconnector wired; `start`: the stopped line with and without queued messages
+- [x] 6.2 Green: `apps/cli/console_delivery.go`, `live.go`, `start.go`, `start_telegram.go` (Telegram run detached from the stop), `main.go` (first signal stops, second exits 130)
+- [x] 6.3 Commit (`kit ship`)
 
 ## 7. E2E
 

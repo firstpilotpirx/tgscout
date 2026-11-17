@@ -50,7 +50,7 @@ func watch(ctx context.Context, con *console, deps startDeps, config string, mat
 	if !ok {
 		return exitError
 	}
-	err := link.client.Run(ctx, func(ctx context.Context) error {
+	err := runDetached(ctx, link.client, func(ctx context.Context) error {
 		found, err := connect(ctx, link, con, watchedChats(settings), settings.Owner.String())
 		if err != nil {
 			return err
