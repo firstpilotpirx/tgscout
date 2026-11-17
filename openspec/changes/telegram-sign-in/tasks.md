@@ -16,12 +16,12 @@
 
 ## 3. Real and fake clients
 
-- [ ] 3.1 Red: unit tests for `mapError` on gotd error values — 401 errors → revoked, `FLOOD_WAIT_12` → `FloodWait{12s}`, `PHONE_CODE_INVALID` → wrong code, invalid password → wrong password, other errors → a fixed text without the server's message
-- [ ] 3.2 Green: `infra/telegram/gotd_errors.go`; `infra/telegram/gotd_client.go` over gotd (auth flow, resolveUsername, dialogs, contacts, no-op logger) and `newClient` without the tag — the network path is checked by the owner's manual run
-- [ ] 3.3 Red: unit test (tag `telegramfake`) for `parseFakeScenario` on a made-up JSON string
-- [ ] 3.4 Green: `infra/telegram/fake_client.go` under `//go:build telegramfake`
-- [ ] 3.5 `.go-arch-lint.yml`: vendors `gotd`, `xterm`; `infra` may use `gotd`, `app` may use `xterm`
-- [ ] 3.6 Commit (`kit ship`)
+- [x] 3.1 Red: unit tests for `mapError` on gotd error values — 401 errors → revoked, `FLOOD_WAIT_12` → `FloodWait{12s}`, `PHONE_CODE_INVALID` → wrong code, invalid password → wrong password, other errors → a fixed text without the server's message
+- [x] 3.2 Green: `infra/telegram/gotd_errors.go`; `infra/telegram/gotd_client.go` over gotd (auth flow, resolveUsername, dialogs, contacts, no-op logger) and `newClient` without the tag — the network path is checked by the owner's manual run
+- [x] 3.3 Red: unit test (tag `telegramfake`) for `parseFakeScenario` on a made-up JSON string
+- [x] 3.4 Green: `infra/telegram/fake_client.go` under `//go:build telegramfake`
+- [x] 3.5 `.go-arch-lint.yml`: vendors `gotd`, `xterm`; `infra` may use `gotd`, `app` may use `xterm`
+- [x] 3.6 Commit (`kit ship`)
 
 ## 4. Start flow in the CLI
 
