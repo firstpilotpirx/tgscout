@@ -12,6 +12,18 @@ tgscout watches chosen Telegram chats and writes to you when a message matches a
 git config core.hooksPath .githooks
 ```
 
+## Setup
+
+tgscout reads chats from its own Telegram account, a second account, not yours.
+
+1. Get an `api_id` and an `api_hash` at [my.telegram.org](https://my.telegram.org) → API development tools, signed in as tgscout's account.
+2. Copy [.env.example](.env.example) to `.env` and fill in `TG_API_ID` and `TG_API_HASH`. `.env` is never committed (`.gitignore`); a variable set in the environment wins over `.env`.
+3. With tgscout's account, join every chat the config names; a chat it has not joined stops the start.
+4. Add yourself (the `owner` of the config) to the contacts of tgscout's account, so a numeric owner ID can be found.
+5. Start tgscout once from a terminal. It asks for the phone number, the login code and the two-step password (hidden), then saves the session.
+
+The session file is `tgscout.session` next to the config, or `TG_SESSION_FILE`; it is written with mode 600 and refused when others can read it (`chmod 600 <file>`). Later starts sign in from it without a question, so tgscout can then run as a service. If Telegram no longer accepts the session, delete the file and start from a terminal again.
+
 ## Run (dev)
 
 ```bash

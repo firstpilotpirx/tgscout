@@ -37,12 +37,12 @@
 
 - [x] 5.1 Red: `e2e/features/telegram_session.feature` (`@telegram_session @e2e`) with every scenario of the spec, one `Rule:` per requirement, and their steps; the typing scenarios run the binary on a pseudo-terminal (`github.com/creack/pty` v1.1.24); the world gives every start made-up credentials, a private session file and a fake scenario
 - [x] 5.2 Green: `scripts/qa.sh` builds the E2E binary with `-tags telegramfake`; fix what the scenarios find
-- [ ] 5.3 Commit (`kit ship`)
+- [x] 5.3 Commit (`kit ship`)
 
 ## 6. Docs and version
 
-- [ ] 6.1 `README.md` § Setup: get `api_id` / `api_hash` at my.telegram.org, prepare the second account, join the chats with it, add the owner to its contacts, first start from a terminal; `.env.example` comments for the three variables
-- [ ] 6.2 Bump `VERSION` to 0.3.0
+- [x] 6.1 `README.md` § Setup: get `api_id` / `api_hash` at my.telegram.org, prepare the second account, join the chats with it, add the owner to its contacts, first start from a terminal; `.env.example` comments for the three variables
+- [x] 6.2 Bump `VERSION` to 0.3.0
 - [ ] 6.3 Commit (`kit ship`)
 
 Manual checks by the user: none for this run (`manual_run` lists no area); the owner's real-account sign-in of the acceptance bar stays for the owner.
