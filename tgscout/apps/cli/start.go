@@ -37,7 +37,9 @@ func start(ctx context.Context, opts options, con *console, deps startDeps) int 
 		_ = db.Close() // the Telegram error is the one to report
 		return exitError
 	}
-	if !matcher.announcedStop() {
+	if matcher.announcedStop() {
+		con.statusTotal(matcher.total())
+	} else {
 		con.step("stopping…") // stopped before the workers ran
 	}
 	if err := db.Close(); err != nil {
@@ -80,6 +82,9 @@ func loadConfig(path string, con *console) (*yaml.YamlSettingsRepository, bool) 
 		}
 		settings := repository.Settings()
 		con.summary(path, len(settings.Requests), settings.DistinctChats(), settings.LmStudio.Model)
+		if !settings.LmStudio.Local() {
+			con.nonLocalLlm(settings.LmStudio.URL)
+		}
 		return repository, true
 	case errors.Is(err, yaml.ErrConfigNotFound):
 		con.fail("config file not found: "+path, "copy tgscout.yaml.example there, or pass --config <path>", path)

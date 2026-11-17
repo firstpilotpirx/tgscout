@@ -53,7 +53,7 @@ func (c *console) catchUpDone(summary collect.Summary) {
 			c.red.Sprint(c.marks.fail), thousands(counts.Errors))
 	}
 	_ = c.block(c.out, // a lost line cannot be reported
-		fmt.Sprintf("%s catch-up done in %s", ok, summary.Took.Round(time.Second)),
+		fmt.Sprintf("%s catch-up done in %s · %s", ok, short(summary.Took), c.catchUpMark(summary.Took)),
 		fmt.Sprintf("  %s chats      %s", ok, chats),
 		fmt.Sprintf("  %s messages   %s read · %s skipped · %s judged", ok,
 			thousands(counts.Read), thousands(counts.Skipped), thousands(counts.Judged)),

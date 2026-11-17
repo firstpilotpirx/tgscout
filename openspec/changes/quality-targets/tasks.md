@@ -14,9 +14,9 @@
 
 ## 3. Console and status loop
 
-- [ ] 3.1 Red: unit tests in `apps/cli`: the match line with ` · latency 3.4s` for a live message and none for a history or edited one; the status block (counts with thousands, `≤ 10s` mark, `> 10s` mark, a dash and no mark without samples); the status since start block; the catch-up summary within and over 15 minutes; the non-local warning; the status loop over made-up ticks (a line per tick, the behind warning after 3 growing lines with the three lengths, none after grow-shrink-grow, the next warning only after 3 more growing lines)
-- [ ] 3.2 Green: `console_status.go` (status block, behind warning, trend, loop), `console_matching.go`, `console_catch_up.go`, `start.go` (non-local warning, status at stop), `live.go` (stats in the ports, status goroutine)
-- [ ] 3.3 Commit (`kit ship`)
+- [x] 3.1 Red: unit tests in `apps/cli`: the match line with ` · latency 3.4s` for a live message and none for a history or edited one; the status block (counts with thousands, `≤ 10s` mark, `> 10s` mark, a dash and no mark without samples); the status since start block; the catch-up summary within and over 15 minutes; the non-local warning; the status loop over made-up ticks (a line per tick, the behind warning after 3 growing lines with the three lengths, none after grow-shrink-grow, the next warning only after 3 more growing lines)
+- [x] 3.2 Green: `console_status.go` (status block, behind warning, trend, loop), `console_matching.go`, `console_catch_up.go`, `start.go` (non-local warning, status at stop), `live.go` (stats in the ports, status goroutine)
+- [x] 3.3 Commit (`kit ship`)
 
 ## 4. E2E of the console lines
 
