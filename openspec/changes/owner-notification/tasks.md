@@ -32,8 +32,8 @@
 
 ## 6. Docs and version
 
-- [ ] 6.1 `README.md`: Setup → First contact (write «hi» to tgscout's account once, add it to contacts), what the owner gets in Telegram, the new console lines
-- [ ] 6.2 Bump `VERSION` to 0.5.0
-- [ ] 6.3 Commit (`kit ship`)
+- [x] 6.1 `README.md`: Setup → First contact (write «hi» to tgscout's account once, add it to contacts), what the owner gets in Telegram, the new console lines
+- [x] 6.2 Bump `VERSION` to 0.5.0
+- [x] 6.3 Commit (`kit ship`)
 
 Manual checks by the user: none for this run (`manual_run` lists no area); the owner's run with real accounts of the acceptance bar stays for the owner.

@@ -20,7 +20,8 @@ tgscout reads chats from its own Telegram account, a second account, not yours.
 2. Copy [.env.example](.env.example) to `.env` and fill in `TG_API_ID` and `TG_API_HASH`. `.env` is never committed (`.gitignore`); a variable set in the environment wins over `.env`.
 3. With tgscout's account, join every chat the config names; a chat it has not joined stops the start.
 4. Add yourself (the `owner` of the config) to the contacts of tgscout's account, so a numeric owner ID can be found.
-5. Start tgscout once from a terminal. It asks for the phone number, the login code and the two-step password (hidden), then saves the session.
+5. First contact: from your own account, write «hi» to tgscout's account once. Telegram lets an account write first only to someone who wrote to it, so without this message tgscout stops at the start with «cannot write to the owner».
+6. Start tgscout once from a terminal. It asks for the phone number, the login code and the two-step password (hidden), then saves the session.
 
 The session file is `tgscout.session` next to the config, or `TG_SESSION_FILE`; it is written with mode 600 and refused when others can read it (`chmod 600 <file>`). Later starts sign in from it without a question, so tgscout can then run as a service. If Telegram no longer accepts the session, delete the file and start from a terminal again.
 
@@ -35,18 +36,36 @@ cp tgscout.yaml.example tgscout.yaml
 
 ### While it runs
 
-After `running`, tgscout judges every new or edited message of the watched chats with the LLM, once per request of that chat. Matches go to stdout, warnings and errors to stderr (made-up examples):
+After `running`, tgscout judges every new or edited message of the watched chats with the LLM, once per request of that chat. Each match goes to you, the owner, as a private Telegram message from tgscout's account:
 
 ```text
-✓ match  14:02  kids-bike  @made_up_market  https://t.me/made_up_market/4211
-         Selling a 16-inch kids' bike, 80 €, pick-up in the old town…
+Match: kids-bike — a kids' bike, 16 inch, under 100 €
+Chat: Made-up market
+https://t.me/made_up_market/4211
+Selling a 16-inch kids' bike, 80 €, pick-up in the old town
+```
+
+The message text is cut at 1,000 characters and ends with «…». tgscout writes only to the owner and never answers anyone else.
+
+Once Telegram confirms the send, the same text goes to stdout; warnings and errors go to stderr (made-up examples):
+
+```text
+✓ match sent  14:02  kids-bike
+  Match: kids-bike — a kids' bike, 16 inch, under 100 €
+  Chat: Made-up market
+  https://t.me/made_up_market/4211
+  Selling a 16-inch kids' bike, 80 €, pick-up in the old town
+Telegram asks to wait 5s (FLOOD_WAIT), then sends again
+✗ send failed on @made_up_market/4217: cannot reach Telegram
+  the message stays unprocessed
 ⚠ unclear LLM answer for kids-bike on @made_up_market/4215, saved as no
   answer: "It might be, the size is not stated"
 ✗ LLM failed on @made_up_market/4216: cannot reach http://localhost:1234/v1
   the message stays unprocessed; is LM Studio running?
 ```
 
-- A match line shows the message time, the request id, the chat as the config writes it, the link and the start of the text (80 characters).
+- A match line shows the message time and the request id, then the text sent to the owner.
+- A message is marked processed only after every send of it is confirmed; a failed send leaves it unprocessed.
 - An answer that is neither yes nor no is asked once more, then saved as «no» with a warning.
 - When the LLM call fails, the message stays unprocessed and the chat's cursor does not pass it.
 - An edited message is judged again only for the requests that had no match on it.
