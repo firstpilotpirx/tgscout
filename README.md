@@ -32,7 +32,7 @@ cp tgscout.yaml.example tgscout.yaml
 (cd tgscout && go run ./apps/cli --config ../tgscout.yaml)
 ```
 
-`tgscout --help` lists the options. The database `tgscout.db` is created next to the config; `--db <path>` puts it elsewhere. Press Ctrl+C to stop.
+`tgscout --help` lists the options. The database `tgscout.db` is created next to the config; `--db <path>` puts it elsewhere. Press Ctrl+C to stop (see [Stop and crash](#stop-and-crash)).
 
 ### Catch-up at start
 
@@ -52,7 +52,7 @@ While live listening is already on, tgscout reads what each watched chat posted 
 
 - A message already processed is skipped; a message that is in the history and also arrives live is judged once.
 - A chat's cursor waits until that chat's history is handed to the judge.
-- A message whose judging fails stays unprocessed and is counted in «errors»; the next start judges it again.
+- A message whose judging fails for a reason the retries do not cover (the database) stays unprocessed and is counted in «errors»; the next start judges it again. While LM Studio is away, the summary waits for it.
 
 ### While it runs
 
@@ -76,19 +76,45 @@ Once Telegram confirms the send, the same text goes to stdout; warnings and erro
   https://t.me/made_up_market/4211
   Selling a 16-inch kids' bike, 80 €, pick-up in the old town
 Telegram asks to wait 5s (FLOOD_WAIT), then sends again
-✗ send failed on @made_up_market/4217: cannot reach Telegram
-  the message stays unprocessed
 ⚠ unclear LLM answer for kids-bike on @made_up_market/4215, saved as no
   answer: "It might be, the size is not stated"
-✗ LLM failed on @made_up_market/4216: cannot reach http://localhost:1234/v1
-  the message stays unprocessed; is LM Studio running?
 ```
 
 - A match line shows the message time and the request id, then the text sent to the owner.
-- A message is marked processed only after every send of it is confirmed; a failed send leaves it unprocessed.
+- A message is marked processed only after every send of it is confirmed.
 - An answer that is neither yes nor no is asked once more, then saved as «no» with a warning.
-- When the LLM call fails, the message stays unprocessed and the chat's cursor does not pass it.
 - An edited message is judged again only for the requests that had no match on it.
+
+### Retries and reconnect
+
+Nothing is dropped when LM Studio or Telegram goes away: the message waits, unprocessed, and its chat's cursor does not pass it (made-up examples):
+
+```text
+⚠ LM Studio is not answering · retry in 1s, 2s, 4s … up to 60s · messages wait in the queue
+✓ LM Studio is back · 1,018 messages waiting
+⚠ send failed: kids-bike on @made_up_market/4529 · cannot reach Telegram · retry in 2s · the message stays unprocessed
+⚠ judge gave up after 10 tries: kids-bike on @made_up_market/4610 · saved as no · made-up LM Studio answered 400
+⚠ queue is full (1,000) · reading new messages paused
+⚠ Telegram connection lost · reconnecting
+✓ Telegram connection back · reading 3 chats from their cursors
+✓ gap read done · 42 messages to judge
+```
+
+- A call to LM Studio that gets no answer (no connection, the timeout, a server error) and a failed send are tried again without end. The pause starts at 1 s and doubles up to `retry_max_pause`.
+- A call LM Studio answers with an error about the message itself (a client error, an answer tgscout cannot read) is tried 10 times, then saved as «no» with a warning, so one bad message never stalls its chat.
+- When the queue is full, tgscout waits before it takes more from Telegram; the line shows once per full spell.
+- When the connection to Telegram drops, tgscout reconnects by itself, then reads each watched chat again from its cursor, as catch-up does.
+
+### Stop and crash
+
+```text
+→ stopping · finishing 2 messages in work · up to 10s · Ctrl+C again to stop now
+✓ stopped · 18 messages in the queue left unprocessed, catch-up reads them next start
+```
+
+- The first Ctrl+C (or SIGTERM) stops taking messages; each worker gets `stop_grace` to finish the message it holds. A message not finished by then, or waiting for a retry, stays unprocessed. tgscout exits with code 0.
+- A second Ctrl+C ends tgscout at once with exit code 130.
+- After a crash (the process killed), the next start reads every unprocessed message again from the cursor. A match sent but not yet marked can come once more; no match is lost.
 
 ## Config
 
@@ -96,6 +122,7 @@ Telegram asks to wait 5s (FLOOD_WAIT), then sends again
 
 - `owner` (required): the Telegram user tgscout writes to, `@username` or a numeric ID.
 - `workers` (default 2): how many messages the LLM judges at once; `queue_size` (default 1000): how many messages wait for the LLM; when the queue is full, tgscout waits before it takes more from Telegram and drops none.
+- `retry_max_pause` (default `60s`): the longest pause between two tries of LM Studio or of a send; `stop_grace` (default `10s`): how long a stop waits for the messages in work.
 - `lm_studio.url` (default `http://localhost:1234/v1`), `lm_studio.model` (required), `lm_studio.timeout` (default `60s`).
 - `catch_up.messages` and `catch_up.days` (defaults 500 and 3): how far back each chat is read at start.
 - `requests`: each with a unique `id`, the `find` text and one or more `chats` (`@username`, a public `t.me` link or a numeric ID).

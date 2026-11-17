@@ -46,8 +46,8 @@
 
 ## 8. Docs and version
 
-- [ ] 8.1 `README.md`: the retries, the reconnect, the stop and the two settings; `docs/architecture/quality-attributes.html` names the crash tests that now exist
-- [ ] 8.2 Bump `VERSION` to 0.7.0
-- [ ] 8.3 Commit (`kit ship`)
+- [x] 8.1 `README.md`: the retries, the reconnect, the stop and the two settings; `docs/architecture/quality-attributes.html` names the crash tests that now exist
+- [x] 8.2 Bump `VERSION` to 0.7.0
+- [x] 8.3 Commit (`kit ship`)
 
 Manual checks by the user: none (`manual_run` lists no area); a real Telegram drop over the network stays with the owner's own run.
