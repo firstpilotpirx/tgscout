@@ -1,10 +1,10 @@
 ## 1. Session file and storage
 
-- [ ] 1.1 Red: unit tests for the mode check on a given `fs.FileMode` (600 private; 644, 640 open, the mode in the error); integration tests for `CheckSessionFile` on a temp folder (absent, private, open)
-- [ ] 1.2 Green: `infra/telegram/session_file.go`
-- [ ] 1.3 Red: integration tests for `fileStorage` — loads an existing file; on a first run writes nothing before `Commit`, mode 600 after
-- [ ] 1.4 Green: `infra/telegram/file_storage.go` (memory until `Commit`, then gotd's `session.FileStorage`, mode 600); add gotd v0.163.0 to `go.mod`
-- [ ] 1.5 Commit (`kit ship`)
+- [x] 1.1 Red: unit tests for the mode check on a given `fs.FileMode` (600 private; 644, 640 open, the mode in the error); integration tests for `CheckSessionFile` on a temp folder (absent, private, open)
+- [x] 1.2 Green: `infra/telegram/session_file.go`
+- [x] 1.3 Red: integration tests for `fileStorage` — loads an existing file; on a first run writes nothing before `Commit`, mode 600 after
+- [x] 1.4 Green: `infra/telegram/file_storage.go` (memory until `Commit`, then gotd's `session.FileStorage`, mode 600); add gotd v0.163.0 to `go.mod`
+- [x] 1.5 Commit (`kit ship`)
 
 ## 2. Sign-in and lookup walks
 
