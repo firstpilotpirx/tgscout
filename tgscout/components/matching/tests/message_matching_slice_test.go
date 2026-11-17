@@ -23,6 +23,7 @@ func TestMessageMatchingSlice(t *testing.T) {
 			s := newSlice()
 			s.steps(sc)
 			s.ownerSteps(sc)
+			newCatchUpSlice().steps(sc)
 		},
 		Options: &godog.Options{
 			Format: "pretty", Paths: []string{"features/slice"}, Tags: "~@wip", Strict: true, TestingT: t,
@@ -162,11 +163,13 @@ type slowLlm struct {
 	mu    sync.Mutex
 	delay time.Duration
 	calls []string
+	finds []string
 }
 
-func (l *slowLlm) Judge(ctx context.Context, _, text string) (domain.Judgment, error) {
+func (l *slowLlm) Judge(ctx context.Context, find, text string) (domain.Judgment, error) {
 	l.mu.Lock()
 	l.calls = append(l.calls, text)
+	l.finds = append(l.finds, find)
 	delay := l.delay
 	l.mu.Unlock()
 	select {

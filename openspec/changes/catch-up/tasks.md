@@ -18,9 +18,9 @@
 
 ## 4. History collector
 
-- [ ] 4.1 Red: `components/matching/tests/features/slice/catch_up.feature` (`@catch_up @slice`): the slice scenarios of design § Test levels through the history collector over a stub client, the real use cases and the memory repository; integration test of the collector over a stub client (FLOOD_WAIT retried, a failed read goes on with the next chat, the per-chat report)
-- [ ] 4.2 Green: `adapters/primary/collect/telegram/history_collector.go` (shared update mapping with the live collector)
-- [ ] 4.3 Commit (`kit ship`)
+- [x] 4.1 Red: `components/matching/tests/features/slice/catch_up.feature` (`@catch_up @slice`): the slice scenarios of design § Test levels through the history collector over a stub client, the real use cases and the memory repository; integration test of the collector over a stub client (FLOOD_WAIT retried, a failed read goes on with the next chat, the per-chat report)
+- [x] 4.2 Green: `adapters/primary/collect/telegram/history_collector.go` (shared update mapping with the live collector)
+- [x] 4.3 Commit (`kit ship`)
 
 ## 5. CLI
 

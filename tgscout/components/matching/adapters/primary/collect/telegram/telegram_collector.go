@@ -10,9 +10,11 @@ import (
 	"github.com/firstpilotpirx/tgscout/infra/telegram"
 )
 
-// Chat is a watched chat as the start found it: the config reference, its
-// username, empty for a private chat, and its title, empty when none.
+// Chat is a watched chat as the start found it: its bare peer ID, the config
+// reference, its username, empty for a private chat, and its title, empty
+// when none.
 type Chat struct {
+	ID       int64
 	Ref      domain.ChatRef
 	Username string
 	Title    string
@@ -48,7 +50,15 @@ func (c *TelegramCollector) Handle(ctx context.Context, update telegram.Update) 
 	if !ok || update.Service {
 		return
 	}
-	message := domain.Message{
+	message := toMessage(chat, update)
+	if err := c.useCase.Collect(ctx, message); err != nil && ctx.Err() == nil {
+		c.report(message, err)
+	}
+}
+
+// toMessage maps an update of a watched chat to a message.
+func toMessage(chat Chat, update telegram.Update) domain.Message {
+	return domain.Message{
 		Key:       domain.MessageKey{ChatID: update.ChatID, MessageID: update.MessageID},
 		Chat:      chat.Ref,
 		ChatTitle: chat.Title,
@@ -56,9 +66,6 @@ func (c *TelegramCollector) Handle(ctx context.Context, update telegram.Update) 
 		Text:      update.Text,
 		Link:      link(chat, update),
 		Edited:    update.Edited,
-	}
-	if err := c.useCase.Collect(ctx, message); err != nil && ctx.Err() == nil {
-		c.report(message, err)
 	}
 }
 
