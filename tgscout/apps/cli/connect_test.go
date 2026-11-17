@@ -25,6 +25,7 @@ type fakeTelegram struct {
 	closed     bool // the owner never wrote to the account
 	everyChat  bool // every chat counts as joined
 	updates    []telegram.Update
+	history    map[int64][]telegram.Update // oldest first, by bare ID
 	mu         sync.Mutex
 	sent       []string
 }
@@ -250,4 +251,8 @@ func chatRef(t *testing.T, text string) domain.ChatRef {
 	ref, err := domain.NewChatRef(text)
 	require.NoError(t, err)
 	return ref
+}
+
+func (f *fakeTelegram) ReadHistory(_ context.Context, chatID int64, _ telegram.HistoryWindow) (telegram.History, error) {
+	return telegram.History{Messages: f.history[chatID]}, nil
 }

@@ -77,6 +77,10 @@ func (c *stubClient) Listen(ctx context.Context, f func(context.Context, Update)
 	return ctx.Err()
 }
 
+func (c *stubClient) ReadHistory(context.Context, int64, HistoryWindow) (History, error) {
+	return History{}, nil
+}
+
 func (c *stubClient) FindOwner(_ context.Context, owner string) (OwnerState, error) {
 	return c.owners[owner], nil
 }

@@ -54,10 +54,11 @@ func TestBareChatIDDropsTheMinusPrefixes(t *testing.T) {
 }
 
 func TestChannelInfoGivesTheIDAndTheUsername(t *testing.T) {
-	info := chatInfo(&tg.ContactsResolvedPeer{Chats: []tg.ChatClass{&tg.Channel{ID: 42, Username: "made_up_market",
-		Title: "Made-up market"}}})
+	info, peer := chatInfo(&tg.ContactsResolvedPeer{Chats: []tg.ChatClass{&tg.Channel{ID: 42, Username: "made_up_market",
+		Title: "Made-up market", AccessHash: 420}}})
 
 	assert.Equal(t, ChatInfo{State: ChatJoined, ID: 42, Username: "made_up_market", Title: "Made-up market"}, info)
+	assert.Equal(t, &tg.InputPeerChannel{ChannelID: 42, AccessHash: 420}, peer)
 }
 
 func TestAPrivateChatIsOpenOnlyWithATopMessage(t *testing.T) {

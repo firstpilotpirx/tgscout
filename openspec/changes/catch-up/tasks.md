@@ -12,9 +12,9 @@
 
 ## 3. Telegram client
 
-- [ ] 3.1 Red: unit tests for `cutWindow` (after, limit, since, gap with each limit, oldest first); the fake's `ReadHistory` (`history`, `history_flood_wait_seconds` once, `history_delay_ms`); the gotd history paging over a stubbed invoker where gotd allows it; the stub client gets `ReadHistory`
-- [ ] 3.2 Green: `infra/telegram` `HistoryWindow`, `History`, `ReadHistory` in the port, `history.go` (`cutWindow`), the gotd client (kept input peers, `messages.getHistory` paging), the fake client
-- [ ] 3.3 Commit (`kit ship`)
+- [x] 3.1 Red: unit tests for `cutWindow` (after, limit, since, gap with each limit, oldest first); the fake's `ReadHistory` (`history`, `history_flood_wait_seconds` once, `history_delay_ms`); the gotd history paging over a stubbed invoker where gotd allows it; the stub client gets `ReadHistory`
+- [x] 3.2 Green: `infra/telegram` `HistoryWindow`, `History`, `ReadHistory` in the port, `history.go` (`cutWindow`), the gotd client (kept input peers, `messages.getHistory` paging), the fake client
+- [x] 3.3 Commit (`kit ship`)
 
 ## 4. History collector
 
