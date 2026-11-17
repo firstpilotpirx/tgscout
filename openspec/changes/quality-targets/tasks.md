@@ -28,12 +28,12 @@
 
 - [x] 5.1 Red: `@targets` scenarios in `quality_targets.feature` and the `TestTargets` suite (concurrency 1; `TestFeatures` skips `@targets`): the load test (design D9), the catch-up test (design D10), the size test (design D11); the fake Telegram writes the play time of each update and the time of each send, and indexes the history by chat; the fake LM Studio's delay is set per scenario
 - [x] 5.2 Green: fix what the tests find; note the time of each target test on this machine in design § Risks
-- [ ] 5.3 Commit (`kit ship`)
+- [x] 5.3 Commit (`kit ship`)
 
 ## 6. Docs and version
 
-- [ ] 6.1 `README.md` § Targets: the numbers, how to read the status line, `status_interval`, the real-model condition (p95 ≤ 10 s needs a model answering within about 2 s; with a local model the 15-minute catch-up holds for about 2,000 judged messages); `docs/architecture/quality-attributes.html` names the tests that now prove each target
-- [ ] 6.2 Bump `VERSION` to 0.8.0
+- [x] 6.1 `README.md` § Targets: the numbers, how to read the status line, `status_interval`, the real-model condition (p95 ≤ 10 s needs a model answering within about 2 s; with a local model the 15-minute catch-up holds for about 2,000 judged messages); `docs/architecture/quality-attributes.html` names the tests that now prove each target
+- [x] 6.2 Bump `VERSION` to 0.8.0
 - [ ] 6.3 Commit (`kit ship`)
 
 Manual checks by the user: none (`manual_run` lists no area); the run with a real LM Studio stays with the owner, before 1.0.0.

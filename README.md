@@ -70,7 +70,7 @@ The message text is cut at 1,000 characters and ends with «…». tgscout write
 Once Telegram confirms the send, the same text goes to stdout; warnings and errors go to stderr (made-up examples):
 
 ```text
-✓ match sent  14:02  kids-bike
+✓ match sent  14:02  kids-bike · latency 3.4s
   Match: kids-bike — a kids' bike, 16 inch, under 100 €
   Chat: Made-up market
   https://t.me/made_up_market/4211
@@ -80,7 +80,7 @@ Telegram asks to wait 5s (FLOOD_WAIT), then sends again
   answer: "It might be, the size is not stated"
 ```
 
-- A match line shows the message time and the request id, then the text sent to the owner.
+- A match line shows the message time and the request id, then the text sent to the owner; a live message adds its latency, the time from the message to the confirmed send.
 - A message is marked processed only after every send of it is confirmed.
 - An answer that is neither yes nor no is asked once more, then saved as «no» with a warning.
 - An edited message is judged again only for the requests that had no match on it.
@@ -116,12 +116,40 @@ Nothing is dropped when LM Studio or Telegram goes away: the message waits, unpr
 - A second Ctrl+C ends tgscout at once with exit code 130.
 - After a crash (the process killed), the next start reads every unprocessed message again from the cursor. A match sent but not yet marked can come once more; no match is lost.
 
+## Targets
+
+Version 1 aims at these numbers; tests prove each with made-up Telegram and LLM (`@targets` in `e2e/features/quality_targets.feature`):
+
+| Target | Number | Test result |
+|---|---|---|
+| Speed | p95 ≤ 10 s from the message to the match in your chat | 2.7 s at a peak of 10 messages/s, LLM 0.5 s, 4 workers |
+| Catch-up | ≤ 15 min from start to the summary | 11 s of a scaled 15 s for 100 chats × 500 messages |
+| Store size | < 10 GB a year at 5,000 messages a day and 10 requests | 2.6 GB |
+| Privacy | chat texts stay on this machine | a warning at start when `lm_studio.url` is not local |
+
+Every `status_interval` the console prints a status line (made-up example):
+
+```text
+● status · last 5m
+  in 312 · judged 1,904 · matches 2 · queue 4
+  p95 latency 3.8s ✓ ≤ 10s · p95 LLM call 1.1s
+```
+
+- `in`: new live messages; `judged`: messages judged, history included; `queue`: messages waiting for the LLM.
+- `p95 latency`: 95 of 100 live messages reached you within this time; `✓ ≤ 10s` or `✗ > 10s` marks the target.
+- `p95 LLM call`: how long one answer of the model takes.
+- When the queue grows 3 status lines in a row, tgscout warns that the model is behind.
+- At the stop, the same block covers the whole run; the catch-up summary marks its time against 15 minutes.
+
+The tests use a fast made-up LLM. With a real model, p95 ≤ 10 s needs a model that answers within about 2 s; with a local model the 15-minute catch-up holds for about 2,000 judged messages (messages × requests).
+
 ## Config
 
 `tgscout.yaml` holds what tgscout looks for; [tgscout.yaml.example](tgscout.yaml.example) shows every field. It is read once, at start, and is never committed (`.gitignore`).
 
 - `owner` (required): the Telegram user tgscout writes to, `@username` or a numeric ID.
 - `workers` (default 2): how many messages the LLM judges at once; `queue_size` (default 1000): how many messages wait for the LLM; when the queue is full, tgscout waits before it takes more from Telegram and drops none.
+- `status_interval` (default `5m`, at least `10s`): how often the status line comes (§ Targets).
 - `retry_max_pause` (default `60s`): the longest pause between two tries of LM Studio or of a send; `stop_grace` (default `10s`): how long a stop waits for the messages in work.
 - `lm_studio.url` (default `http://localhost:1234/v1`), `lm_studio.model` (required), `lm_studio.timeout` (default `60s`).
 - `catch_up.messages` and `catch_up.days` (defaults 500 and 3): how far back each chat is read at start.
