@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/firstpilotpirx/tgscout/infra/telegram"
 )
 
 // stopped is a context that is already cancelled: tgscout stops right after it starts.
@@ -114,4 +117,22 @@ func TestTooManyChatsWarnsAndStarts(t *testing.T) {
 	assert.Equal(t, 0, code, errOut)
 	assert.Contains(t, errOut, "[warn] "+config+": 101 chats; the design maximum is 100")
 	assert.Contains(t, out, "[ok] "+config+": 1 request, 101 chats, model m")
+}
+
+func TestLookupFailureGivesCode1(t *testing.T) {
+	dir := t.TempDir()
+	deps := testDeps()
+	deps.newClient = func(telegram.Config) (telegram.Client, error) {
+		client := everythingFound()
+		client.authorized = true
+		client.chats["@made_up_market"] = telegram.ChatNotJoined
+		return client, nil
+	}
+	var out, errOut bytes.Buffer
+
+	code := runWith(stopped(), []string{"--config", writeValidConfig(t, dir)}, newConsole(&out, &errOut, true), deps)
+
+	assert.Equal(t, 1, code)
+	assert.Contains(t, errOut.String(), "@made_up_market  the account has not joined it")
+	assert.NotContains(t, out.String(), "running")
 }

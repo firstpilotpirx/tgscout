@@ -49,7 +49,7 @@ func telegramGivenSteps(sc *godog.ScenarioContext, w *world) {
 func telegramWhenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^the owner starts tgscout with its input not coming from a terminal$`, func() error { return w.start() })
 	sc.Step(`^the owner starts tgscout on a terminal and types the phone number, the login code and the password$`,
-		func() error { return w.signInOnTerminal(madeUpCode) })
+		func() error { w.echo = true; return w.signInOnTerminal(madeUpCode) })
 	sc.Step(`^the owner starts tgscout on a terminal and types a wrong login code$`, func() error {
 		if err := w.startTerminal(); err != nil {
 			return err
@@ -68,6 +68,7 @@ func telegramThenSteps(sc *godog.ScenarioContext, w *world) {
 		return w.outputHas("[ok] signed in as " + madeUpAccount)
 	})
 	sc.Step(`^the session file exists and only its owner can read or write it$`, w.sessionIsPrivate)
+	sc.Step(`^the password is not shown while typed$`, w.passwordHidden)
 	sc.Step(`^tgscout says the code is wrong and asks for the code again$`, func() error {
 		if err := w.outputHas("[fail] the code is wrong — try again"); err != nil {
 			return err
@@ -76,6 +77,9 @@ func telegramThenSteps(sc *godog.ScenarioContext, w *world) {
 	})
 	sc.Step(`^no session file is saved$`, w.noSessionFile)
 	sc.Step(`^tgscout prints an error that says to sign in once from a terminal$`, func() error {
+		if strings.Contains(w.run.output(), "Phone number") {
+			return fmt.Errorf("tgscout asked for input:\n%s", w.run.output())
+		}
 		return w.stderrHas("[fail] first sign-in needs a terminal", "sign in once from a terminal first")
 	})
 	sc.Step(`^tgscout says it signed in from the saved session without asking anything$`, func() error {
@@ -118,7 +122,7 @@ func (w *world) startTerminal() error {
 	if err != nil {
 		return err
 	}
-	w.run, err = startOnTerminal(w.dir, env, "--config", "./"+w.config)
+	w.run, err = startOnTerminal(w.dir, env, w.echo, "--config", "./"+w.config)
 	return err
 }
 
@@ -131,7 +135,16 @@ func (w *world) signInOnTerminal(codes ...string) error {
 	for _, code := range codes {
 		answers = append(answers, []string{"Login code: ", code})
 	}
-	if err := w.typeAll(append(answers, []string{"Two-step password: ", madeUpPassword})...); err != nil {
+	if err := w.typeAll(answers...); err != nil {
+		return err
+	}
+	if err := w.run.waitFor("Two-step password: ", 1); err != nil {
+		return err
+	}
+	if err := w.run.waitEchoOff(); err != nil {
+		return err
+	}
+	if err := w.run.typeAfter("Two-step password: ", 1, madeUpPassword); err != nil {
 		return err
 	}
 	return w.run.settle()
@@ -178,6 +191,18 @@ func (w *world) noSecrets() error {
 		if strings.Contains(output, secret) {
 			return fmt.Errorf("the output holds the secret %q:\n%s", secret, output)
 		}
+	}
+	return nil
+}
+
+// passwordHidden: the terminal showed the typed phone, so echo was on, but not the password.
+func (w *world) passwordHidden() error {
+	output := w.run.output()
+	if !strings.Contains(output, madeUpPhone) {
+		return fmt.Errorf("the terminal did not echo the phone, so the check proves nothing:\n%s", output)
+	}
+	if strings.Contains(output, madeUpPassword) {
+		return fmt.Errorf("the password was shown while typed:\n%s", output)
 	}
 	return nil
 }

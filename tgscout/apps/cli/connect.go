@@ -27,7 +27,7 @@ func connect(ctx context.Context, link telegramLink, con *console, chats []strin
 	firstRun := link.session.FirstRun()
 	account, err := telegram.SignIn(ctx, link.client, link.prompter, link.session)
 	if err != nil {
-		return reportSignIn(ctx, con, err, link.sessionPath)
+		return reportSignIn(con, err, link.sessionPath)
 	}
 	con.signedIn(account.Name, !firstRun)
 	if firstRun {
@@ -35,17 +35,17 @@ func connect(ctx context.Context, link telegramLink, con *console, chats []strin
 	}
 	lookup := telegram.Lookup{Client: link.client, Waiting: con.floodWait, Sleep: link.sleep}
 	if err := lookup.Find(ctx, chats, owner); err != nil {
-		return reportLookup(ctx, con, err)
+		return reportLookup(con, err)
 	}
 	con.ownerFound(owner)
 	con.watching(len(chats))
 	return nil
 }
 
-func reportSignIn(ctx context.Context, con *console, err error, path string) error {
+func reportSignIn(con *console, err error, path string) error {
 	switch {
-	case ctx.Err() != nil:
-		return ctx.Err()
+	case isStop(err):
+		return err
 	case errors.Is(err, telegram.ErrSessionRevoked):
 		con.fail("Telegram no longer accepts the session", fmt.Sprintf("delete %s, then start tgscout from a terminal", path))
 	default:
@@ -54,9 +54,9 @@ func reportSignIn(ctx context.Context, con *console, err error, path string) err
 	return errReported
 }
 
-func reportLookup(ctx context.Context, con *console, err error) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
+func reportLookup(con *console, err error) error {
+	if isStop(err) {
+		return err
 	}
 	var chatsErr *telegram.ChatsNotFoundError
 	var ownerErr *telegram.OwnerNotFoundError
@@ -70,4 +70,9 @@ func reportLookup(ctx context.Context, con *console, err error) error {
 		con.fail(err.Error(), "")
 	}
 	return errReported
+}
+
+// isStop tells whether err is the stop (Ctrl+C), not a problem to report.
+func isStop(err error) bool {
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }

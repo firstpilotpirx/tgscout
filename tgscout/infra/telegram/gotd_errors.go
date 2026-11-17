@@ -3,7 +3,6 @@ package telegram
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/gotd/td/telegram/auth"
 	"github.com/gotd/td/tgerr"
@@ -11,7 +10,10 @@ import (
 
 // errTelegram stands for any other failure; it keeps no text a server or the
 // network sent, which may hold a phone number.
-var errTelegram = errors.New("cannot reach Telegram")
+var (
+	errTelegram = errors.New("cannot reach Telegram")
+	errRefused  = errors.New("the call was refused by Telegram") // the server's own text stays out
+)
 
 // mapError turns a gotd error into an error of the port.
 func mapError(err error) error {
@@ -32,8 +34,8 @@ func mapError(err error) error {
 	if wait, ok := tgerr.AsFloodWait(err); ok {
 		return &FloodWait{Wait: wait}
 	}
-	if rpc, ok := tgerr.As(err); ok {
-		return fmt.Errorf("the call was refused by Telegram: %s", rpc.Type)
+	if _, ok := tgerr.As(err); ok {
+		return errRefused
 	}
 	return errTelegram
 }

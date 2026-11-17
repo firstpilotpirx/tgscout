@@ -77,7 +77,7 @@ The scenarios that type into tgscout (first sign-in, wrong code, secrets) run th
 | Scenario | Level | Where |
 |---|---|---|
 | the api hash is missing | E2E | `e2e/features/telegram_session.feature` |
-| first start signs in and saves the session | E2E | feature, on a pseudo-terminal |
+| first start signs in and saves the session | E2E | feature, on a pseudo-terminal with echo on: the typed phone shows, the password does not (hidden) |
 | a wrong login code | E2E | feature, on a pseudo-terminal |
 | first sign-in without a terminal | E2E | feature (stdin of the process is a pipe) |
 | a later start signs in silently | E2E | feature |

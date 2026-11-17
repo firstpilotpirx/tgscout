@@ -19,6 +19,8 @@ func TestParseFakeScenarioReadsEveryField(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, scenario.SessionValid)
 	assert.Equal(t, "Made Up Scout", scenario.Account)
+	assert.Equal(t, "24680", scenario.Code)
+	assert.Equal(t, "made-up-pass", scenario.Password)
 	assert.Equal(t, ChatJoined, scenario.state("@made_up_market"))
 	assert.Equal(t, ChatNotJoined, scenario.state("@made_up_river"))
 	assert.Equal(t, ChatMissing, scenario.state("@no_such_chat"))

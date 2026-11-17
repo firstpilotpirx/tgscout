@@ -40,6 +40,7 @@ type process struct {
 	done     chan struct{}
 	code     int
 	terminal *os.File // the pseudo-terminal of a run on one, else nil
+	tty      *os.File // its terminal side, kept to read the echo state
 }
 
 // newProcess prepares the binary named by SUT_BIN in dir, without color.
@@ -50,7 +51,7 @@ func newProcess(dir string, env []string, args ...string) (*process, error) {
 	}
 	p := &process{cmd: exec.Command(bin, args...), done: make(chan struct{})} //nolint:gosec // G204: the binary under test, named by SUT_BIN
 	p.cmd.Dir = dir
-	p.cmd.Env = append(append(os.Environ(), "NO_COLOR=1"), env...)
+	p.cmd.Env = append(append(cleanEnviron(), "NO_COLOR=1"), env...)
 	return p, nil
 }
 
@@ -123,3 +124,15 @@ func (p *process) stop() {
 }
 
 func (p *process) output() string { return p.stdout.String() + p.stderr.String() }
+
+// cleanEnviron is the runner's environment without tgscout's own variables,
+// so a developer's or CI's Telegram settings never reach a scenario.
+func cleanEnviron() []string {
+	var env []string
+	for _, each := range os.Environ() {
+		if !strings.HasPrefix(each, "TG_") && !strings.HasPrefix(each, "TGSCOUT_") {
+			env = append(env, each)
+		}
+	}
+	return env
+}

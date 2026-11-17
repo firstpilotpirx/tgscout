@@ -41,7 +41,7 @@ func TestMapErrorKeepsNoServerText(t *testing.T) {
 
 	require.Error(t, err)
 	assert.NotContains(t, err.Error(), "+0000000000")
-	assert.Contains(t, mapError(tgerr.New(400, "PHONE_NUMBER_INVALID")).Error(), "PHONE_NUMBER_INVALID")
+	assert.Equal(t, "the call was refused by Telegram", mapError(tgerr.New(400, "PHONE_NUMBER_INVALID")).Error())
 }
 
 func TestMapErrorKeepsNilAndCancel(t *testing.T) {

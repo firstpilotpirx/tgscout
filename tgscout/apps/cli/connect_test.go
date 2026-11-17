@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/firstpilotpirx/tgscout/components/matching/core/domain"
 	"github.com/firstpilotpirx/tgscout/infra/telegram"
 )
 
@@ -189,4 +190,20 @@ func testDeps() startDeps {
 		},
 		sleep: func(context.Context, time.Duration) error { return nil },
 	}
+}
+
+func TestWatchedChatsListsAChatOfTwoRequestsOnce(t *testing.T) {
+	settings := domain.Settings{Requests: []domain.Request{
+		{ID: "bike", Chats: []domain.RequestChat{{Ref: chatRef(t, "@made_up_market")}}},
+		{ID: "lamp", Chats: []domain.RequestChat{{Ref: chatRef(t, "@made_up_market")}, {Ref: chatRef(t, "@made_up_river")}}},
+	}}
+
+	assert.Equal(t, []string{"@made_up_market", "@made_up_river"}, watchedChats(settings))
+}
+
+func chatRef(t *testing.T, text string) domain.ChatRef {
+	t.Helper()
+	ref, err := domain.NewChatRef(text)
+	require.NoError(t, err)
+	return ref
 }

@@ -18,6 +18,7 @@ Feature: telegram-session — how tgscout signs in to its Telegram account and f
       When the owner starts tgscout on a terminal and types the phone number, the login code and the password
       Then tgscout says it signed in as the account's name
       And the session file exists and only its owner can read or write it
+      And the password is not shown while typed
 
     Scenario: a wrong login code
       Given a valid config file
