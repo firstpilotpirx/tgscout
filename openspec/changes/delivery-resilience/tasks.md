@@ -8,11 +8,11 @@
 
 ## 2. Retries in the match use case
 
-- [ ] 2.1 Red: unit tests for `MatchMessage` with fake ports and a recording sleep: pauses 1, 2, 4, 4 s with a 4 s cap; a rejecting LLM saved as «no» after 10 tries, processed, `GaveUp` reported; 12 no-answers then «yes» sent, no «no» saved; `LlmDown` once and `LlmBack` once over two messages; a send that fails twice then works (two `SendFailed`, one send, processed after it); a pause that ends at the stop leaves the message unprocessed and the cursor unmoved; a failed database write still settles the catch-up tally as an error; `OpenAiLlmClient` wraps `ErrLlmRejected` for a 400 and an unreadable answer, not for a 503 or no connection
-- [ ] 2.2 Green: `core/application/delivery.go` (`Delivery`, `DeliveryReporter`, `ErrLlmRejected`, `llmHealth`), `match_message.go`, `matching_config.go` (passes `Delivery`), `adapters/secondary/llm/openai` (rejected errors)
-- [ ] 2.3 Red: slice scenario «a send fails, then works» in `tests/features/slice/owner_notification.feature` over the stub client
-- [ ] 2.4 Green: fix what the slice finds; the slice harness passes a `Delivery`
-- [ ] 2.5 Commit (`kit ship`)
+- [x] 2.1 Red: unit tests for `MatchMessage` with fake ports and a recording sleep: pauses 1, 2, 4, 4 s with a 4 s cap; a rejecting LLM saved as «no» after 10 tries, processed, `GaveUp` reported; 12 no-answers then «yes» sent, no «no» saved; `LlmDown` once and `LlmBack` once over two messages; a send that fails twice then works (two `SendFailed`, one send, processed after it); a pause that ends at the stop leaves the message unprocessed and the cursor unmoved; a failed database write still settles the catch-up tally as an error; `OpenAiLlmClient` wraps `ErrLlmRejected` for a 400 and an unreadable answer, not for a 503 or no connection
+- [x] 2.2 Green: `core/application/delivery.go` (`Delivery`, `DeliveryReporter`, `ErrLlmRejected`, `llmHealth`), `match_message.go`, `matching_config.go` (passes `Delivery`), `adapters/secondary/llm/openai` (rejected errors)
+- [x] 2.3 Red: slice scenario «a send fails, then works» in `tests/features/slice/owner_notification.feature` over the stub client
+- [x] 2.4 Green: fix what the slice finds; the slice harness passes a `Delivery`
+- [x] 2.5 Commit (`kit ship`)
 
 ## 3. Queue and workers
 

@@ -123,7 +123,7 @@ func TestWaitGivesTheCountsOnceTheJudgeSettledEveryMessage(t *testing.T) {
 	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
 	require.NoError(t, f.catchUp.Collect(context.Background(), chat, historyMessage(t, 1, time.Hour), 1))
 	match := application.NewMatchMessage(f.repository, &fakeLlm{answers: map[string]domain.Judgment{
-		"a kids bike": {Matched: true, Raw: "yes"}}}, &fakeNotifier{}, f.tracker)
+		"a kids bike": {Matched: true, Raw: "yes"}}}, &fakeNotifier{}, f.tracker, application.Delivery{})
 
 	_, err := match.Match(context.Background(), f.queue.items[0])
 	require.NoError(t, err)
@@ -148,7 +148,7 @@ func TestCollectCountsARepositoryErrorAsAnError(t *testing.T) {
 func TestTheCursorWaitsUntilTheChatIsClosed(t *testing.T) {
 	f := newCatchUp(t)
 	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
-	match := application.NewMatchMessage(f.repository, &fakeLlm{}, &fakeNotifier{}, f.tracker)
+	match := application.NewMatchMessage(f.repository, &fakeLlm{}, &fakeNotifier{}, f.tracker, application.Delivery{})
 	live := domain.QueueItem{Message: message(t, 50, "Selling a lamp"), Requests: depthRequests(t).Requests}
 	require.True(t, f.tracker.Begin(live.Message.Key))
 
@@ -164,7 +164,8 @@ func TestMatchSettlesOnlyAnExpectedNewMessage(t *testing.T) {
 	f := newCatchUp(t)
 	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
 	require.NoError(t, f.catchUp.Collect(context.Background(), chat, historyMessage(t, 1, time.Hour), 1))
-	match := application.NewMatchMessage(f.repository, &fakeLlm{err: errBoom}, &fakeNotifier{}, f.tracker)
+	match := application.NewMatchMessage(f.repository, &fakeLlm{}, &fakeNotifier{}, f.tracker, application.Delivery{})
+	f.repository.err = errBoom // a failed database read ends the judgment
 	edit := f.queue.items[0]
 	edit.Message.Edited = true
 

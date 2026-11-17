@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,8 +31,14 @@ func newMatch() matchFixture {
 		notifier: &fakeNotifier{},
 		tracker:  domain.NewMessageTracker(),
 	}
-	f.useCase = application.NewMatchMessage(f.repository, f.llm, f.notifier, f.tracker)
+	f.useCase = application.NewMatchMessage(f.repository, f.llm, f.notifier, f.tracker, stopAtFirstPause)
 	return f
+}
+
+// stopAtFirstPause ends a judgment at its first retry pause, as a stop does.
+var stopAtFirstPause = application.Delivery{
+	Backoff: domain.Backoff{Max: time.Second},
+	Sleep:   func(context.Context, time.Duration) error { return context.Canceled },
 }
 
 func item(t *testing.T, id int) domain.QueueItem {
@@ -193,7 +200,7 @@ func (stoppedNotifier) Notify(ctx context.Context, _ domain.Match) error {
 
 func TestMatchStoppedDuringTheSendLeavesTheMessageUnprocessed(t *testing.T) {
 	f := newMatch()
-	useCase := application.NewMatchMessage(f.repository, f.llm, stoppedNotifier{}, f.tracker)
+	useCase := application.NewMatchMessage(f.repository, f.llm, stoppedNotifier{}, f.tracker, stopAtFirstPause)
 	queued := f.begin(t, item(t, 5))
 	ctx, stop := context.WithCancel(context.Background())
 	stop()

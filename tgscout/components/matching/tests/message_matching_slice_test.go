@@ -102,7 +102,7 @@ func (s *slice) play(updates ...telegram.Update) error {
 	tracker := domain.NewMessageTracker()
 	s.puts.queue = s.queue
 	collectUseCase := application.NewCollectMessage(staticSettings{s.settings}, s.repository, &s.puts, tracker)
-	matchUseCase := application.NewMatchMessage(s.repository, s.llm, nopNotifier{}, tracker)
+	matchUseCase := application.NewMatchMessage(s.repository, s.llm, nopNotifier{}, tracker, application.Delivery{})
 	collector := collect.NewTelegramCollector(map[int64]collect.Chat{watchedChatID: {Ref: s.settings.Requests[0].Chats[0].Ref,
 		Username: "made_up_market"}}, collectUseCase, func(domain.Message, error) {})
 	ctx, cancel := context.WithCancel(context.Background())

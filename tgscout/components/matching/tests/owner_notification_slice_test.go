@@ -21,6 +21,7 @@ type ownerSlice struct {
 	repository *memoryRepository
 	client     *sendingClient
 	slept      []time.Duration
+	warnings   []string
 	matchErr   error
 }
 
@@ -30,6 +31,7 @@ func (s *slice) ownerSteps(sc *godog.ScenarioContext) {
 	sc.Step(`^Telegram answers a send with a wait of 5 seconds$`, func() {
 		o.client.floods = []time.Duration{5 * time.Second}
 	})
+	sc.Step(`^the first two sends of a match fail$`, func() { o.client.failures = 2 })
 	sc.Step(`^tgscout stops at that moment$`, o.stopDuringTheSend)
 	sc.Step(`^tgscout sends a match$`, func() error { return o.match(context.Background()) })
 	sc.Step(`^the message is not marked processed and the cursor has not moved past it$`, func() error {
@@ -38,6 +40,8 @@ func (s *slice) ownerSteps(sc *godog.ScenarioContext) {
 		}
 		return o.repository.untouched(ownerKey)
 	})
+	sc.Step(`^the console shows two warning lines, the owner gets the match once and the message is marked processed after the send$`,
+		o.sentAfterTwoFailures)
 	sc.Step(`^it waits 5 seconds, sends again and marks the message processed after the send is confirmed$`, o.waitedAndSent)
 }
 
@@ -48,7 +52,13 @@ func (o *ownerSlice) match(ctx context.Context) error {
 	notifier := notify.NewTelegramNotifierClient(o.client, "@made_up_owner",
 		notify.PrintFunc(func(domain.Match, string) error { return nil }), func(time.Duration) {},
 		func(_ context.Context, d time.Duration) error { o.slept = append(o.slept, d); return nil })
-	useCase := application.NewMatchMessage(o.repository, yesLlm{}, notifier, tracker)
+	useCase := application.NewMatchMessage(o.repository, yesLlm{}, notifier, tracker, application.Delivery{
+		Backoff: domain.Backoff{Max: time.Minute},
+		Sleep:   func(context.Context, time.Duration) error { return nil },
+		Reporter: application.DeliveryFuncs{OnSendFailed: func(match domain.Match, err error, pause time.Duration) {
+			o.warnings = append(o.warnings, fmt.Sprintf("send failed: %s · %v · retry in %s", match.Request.ID, err, pause))
+		}},
+	})
 	ref, err := domain.NewChatRef("@made_up_market")
 	if err != nil {
 		return err
@@ -91,15 +101,34 @@ func (o *ownerSlice) waitedAndSent() error {
 	return nil
 }
 
+func (o *ownerSlice) sentAfterTwoFailures() error {
+	if o.matchErr != nil {
+		return fmt.Errorf("the match failed: %w", o.matchErr)
+	}
+	want := "[send failed: bike · a made-up network error · retry in 1s send failed: bike · a made-up network error · retry in 2s]"
+	if fmt.Sprint(o.warnings) != want {
+		return fmt.Errorf("warnings %v, want %s", o.warnings, want)
+	}
+	if o.client.attempts() != 3 || o.client.delivered != 1 {
+		return fmt.Errorf("%d sends tried and %d delivered, want 3 and 1", o.client.attempts(), o.client.delivered)
+	}
+	if o.repository.processedCount() != 1 {
+		return errors.New("the message is not marked processed")
+	}
+	return nil
+}
+
 // sendingClient is the stub Telegram of the slice: a send can wait for the
 // stop or answer FLOOD_WAIT first.
 type sendingClient struct {
 	telegram.Client
-	mu      sync.Mutex
-	block   bool
-	floods  []time.Duration
-	tries   int
-	started chan struct{}
+	mu        sync.Mutex
+	block     bool
+	floods    []time.Duration
+	failures  int
+	tries     int
+	delivered int
+	started   chan struct{}
 }
 
 func (c *sendingClient) SendToOwner(ctx context.Context, _, _ string) error {
@@ -110,7 +139,14 @@ func (c *sendingClient) SendToOwner(ctx context.Context, _, _ string) error {
 	if len(c.floods) > 0 {
 		flood, c.floods = c.floods[0], c.floods[1:]
 	}
+	failed := c.tries <= c.failures
+	if !failed && !block && flood == 0 {
+		c.delivered++
+	}
 	c.mu.Unlock()
+	if failed {
+		return errors.New("a made-up network error")
+	}
 	if block {
 		c.started <- struct{}{}
 		<-ctx.Done()

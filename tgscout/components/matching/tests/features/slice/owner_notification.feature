@@ -14,3 +14,10 @@ Feature: owner-notification — the send of a match through the real matcher and
       Given Telegram answers a send with a wait of 5 seconds
       When tgscout sends a match
       Then it waits 5 seconds, sends again and marks the message processed after the send is confirmed
+
+  Rule: Send retries
+
+    Scenario: a send fails, then works
+      Given the first two sends of a match fail
+      When tgscout sends a match
+      Then the console shows two warning lines, the owner gets the match once and the message is marked processed after the send

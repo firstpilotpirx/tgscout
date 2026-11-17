@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/llm/openai"
+	"github.com/firstpilotpirx/tgscout/components/matching/core/application"
 	"github.com/firstpilotpirx/tgscout/components/matching/core/domain"
 )
 
@@ -145,4 +146,47 @@ func TestJudgeReportsAnAddressThatDoesNotAnswer(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, "cannot reach "+server.URL+"/v1", err.Error())
 	assert.Error(t, errors.Unwrap(err), "the cause stays for errors.Is")
+}
+
+func TestJudgeMarksAClientErrorAsRejected(t *testing.T) {
+	server, _ := fakeServer(t, http.StatusBadRequest, "")
+
+	_, err := client(server, time.Second).Judge(context.Background(), "a desk lamp", "Desk lamp")
+
+	require.ErrorIs(t, err, application.ErrLlmRejected)
+	assert.Equal(t, server.URL+"/v1 answered 400 Bad Request", err.Error())
+}
+
+func TestJudgeMarksAnUnreadableAnswerAsRejected(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("not json"))
+	}))
+	t.Cleanup(server.Close)
+
+	_, err := client(server, time.Second).Judge(context.Background(), "a desk lamp", "Desk lamp")
+
+	require.ErrorIs(t, err, application.ErrLlmRejected)
+}
+
+func TestJudgeMarksAnAnswerWithNoChoiceAsRejected(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"choices":[]}`))
+	}))
+	t.Cleanup(server.Close)
+
+	_, err := client(server, time.Second).Judge(context.Background(), "a desk lamp", "Desk lamp")
+
+	require.ErrorIs(t, err, application.ErrLlmRejected)
+}
+
+func TestJudgeKeepsNoAnswerApartFromRejected(t *testing.T) {
+	down, _ := fakeServer(t, http.StatusServiceUnavailable, "")
+	gone := httptest.NewServer(http.NotFoundHandler())
+	gone.Close()
+
+	_, unavailable := client(down, time.Second).Judge(context.Background(), "a desk lamp", "Desk lamp")
+	_, unreachable := client(gone, time.Second).Judge(context.Background(), "a desk lamp", "Desk lamp")
+
+	assert.NotErrorIs(t, unavailable, application.ErrLlmRejected)
+	assert.NotErrorIs(t, unreachable, application.ErrLlmRejected)
 }

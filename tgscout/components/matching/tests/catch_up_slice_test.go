@@ -151,7 +151,7 @@ func (c *catchUpSlice) run() error {
 	messages := queue.NewChannelMessageQueue(100)
 	collectUseCase := application.NewCollectMessage(settings, c.repository, messages, tracker)
 	catchUp := application.NewCatchUp(settings, c.repository, collectUseCase, tracker, func() time.Time { return catchUpNow })
-	matchUseCase := application.NewMatchMessage(c.repository, c.llm, nopNotifier{}, tracker)
+	matchUseCase := application.NewMatchMessage(c.repository, c.llm, nopNotifier{}, tracker, application.Delivery{})
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	stopped := make(chan struct{})
