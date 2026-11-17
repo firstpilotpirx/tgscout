@@ -69,6 +69,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	telegramSteps(sc, w)
 	matchingSteps(sc, w)
 	deliverySteps(sc, w)
+	qualitySteps(sc, w)
 }
 
 func givenSteps(sc *godog.ScenarioContext, w *world) {

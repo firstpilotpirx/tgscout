@@ -20,9 +20,9 @@
 
 ## 4. E2E of the console lines
 
-- [ ] 4.1 Red: `e2e/features/quality_targets.feature` (`@quality_targets @e2e`), one `Rule:` per requirement, the E2E scenarios of design D8 but the `@targets` ones: latency on a live match line, none on a catch-up match, the status line with a 10 s interval, status since start at stop, the non-local warning and none for a local address; the config step takes `status_interval` and an LM Studio address
-- [ ] 4.2 Green: fix what the scenarios find
-- [ ] 4.3 Commit (`kit ship`)
+- [x] 4.1 Red: `e2e/features/quality_targets.feature` (`@quality_targets @e2e`), one `Rule:` per requirement, the E2E scenarios of design D8 but the `@targets` ones: latency on a live match line, none on a catch-up match, the status line with a 10 s interval, status since start at stop, the non-local warning and none for a local address; the config step takes `status_interval` and an LM Studio address
+- [x] 4.2 Green: fix what the scenarios find
+- [x] 4.3 Commit (`kit ship`)
 
 ## 5. Target tests
 

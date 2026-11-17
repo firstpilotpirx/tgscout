@@ -157,7 +157,7 @@ func consoleThenSteps(sc *godog.ScenarioContext, w *world) {
 			`answer: "`+unclearReply+`"`)
 	})
 	sc.Step(`^the console shows a match line with the request, the chat and a link to the message$`, func() error {
-		return w.allStdoutHas("[ok] match sent  ", "  kids-bike\n  Match: kids-bike — "+bikeFind+"\n  Chat: "+marketTitle+
+		return w.allStdoutHas("[ok] match sent  ", "  kids-bike · latency ", "s\n  Match: kids-bike — "+bikeFind+"\n  Chat: "+marketTitle+
 			"\n  https://t.me/made_up_market/4211\n  "+bikeText+"\n")
 	})
 	sc.Step(`^the console shows no match line$`, func() error { return w.matchLines("", 0) })
