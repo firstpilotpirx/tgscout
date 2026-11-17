@@ -152,19 +152,30 @@ func (m *MatchMessage) ask(ctx context.Context, item domain.QueueItem, request d
 		if ctx.Err() != nil {
 			return domain.Judgment{}, &MatchError{Key: key, Stage: StageLlm, Err: err}
 		}
-		if errors.Is(err, ErrLlmRejected) {
-			rejected++
-			if rejected >= MaxRejectedTries {
-				m.delivery.reporter().GaveUp(item, request, rejected, err)
-				return domain.Judgment{}, nil
-			}
-		} else if m.health.failed() {
-			m.delivery.reporter().LlmDown(m.delivery.Backoff.Max)
+		if m.failedTry(item, request, err, &rejected) {
+			return domain.Judgment{}, nil
 		}
 		if stop := m.delivery.sleep(ctx, m.delivery.Backoff.Pause(try)); stop != nil {
 			return domain.Judgment{}, &MatchError{Key: key, Stage: StageLlm, Err: stopped(err, stop)}
 		}
 	}
+}
+
+// failedTry counts and reports a failed call; it tells whether to give up:
+// the LLM rejected the call MaxRejectedTries times.
+func (m *MatchMessage) failedTry(item domain.QueueItem, request domain.Request, err error, rejected *int) bool {
+	if !errors.Is(err, ErrLlmRejected) {
+		if m.health.failed() {
+			m.delivery.reporter().LlmDown(m.delivery.Backoff.Max)
+		}
+		return false
+	}
+	*rejected++
+	if *rejected < MaxRejectedTries {
+		return false
+	}
+	m.delivery.reporter().GaveUp(item, request, *rejected, err)
+	return true
 }
 
 // send tells the owner about a match, trying again after a pause until it is sent.

@@ -51,7 +51,6 @@ type recordingDelivery struct {
 	pauses  []time.Duration
 	events  []string
 	stopAt  int // the pause that ends with the stop; 0 never
-	gaveUp  []string
 	sendErr []error
 }
 

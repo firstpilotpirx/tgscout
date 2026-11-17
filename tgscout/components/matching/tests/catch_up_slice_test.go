@@ -94,11 +94,7 @@ func (c *catchUpSlice) dropAndBack() error {
 		return err
 	}
 	reconnector.Handle(telegram.ConnectionLost)
-	item, err := messages.Receive(ctx)
-	if err != nil {
-		return err
-	}
-	if _, err := matchUseCase.Match(ctx, item); err != nil {
+	if err := judgeQueued(ctx, messages, matchUseCase); err != nil {
 		return err
 	}
 	reconnector.Handle(telegram.ConnectionBack)
@@ -107,6 +103,11 @@ func (c *catchUpSlice) dropAndBack() error {
 	case <-ctx.Done():
 		return fmt.Errorf("no gap read: %w", ctx.Err())
 	}
+	return judgeQueued(ctx, messages, matchUseCase)
+}
+
+// judgeQueued judges every message in the queue, one after another.
+func judgeQueued(ctx context.Context, messages *queue.ChannelMessageQueue, matchUseCase *application.MatchMessage) error {
 	for messages.Len() > 0 {
 		item, err := messages.Receive(ctx)
 		if err != nil {

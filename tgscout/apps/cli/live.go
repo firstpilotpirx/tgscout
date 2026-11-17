@@ -83,34 +83,59 @@ func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 	found map[string]telegram.ChatInfo) error {
 	stopCtx, stop := context.WithCancel(ctx)
 	defer stop()
-	workCtx, endWork := context.WithCancel(context.WithoutCancel(ctx))
-	defer endWork()
 	busy := &match.Busy{}
-	announced := make(chan struct{})
+	workCtx, endWork, announced := l.stopInTwoSteps(ctx, con, busy)
+	defer announced()
+	defer endWork()
+	l.queue.OnFull = con.queueFull
+	config := l.wire(con, client, l.delivery(con, stopCtx))
+	var wait sync.WaitGroup
+	wait.Go(func() {
+		match.RunWorkers(stopCtx, workCtx, match.Pool{Workers: l.workers, Queue: l.queue, Matcher: config.MatchMessage,
+			Report: match.ReportFuncs{OnUnclear: con.Unclear, OnFailed: con.Failed}, Busy: busy})
+	})
+	con.running()
+	readers := l.readHistory(stopCtx, con, client, config, inConfigOrder(l.settings, found))
+	collector := collect.NewTelegramCollector(watchedByID(found), config.CollectMessage, con.collectFailed)
+	err := collector.Listen(stopCtx, client)
+	if ctx.Err() == nil {
+		endWork() // the listener failed: no grace time
+	}
+	stop()
+	readers.Wait()
+	wait.Wait()
+	if isStop(err) {
+		return nil
+	}
+	return err
+}
+
+// stopInTwoSteps gives the work context of the workers: it ends stop_grace
+// after ctx ends, once the stopping line is out. announced waits for that
+// line when the stop came.
+func (l live) stopInTwoSteps(ctx context.Context, con *console, busy *match.Busy) (context.Context, context.CancelFunc, func()) {
+	workCtx, endWork := context.WithCancel(context.WithoutCancel(ctx))
+	printed := make(chan struct{})
 	notYet := context.AfterFunc(ctx, func() {
-		defer close(announced)
+		defer close(printed)
 		if l.stopping != nil {
 			l.stopping.Store(true)
 		}
 		con.stopping(busy.Count(), l.settings.StopGrace)
 		time.AfterFunc(l.settings.StopGrace, endWork)
 	})
-	defer func() {
+	announced := func() {
 		if !notYet() {
-			<-announced // the stopping line is out before serve returns
+			<-printed // the stopping line is out before serve returns
 		}
-	}()
-	l.queue.OnFull = con.queueFull
-	config := l.wire(con, client, l.delivery(con, stopCtx))
-	var wait sync.WaitGroup
-	wait.Add(1)
-	go func() {
-		defer wait.Done()
-		match.RunWorkers(stopCtx, workCtx, match.Pool{Workers: l.workers, Queue: l.queue, Matcher: config.MatchMessage,
-			Report: match.ReportFuncs{OnUnclear: con.Unclear, OnFailed: con.Failed}, Busy: busy})
-	}()
-	con.running()
-	chats := inConfigOrder(l.settings, found)
+	}
+	return workCtx, endWork, announced
+}
+
+// readHistory runs the catch-up of the chats and the gap reads after a
+// reconnect in the background, until the stop; wait on the group it gives.
+func (l live) readHistory(stop context.Context, con *console, client telegram.Client,
+	config *matching.MatchingConfig, chats []collect.Chat) *sync.WaitGroup {
 	history := collect.NewHistoryCollector(config.CatchUp, collect.HistoryReports{
 		OnStart: con.catchUpStarted, OnChat: con.catchUpChat, OnWait: con.floodWait,
 		OnDone: con.catchUpDone, OnFailed: con.collectFailed,
@@ -119,26 +144,12 @@ func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 		OnLost: con.connectionLost, OnBack: con.connectionBack, OnGapDone: con.gapRead,
 	})
 	client.WatchConnection(reconnector.Handle)
-	wait.Add(2)
-	go func() {
-		defer wait.Done()
-		_ = history.CatchUp(stopCtx, client, chats) // it ends with an error only on a stop
-	}()
-	go func() {
-		defer wait.Done()
-		reconnector.Run(stopCtx)
-	}()
-	collector := collect.NewTelegramCollector(watchedByID(found), config.CollectMessage, con.collectFailed)
-	err := collector.Listen(stopCtx, client)
-	if ctx.Err() == nil {
-		endWork() // the listener failed: no grace time
-	}
-	stop()
-	wait.Wait()
-	if isStop(err) {
-		return nil
-	}
-	return err
+	wait := &sync.WaitGroup{}
+	wait.Go(func() {
+		_ = history.CatchUp(stop, client, chats) // it ends with an error only on a stop
+	})
+	wait.Go(func() { reconnector.Run(stop) })
+	return wait
 }
 
 // announcedStop tells whether serve printed the stopping line.
