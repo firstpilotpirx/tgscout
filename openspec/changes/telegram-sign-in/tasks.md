@@ -25,12 +25,12 @@
 
 ## 4. Start flow in the CLI
 
-- [ ] 4.1 Red: unit tests for the `.env` parser on a string and for credentials — comments, quotes, environment wins, missing `TG_API_HASH`, non-numeric `TG_API_ID`, default session path next to the config
-- [ ] 4.2 Green: `apps/cli/env.go`
-- [ ] 4.3 Red: unit tests for the new console lines (signed in, session saved, wait, owner found, watching, chats-not-found list)
-- [ ] 4.4 Green: console lines in `apps/cli/console_telegram.go`
-- [ ] 4.5 Red: unit tests for `connect` (the sign-in step: client, prompter, console; no config file, no database) with a fake client and scripted input — first run prints the sign-in lines in order, a wrong code asks again, a lookup failure stops with exit 1
-- [ ] 4.6 Green: `apps/cli/prompter.go` (hidden password via `golang.org/x/term` v0.45.0, terminal check), `startDeps`, sign-in and lookup inside `client.Run` in `apps/cli/start.go`; update existing start tests for the new deps
+- [x] 4.1 Red: unit tests for the `.env` parser on a string and for credentials — comments, quotes, environment wins, missing `TG_API_HASH`, non-numeric `TG_API_ID`, default session path next to the config
+- [x] 4.2 Green: `apps/cli/env.go`
+- [x] 4.3 Red: unit tests for the new console lines (signed in, session saved, wait, owner found, watching, chats-not-found list)
+- [x] 4.4 Green: console lines in `apps/cli/console_telegram.go`
+- [x] 4.5 Red: unit tests for `connect` (the sign-in step: client, prompter, console; no config file, no database) with a fake client and scripted input — first run prints the sign-in lines in order, a wrong code asks again, a lookup failure stops with exit 1
+- [x] 4.6 Green: `apps/cli/prompter.go` (hidden password via `golang.org/x/term` v0.45.0, terminal check), `startDeps`, sign-in and lookup inside `client.Run` in `apps/cli/start.go`; update existing start tests for the new deps
 - [ ] 4.7 Commit (`kit ship`)
 
 ## 5. E2E

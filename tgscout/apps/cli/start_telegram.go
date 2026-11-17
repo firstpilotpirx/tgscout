@@ -1,0 +1,128 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"time"
+
+	"github.com/firstpilotpirx/tgscout/components/matching/core/domain"
+	"github.com/firstpilotpirx/tgscout/infra/telegram"
+)
+
+// startDeps are the parts of the start that touch the world outside the
+// config and the database; tests swap them.
+type startDeps struct {
+	getenv       func(string) (string, bool)
+	readDotEnv   func() string
+	isTerminal   func() bool
+	stdin        io.Reader
+	readPassword func(context.Context) (string, error)
+	newClient    func(telegram.Config) (telegram.Client, error)
+	sleep        func(context.Context, time.Duration) error
+}
+
+func defaultDeps() startDeps {
+	return startDeps{
+		getenv: os.LookupEnv,
+		readDotEnv: func() string {
+			data, err := os.ReadFile(dotEnvFile)
+			if err != nil {
+				return "" // no .env: the environment alone holds the variables
+			}
+			return string(data)
+		},
+		isTerminal:   stdinIsTerminal,
+		stdin:        os.Stdin,
+		readPassword: readHiddenPassword,
+		newClient:    telegram.NewClient,
+		sleep:        telegram.SleepContext,
+	}
+}
+
+// watch signs in, finds the chats and the owner, then runs until ctx ends.
+func watch(ctx context.Context, con *console, deps startDeps, config string, settings domain.Settings) int {
+	link, ok := openTelegram(con, deps, config)
+	if !ok {
+		return exitError
+	}
+	err := link.client.Run(ctx, func(ctx context.Context) error {
+		if err := connect(ctx, link, con, watchedChats(settings), settings.Owner.String()); err != nil {
+			return err
+		}
+		con.running()
+		<-ctx.Done()
+		return nil
+	})
+	switch {
+	case errors.Is(err, errReported):
+		return exitError
+	case err != nil && ctx.Err() == nil:
+		con.fail("cannot reach Telegram", "check the network, then start tgscout again")
+		return exitError
+	}
+	return exitOK
+}
+
+// openTelegram reads the credentials, checks the session file and makes the client.
+func openTelegram(con *console, deps startDeps, config string) (telegramLink, bool) {
+	creds, err := loadCredentials(deps.getenv, parseDotEnv(deps.readDotEnv()), config)
+	if err != nil {
+		con.fail(err.Error(), "fill it in .env (see .env.example)")
+		return telegramLink{}, false
+	}
+	exists, ok := checkSession(con, creds.sessionFile)
+	if !ok {
+		return telegramLink{}, false
+	}
+	if !exists && !deps.isTerminal() {
+		con.fail("first sign-in needs a terminal", "sign in once from a terminal first, then run it as a service")
+		return telegramLink{}, false
+	}
+	storage := telegram.NewFileStorage(creds.sessionFile, !exists)
+	client, err := deps.newClient(telegram.Config{APIID: creds.apiID, APIHash: creds.apiHash, Storage: storage})
+	if err != nil {
+		con.fail("cannot start the Telegram client: "+err.Error(), "")
+		return telegramLink{}, false
+	}
+	return telegramLink{
+		client:      client,
+		prompter:    newConsolePrompter(con, deps.stdin, deps.readPassword),
+		session:     storage,
+		sessionPath: creds.sessionFile,
+		sleep:       deps.sleep,
+	}, true
+}
+
+// checkSession tells whether the session file exists; an open one stops the start.
+func checkSession(con *console, path string) (bool, bool) {
+	exists, err := telegram.CheckSessionFile(path)
+	var open *telegram.SessionOpenError
+	switch {
+	case errors.As(err, &open):
+		con.fail("the session file is open to other users",
+			fmt.Sprintf("%s has mode %o · Fix: chmod 600 %s", open.Path, open.Mode.Perm(), open.Path), open.Path)
+		return false, false
+	case err != nil:
+		con.fail(fmt.Sprintf("session file %s: %v", path, err), "", path)
+		return false, false
+	}
+	return exists, true
+}
+
+// watchedChats lists every chat of every request once, in config order.
+func watchedChats(settings domain.Settings) []string {
+	seen := map[string]bool{}
+	var chats []string
+	for _, request := range settings.Requests {
+		for _, chat := range request.Chats {
+			if !seen[chat.Ref.Key()] {
+				seen[chat.Ref.Key()] = true
+				chats = append(chats, chat.Ref.String())
+			}
+		}
+	}
+	return chats
+}

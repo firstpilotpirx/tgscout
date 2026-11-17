@@ -10,7 +10,7 @@ import (
 
 func runTgscout(ctx context.Context, args ...string) (int, string, string) {
 	var out, errOut bytes.Buffer
-	code := run(ctx, args, &out, &errOut, true)
+	code := runWith(ctx, args, newConsole(&out, &errOut, true), testDeps())
 	return code, out.String(), errOut.String()
 }
 

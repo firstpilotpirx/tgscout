@@ -31,9 +31,14 @@ type options struct {
 
 // run parses args, runs tgscout until ctx ends and returns the exit code.
 func run(ctx context.Context, args []string, out, errOut io.Writer, plain bool) int {
-	con := newConsole(out, errOut, plain)
+	return runWith(ctx, args, newConsole(out, errOut, plain), defaultDeps())
+}
+
+// runWith is run with the start's outside parts given.
+func runWith(ctx context.Context, args []string, con *console, deps startDeps) int {
+	out, errOut := con.out, con.errOut
 	code := exitOK
-	cmd := newRootCommand(func(opts options) { code = start(ctx, opts, con) })
+	cmd := newRootCommand(func(opts options) { code = start(ctx, opts, con, deps) })
 	cmd.SetArgs(args)
 	cmd.SetOut(out)
 	cmd.SetErr(errOut)
