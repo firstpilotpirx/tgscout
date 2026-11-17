@@ -25,3 +25,10 @@ func NewConsoleNotifier(printer MatchPrinter) *ConsoleNotifier {
 func (n *ConsoleNotifier) Notify(_ context.Context, match domain.Match) error {
 	return n.printer.PrintMatch(match)
 }
+
+// PrintFunc is a MatchPrinter made of one function, so the app passes its
+// console's method and the adapter never holds an app type.
+type PrintFunc func(match domain.Match) error
+
+// PrintMatch calls the function.
+func (f PrintFunc) PrintMatch(match domain.Match) error { return f(match) }

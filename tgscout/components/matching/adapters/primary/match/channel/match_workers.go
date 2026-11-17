@@ -56,3 +56,18 @@ func work(ctx context.Context, queue Receiver, matcher Matcher, report Reporter)
 		}
 	}
 }
+
+// ReportFuncs is a Reporter made of two functions, so the app passes its
+// console's methods and the adapter never holds an app type.
+type ReportFuncs struct {
+	OnUnclear func(item domain.QueueItem, unclear application.Unclear)
+	OnFailed  func(item domain.QueueItem, err error)
+}
+
+// Unclear calls OnUnclear.
+func (r ReportFuncs) Unclear(item domain.QueueItem, unclear application.Unclear) {
+	r.OnUnclear(item, unclear)
+}
+
+// Failed calls OnFailed.
+func (r ReportFuncs) Failed(item domain.QueueItem, err error) { r.OnFailed(item, err) }

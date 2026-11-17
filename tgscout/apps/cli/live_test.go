@@ -87,7 +87,7 @@ func newTestLive(t *testing.T, con *console, messages *memoryMessages) live {
 	items := queue.NewChannelMessageQueue(settings.QueueSize)
 	config := matching.NewMatchingConfig(matching.Ports{
 		Settings: liveSettings{settings}, Messages: messages, Queue: items,
-		Llm: yesLlm{}, Notifier: notify.NewConsoleNotifier(con),
+		Llm: yesLlm{}, Notifier: notify.NewConsoleNotifier(notify.PrintFunc(con.PrintMatch)),
 	})
 	return live{settings: settings, config: config, queue: items, workers: settings.Workers}
 }

@@ -35,7 +35,7 @@ func newLive(settings application.SettingsRepository, db *sql.DB, con *console) 
 		Messages: sqlite.NewSqliteMessageRepository(db),
 		Queue:    messages,
 		Llm:      openai.NewOpenAiLlmClient(resolved.LmStudio),
-		Notifier: notify.NewConsoleNotifier(con),
+		Notifier: notify.NewConsoleNotifier(notify.PrintFunc(con.PrintMatch)),
 	})
 	return live{settings: resolved, config: config, queue: messages, workers: resolved.Workers}
 }
@@ -51,7 +51,8 @@ func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 	wait.Add(1)
 	go func() {
 		defer wait.Done()
-		match.RunWorkers(ctx, l.workers, l.queue, l.config.MatchMessage, con)
+		match.RunWorkers(ctx, l.workers, l.queue, l.config.MatchMessage,
+			match.ReportFuncs{OnUnclear: con.Unclear, OnFailed: con.Failed})
 	}()
 	con.running()
 	collector := collect.NewTelegramCollector(watchedByID(found), l.config.CollectMessage, con.collectFailed)
