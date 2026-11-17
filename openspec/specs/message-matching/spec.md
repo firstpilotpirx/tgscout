@@ -75,7 +75,7 @@ An LLM answer that is neither yes nor no SHALL be asked once more with a stricte
 
 ### Requirement: Decisions and matches
 
-For each request asked, tgscout SHALL save a decision with whether it matched and when it was decided. Each «yes» SHALL be shown on the console as one match line with the time, the request id, the chat, a link to the message and the start of its text; a saved «yes» decision SHALL be the record of a found message, and nothing else SHALL store matches.
+For each request asked, tgscout SHALL save a decision with whether it matched and when it was decided. Each «yes» SHALL be sent to the owner as a private Telegram message and shown on the console as one match line followed by the same text as the private message (the owner-notification capability); a saved «yes» decision SHALL be the record of a found message, and nothing else SHALL store matches.
 
 #### Scenario: a matching message is shown on the console
 
@@ -93,7 +93,7 @@ For each request asked, tgscout SHALL save a decision with whether it matched an
 
 ### Requirement: Processed mark and cursor
 
-tgscout SHALL mark a message processed only after every request of its chat was decided and every «yes» was shown; then it SHALL move the chat's cursor. The cursor of a chat SHALL move only past messages that are all processed: with several messages judged at once and finishing out of order, it SHALL never pass a message that is not processed yet.
+tgscout SHALL mark a message processed only after every request of its chat was decided and every «yes» was sent to the owner and confirmed by Telegram; then it SHALL move the chat's cursor. The cursor of a chat SHALL move only past messages that are all processed: with several messages judged at once and finishing out of order, it SHALL never pass a message that is not processed yet.
 
 #### Scenario: the cursor never passes an unprocessed message
 
@@ -114,7 +114,7 @@ When the LLM call fails (LM Studio down, an error answer, the timeout), tgscout 
 
 ### Requirement: Edited messages
 
-An edited message SHALL be judged again only for the requests of its chat that have no «yes» shown yet; a request whose «yes» was shown SHALL not be asked again, and a shown «yes» SHALL never be shown twice for the same message and request. A «yes» that was saved but not shown (the console write failed, or tgscout stopped in between) SHALL be judged and shown again, so no match is lost. Judging an edit SHALL not move the cursor.
+An edited message SHALL be judged again only for the requests of its chat that have no «yes» sent yet; a request whose «yes» was sent SHALL not be asked again, and a sent «yes» SHALL never be sent twice for the same message and request. A «yes» that was saved but not sent (the send failed, or tgscout stopped in between) SHALL be judged and sent again, so no match is lost. Judging an edit SHALL not move the cursor.
 
 #### Scenario: an edited message is judged again only where it was «no»
 
@@ -125,9 +125,9 @@ An edited message SHALL be judged again only for the requests of its chat that h
 
 #### Scenario: a match saved but not shown is shown again
 
-- **GIVEN** a message with a saved «yes» for a request that was never shown
+- **GIVEN** a message with a saved «yes» for a request that was never sent
 - **WHEN** the message is judged again
-- **THEN** the match line for that request appears
+- **THEN** the match for that request is sent and its match line appears
 
 ### Requirement: Queue capacity
 
