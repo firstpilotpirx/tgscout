@@ -18,11 +18,11 @@ type CatchUpUseCase interface {
 
 // ChatReport is one chat as catch-up read it; Err is set when the read failed.
 type ChatReport struct {
-	Chat    Chat
-	Read    int
-	Window  domain.CatchUpChat
-	Gap     bool
-	Err     error
+	Chat   Chat
+	Read   int
+	Window domain.CatchUpChat
+	Gap    bool
+	Err    error
 }
 
 // HasCursor tells whether the chat was read from its cursor.
