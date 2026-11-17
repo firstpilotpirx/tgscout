@@ -10,14 +10,16 @@ type MessageKey struct {
 }
 
 // Message is a text message of a watched chat as the collector hands it in.
-// Chat is the reference as the config writes it.
+// Chat is the reference as the config writes it; ChatTitle is the title
+// Telegram gives the chat, empty when it gives none.
 type Message struct {
-	Key    MessageKey
-	Chat   ChatRef
-	SentAt time.Time
-	Text   string
-	Link   string
-	Edited bool
+	Key       MessageKey
+	Chat      ChatRef
+	ChatTitle string
+	SentAt    time.Time
+	Text      string
+	Link      string
+	Edited    bool
 }
 
 // QueueItem is a message with the requests it is judged against, so the
