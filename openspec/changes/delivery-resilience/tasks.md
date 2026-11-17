@@ -28,9 +28,9 @@
 
 ## 5. Reconnect and gap read
 
-- [ ] 5.1 Red: unit tests for `CatchUp.Pause` (holds each chat's cursor; a finish while held does not move it) and `CatchUp.Collect` returning whether the message was handed on; `HistoryCollector` test: a failed read keeps the chat's cursor held; `GapRead` reads each chat from its cursor and reports the handed count; `Reconnector` (Lost pauses and reports, Back runs one gap read, a Back during a read runs one more); slice scenario «a message processed during the drop is not judged twice» in `tests/features/slice/catch_up.feature`
-- [ ] 5.2 Green: `core/application/catch_up.go`, `adapters/primary/collect/telegram/history_collector.go` and `reconnect.go`
-- [ ] 5.3 Commit (`kit ship`)
+- [x] 5.1 Red: unit tests for `CatchUp.Pause` (holds each chat's cursor; a finish while held does not move it) and `CatchUp.Collect` returning whether the message was handed on; `HistoryCollector` test: a failed read keeps the chat's cursor held; `GapRead` reads each chat from its cursor and reports the handed count; `Reconnector` (Lost pauses and reports, Back runs one gap read, a Back during a read runs one more); slice scenario «a message processed during the drop is not judged twice» in `tests/features/slice/catch_up.feature`
+- [x] 5.2 Green: `core/application/catch_up.go`, `adapters/primary/collect/telegram/history_collector.go` and `reconnect.go`
+- [x] 5.3 Commit (`kit ship`)
 
 ## 6. CLI: console, stop, wiring
 

@@ -11,8 +11,9 @@ import (
 // CatchUpUseCase is the catch-up use case.
 type CatchUpUseCase interface {
 	Open(ctx context.Context, chatID int64, ref domain.ChatRef) (domain.CatchUpChat, error)
-	Collect(ctx context.Context, chat domain.CatchUpChat, message domain.Message, rank int) error
+	Collect(ctx context.Context, chat domain.CatchUpChat, message domain.Message, rank int) (bool, error)
 	Close(ctx context.Context, chat domain.CatchUpChat) error
+	Pause(chatIDs []int64)
 	Wait(ctx context.Context) (domain.CatchUpCounts, error)
 }
 
@@ -82,7 +83,7 @@ func (h *HistoryCollector) CatchUp(ctx context.Context, client telegram.Client, 
 	h.reports.OnStart(len(chats))
 	gaps := 0
 	for _, chat := range chats {
-		report := h.catchUpChat(ctx, client, chat)
+		report, _ := h.readChat(ctx, client, chat)
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -100,42 +101,66 @@ func (h *HistoryCollector) CatchUp(ctx context.Context, client telegram.Client, 
 	return nil
 }
 
-// catchUpChat opens the chat, reads its window, hands each message on with
-// its rank from the newest, and closes it whatever happened.
-// The report is a named result, so the deferred Close can still set its error.
-func (h *HistoryCollector) catchUpChat(ctx context.Context, client telegram.Client, chat Chat) (report ChatReport) {
-	report = ChatReport{Chat: chat}
+// GapRead reads every chat again from its cursor after the connection to
+// Telegram was back, the same way catch-up does, and gives how many messages
+// it handed to the judge and the chats whose read failed.
+func (h *HistoryCollector) GapRead(ctx context.Context, client telegram.Client, chats []Chat) (int, []ChatReport) {
+	handed := 0
+	var failed []ChatReport
+	for _, chat := range chats {
+		report, n := h.readChat(ctx, client, chat)
+		if ctx.Err() != nil {
+			return handed, failed
+		}
+		handed += n
+		if report.Err != nil {
+			failed = append(failed, report)
+		}
+	}
+	return handed, failed
+}
+
+// readChat opens the chat, reads its window, hands each message on with its
+// rank from the newest, and gives the report and how many went to the judge.
+// It closes the chat (releases its cursor) only after a read that worked: a
+// failed read keeps the cursor held, so later messages never move it past the
+// unread history.
+func (h *HistoryCollector) readChat(ctx context.Context, client telegram.Client, chat Chat) (ChatReport, int) {
+	report := ChatReport{Chat: chat}
 	window, err := h.useCase.Open(ctx, chat.ID, chat.Ref)
 	report.Window = window
 	if err != nil {
 		report.Err = err
-		return report
+		return report, 0
 	}
-	defer func() {
-		if err := h.useCase.Close(ctx, window); err != nil && report.Err == nil {
-			report.Err = err
-		}
-	}()
 	history, err := telegram.Retry(ctx, h.waiting, h.sleep, func() (telegram.History, error) {
 		return client.ReadHistory(ctx, chat.ID, telegram.HistoryWindow{After: window.After,
 			Limit: window.Depth.Messages, Since: window.Since()})
 	})
 	if err != nil {
 		report.Err = err
-		return report
+		return report, 0
 	}
 	report.Read = len(history.Messages)
 	report.Gap = window.HasCursor && history.Gap
+	handed := 0
 	for i, update := range history.Messages {
 		message := toMessage(chat, update)
 		if update.Service {
 			message.Text = "" // a service message has nothing to judge
 		}
-		if err := h.useCase.Collect(ctx, window, message, len(history.Messages)-i); err != nil && ctx.Err() == nil {
+		queued, err := h.useCase.Collect(ctx, window, message, len(history.Messages)-i)
+		if err != nil && ctx.Err() == nil {
 			h.reports.OnFailed(message, err)
 		}
+		if queued {
+			handed++
+		}
 	}
-	return report
+	if err := h.useCase.Close(ctx, window); err != nil {
+		report.Err = err
+	}
+	return report, handed
 }
 
 func (h *HistoryCollector) waiting(wait time.Duration) { h.reports.OnWait(wait) }

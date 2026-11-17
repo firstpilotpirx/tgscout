@@ -39,12 +39,13 @@ func (c *CollectMessage) Collect(ctx context.Context, message domain.Message) er
 
 // CollectHistory takes a history message with the requests whose depth
 // covers it through the same checks, and counts it in the catch-up tally.
-func (c *CollectMessage) CollectHistory(ctx context.Context, message domain.Message, requests []domain.Request) error {
+// True means it went to the judge.
+func (c *CollectMessage) CollectHistory(ctx context.Context, message domain.Message, requests []domain.Request) (bool, error) {
 	tally := c.tracker.Tally()
 	tally.Read(1)
 	if len(requests) == 0 || strings.TrimSpace(message.Text) == "" {
 		tally.Skip()
-		return nil
+		return false, nil
 	}
 	queued, err := c.admit(ctx, domain.QueueItem{Message: message, Requests: requests},
 		func() { tally.Expect(message.Key) })
@@ -56,7 +57,7 @@ func (c *CollectMessage) CollectHistory(ctx context.Context, message domain.Mess
 	case !queued:
 		tally.Skip()
 	}
-	return err
+	return queued && err == nil, err
 }
 
 // admit begins a new message, drops one in flight or processed already, and

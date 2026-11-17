@@ -44,10 +44,19 @@ func (c *CatchUp) Open(ctx context.Context, chatID int64, ref domain.ChatRef) (d
 	return chat, nil
 }
 
-// Collect hands one history message on; rank 1 is the newest message read.
-func (c *CatchUp) Collect(ctx context.Context, chat domain.CatchUpChat, message domain.Message, rank int) error {
+// Collect hands one history message on and says whether it went to the
+// judge; rank 1 is the newest message read.
+func (c *CatchUp) Collect(ctx context.Context, chat domain.CatchUpChat, message domain.Message, rank int) (bool, error) {
 	requests := c.settings.Settings().CoveringRequests(chat.Ref, rank, message.SentAt, chat.Start)
 	return c.collect.CollectHistory(ctx, message, requests)
+}
+
+// Pause holds the cursor of each chat while the connection to Telegram is
+// away; the gap read after it opens and closes each chat again.
+func (c *CatchUp) Pause(chatIDs []int64) {
+	for _, chatID := range chatIDs {
+		c.tracker.Hold(chatID)
+	}
 }
 
 // Close releases the chat's cursor and stores it when it moved.

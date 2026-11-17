@@ -45,6 +45,78 @@ func (c *catchUpSlice) steps(sc *godog.ScenarioContext) {
 	c.depthSteps(sc)
 	c.depthPerRequestSteps(sc)
 	c.processedSteps(sc)
+	c.reconnectSteps(sc)
+}
+
+// reconnectSteps: a drop of the connection while a live message is judged.
+func (c *catchUpSlice) reconnectSteps(sc *godog.ScenarioContext) {
+	sc.Step(`^a message reached tgscout and was processed just before the connection dropped$`, func() {
+		c.repository.cursor[watchedChatID] = 1
+		c.repository.cursorAt[watchedChatID] = catchUpNow.Add(-time.Hour)
+		c.postAt(2, 30*time.Minute, "processed before the drop")
+		c.postAt(3, 20*time.Minute, "posted during the drop")
+	})
+	sc.Step(`^the connection is back and tgscout reads the gap$`, c.dropAndBack)
+	sc.Step(`^that message is not judged again$`, func() error {
+		if err := c.askedTexts("processed before the drop", "posted during the drop"); err != nil {
+			return err
+		}
+		c.repository.mu.Lock()
+		defer c.repository.mu.Unlock()
+		if cursor := c.repository.cursor[watchedChatID]; cursor != 3 {
+			return fmt.Errorf("the cursor is at %d after the gap read, want 3", cursor)
+		}
+		return nil
+	})
+}
+
+// dropAndBack judges message 2 live, drops the connection before it is
+// processed, then brings it back and waits for the gap read and its judgment.
+func (c *catchUpSlice) dropAndBack() error {
+	settings := staticSettings{domain.Settings{Requests: c.requests}}
+	tracker := domain.NewMessageTracker()
+	messages := queue.NewChannelMessageQueue(100)
+	collectUseCase := application.NewCollectMessage(settings, c.repository, messages, tracker)
+	catchUp := application.NewCatchUp(settings, c.repository, collectUseCase, tracker, func() time.Time { return catchUpNow })
+	matchUseCase := application.NewMatchMessage(c.repository, c.llm, nopNotifier{}, tracker, application.Delivery{})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	chats := []collect.Chat{{ID: watchedChatID, Ref: c.ref, Username: "made_up_market"}}
+	collector := collect.NewHistoryCollector(catchUp, collect.HistoryReports{}, func(context.Context, time.Duration) error { return nil })
+	gapDone := make(chan struct{}, 1)
+	reconnector := collect.NewReconnector(catchUp, collector, historyStub{history: c.history}, chats,
+		collect.ReconnectReports{OnGapDone: func(int, []collect.ChatReport) { gapDone <- struct{}{} }})
+	go reconnector.Run(ctx)
+
+	live := c.history[0]
+	if err := collectUseCase.Collect(ctx, domain.Message{Key: domain.MessageKey{ChatID: watchedChatID, MessageID: live.MessageID},
+		Chat: c.ref, SentAt: live.Date, Text: live.Text}); err != nil {
+		return err
+	}
+	reconnector.Handle(telegram.ConnectionLost)
+	item, err := messages.Receive(ctx)
+	if err != nil {
+		return err
+	}
+	if _, err := matchUseCase.Match(ctx, item); err != nil {
+		return err
+	}
+	reconnector.Handle(telegram.ConnectionBack)
+	select {
+	case <-gapDone:
+	case <-ctx.Done():
+		return fmt.Errorf("no gap read: %w", ctx.Err())
+	}
+	for messages.Len() > 0 {
+		item, err := messages.Receive(ctx)
+		if err != nil {
+			return err
+		}
+		if _, err := matchUseCase.Match(ctx, item); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // depthSteps: where catch-up starts and stops, and the gap.
