@@ -24,9 +24,9 @@
 
 ## 5. CLI
 
-- [ ] 5.1 Red: unit tests for the console lines of design § D5 (start line, chat line from the cursor, first start, gap, the summary with and without errors, a chat with no title) and for `live.serve` running catch-up beside listening
-- [ ] 5.2 Green: `apps/cli/console_catch_up.go`, `live.go`
-- [ ] 5.3 Commit (`kit ship`)
+- [x] 5.1 Red: unit tests for the console lines of design § D5 (start line, chat line from the cursor, first start, gap, the summary with and without errors, a chat with no title) and for `live.serve` running catch-up beside listening
+- [x] 5.2 Green: `apps/cli/console_catch_up.go`, `live.go`
+- [x] 5.3 Commit (`kit ship`)
 
 ## 6. E2E
 

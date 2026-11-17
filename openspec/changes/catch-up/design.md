@@ -75,6 +75,8 @@ The errors line gets the fail mark and «(not marked processed; judged again at 
 
 Decided by the prepared run, beside the approved mock: the mock's clock and INFO/WARN words are left out (as owner-notification did), and «skipped» drops the mock's «(already processed)», since it also counts service messages, messages with no text and messages no request covers; the gap line keeps the count of messages read («500 messages ·») before the mock's «off for 12 days, read only the last 3 days», as the spec's chat line asks for the count.
 
+Decided by the prepared run: a chat whose history cannot be read prints «✗ catch-up: <chat> · cannot read the history: <cause>» with the hint «next start reads it again» on the error stream, and catch-up goes on with the next chat; the chats line of the summary drops «(N with a gap)» when no chat had a gap.
+
 The cursor hold (D2) modifies the main requirement message-matching «Processed mark and cursor» (delta in `specs/message-matching/spec.md`): a live message of a chat being caught up no longer moves the cursor at once. This follows the prepared decision «It waits until that chat's catch-up is done, then moves».
 
 ### D6. Docs

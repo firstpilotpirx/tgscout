@@ -52,8 +52,8 @@ func (l live) wire(con *console, client telegram.Client) *matching.MatchingConfi
 	return matching.NewMatchingConfig(ports)
 }
 
-// serve starts the workers, says it is running, then listens to the found
-// chats until ctx ends; it returns once the listener and every worker
+// serve starts the workers, says it is running, then catches up the found
+// chats in the background and listens to them until ctx ends; it returns once the listener and every worker
 // stopped. A listener that fails stops the workers and gives its error.
 func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 	found map[string]telegram.ChatInfo) error {
@@ -68,6 +68,15 @@ func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 			match.ReportFuncs{OnUnclear: con.Unclear, OnFailed: con.Failed})
 	}()
 	con.running()
+	wait.Add(1)
+	go func() {
+		defer wait.Done()
+		history := collect.NewHistoryCollector(config.CatchUp, collect.HistoryReports{
+			OnStart: con.catchUpStarted, OnChat: con.catchUpChat, OnWait: con.floodWait,
+			OnDone: con.catchUpDone, OnFailed: con.collectFailed,
+		}, l.sleep)
+		_ = history.CatchUp(ctx, client, inConfigOrder(l.settings, found)) // it ends with an error only on a stop
+	}()
 	collector := collect.NewTelegramCollector(watchedByID(found), config.CollectMessage, con.collectFailed)
 	err := collector.Listen(ctx, client)
 	stop()
@@ -86,7 +95,19 @@ func watchedByID(found map[string]telegram.ChatInfo) map[int64]collect.Chat {
 		if err != nil {
 			continue // the config check let only valid references through
 		}
-		chats[info.ID] = collect.Chat{Ref: ref, Username: info.Username, Title: info.Title}
+		chats[info.ID] = collect.Chat{ID: info.ID, Ref: ref, Username: info.Username, Title: info.Title}
+	}
+	return chats
+}
+
+// inConfigOrder lists the found chats in the order the config names them.
+func inConfigOrder(settings domain.Settings, found map[string]telegram.ChatInfo) []collect.Chat {
+	byID := watchedByID(found)
+	var chats []collect.Chat
+	for _, text := range watchedChats(settings) {
+		if info, ok := found[text]; ok {
+			chats = append(chats, byID[info.ID])
+		}
 	}
 	return chats
 }
