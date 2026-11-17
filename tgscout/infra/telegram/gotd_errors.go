@@ -33,7 +33,7 @@ func mapError(err error) error {
 		return &FloodWait{Wait: wait}
 	}
 	if rpc, ok := tgerr.As(err); ok {
-		return fmt.Errorf("Telegram refused the call: %s", rpc.Type)
+		return fmt.Errorf("the call was refused by Telegram: %s", rpc.Type)
 	}
 	return errTelegram
 }

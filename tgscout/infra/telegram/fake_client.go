@@ -34,8 +34,13 @@ func parseFakeScenario(data []byte) (fakeScenario, error) {
 	return scenario, nil
 }
 
+// state is the chat's state; the "*" entry stands for every chat not named.
 func (s fakeScenario) state(ref string) ChatState {
-	switch s.Chats[ref] {
+	state, ok := s.Chats[ref]
+	if !ok {
+		state = s.Chats["*"]
+	}
+	switch state {
 	case "joined":
 		return ChatJoined
 	case "not_joined":
@@ -57,7 +62,7 @@ type fakeClient struct {
 
 // NewClient builds the made-up Telegram of the E2E build.
 func NewClient(cfg Config) (Client, error) {
-	data, err := os.ReadFile(os.Getenv(fakeScenarioEnv))
+	data, err := os.ReadFile(os.Getenv(fakeScenarioEnv)) //nolint:gosec // G703: the E2E build reads the file its test names
 	if err != nil {
 		return nil, fmt.Errorf("fake Telegram scenario: %w", err)
 	}

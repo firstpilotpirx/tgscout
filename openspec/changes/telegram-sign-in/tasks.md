@@ -31,12 +31,12 @@
 - [x] 4.4 Green: console lines in `apps/cli/console_telegram.go`
 - [x] 4.5 Red: unit tests for `connect` (the sign-in step: client, prompter, console; no config file, no database) with a fake client and scripted input — first run prints the sign-in lines in order, a wrong code asks again, a lookup failure stops with exit 1
 - [x] 4.6 Green: `apps/cli/prompter.go` (hidden password via `golang.org/x/term` v0.45.0, terminal check), `startDeps`, sign-in and lookup inside `client.Run` in `apps/cli/start.go`; update existing start tests for the new deps
-- [ ] 4.7 Commit (`kit ship`)
+- [x] 4.7 Commit (`kit ship`)
 
 ## 5. E2E
 
-- [ ] 5.1 Red: `e2e/features/telegram_session.feature` (`@telegram_session @e2e`) with every scenario of the spec, one `Rule:` per requirement, and their steps; the typing scenarios run the binary on a pseudo-terminal (`github.com/creack/pty` v1.1.24); the world gives every start made-up credentials, a private session file and a fake scenario
-- [ ] 5.2 Green: `scripts/qa.sh` builds the E2E binary with `-tags telegramfake`; fix what the scenarios find
+- [x] 5.1 Red: `e2e/features/telegram_session.feature` (`@telegram_session @e2e`) with every scenario of the spec, one `Rule:` per requirement, and their steps; the typing scenarios run the binary on a pseudo-terminal (`github.com/creack/pty` v1.1.24); the world gives every start made-up credentials, a private session file and a fake scenario
+- [x] 5.2 Green: `scripts/qa.sh` builds the E2E binary with `-tags telegramfake`; fix what the scenarios find
 - [ ] 5.3 Commit (`kit ship`)
 
 ## 6. Docs and version

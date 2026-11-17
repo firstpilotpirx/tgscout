@@ -31,3 +31,11 @@ func TestParseFakeScenarioRefusesBrokenJSON(t *testing.T) {
 
 	assert.Error(t, err)
 }
+
+func TestFakeScenarioStarStateCoversEveryOtherChat(t *testing.T) {
+	scenario, err := parseFakeScenario([]byte(`{"chats": {"*": "joined", "@made_up_river": "not_joined"}}`))
+
+	require.NoError(t, err)
+	assert.Equal(t, ChatJoined, scenario.state("-1001234567890"))
+	assert.Equal(t, ChatNotJoined, scenario.state("@made_up_river"))
+}

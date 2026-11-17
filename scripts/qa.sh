@@ -78,7 +78,7 @@ e2e() {
   local bin_dir
   bin_dir="$(mktemp -d)"
   step "build tgscout"
-  (cd "$service" && go build -o "$bin_dir/tgscout" ./apps/cli)
+  (cd "$service" && go build -tags telegramfake -o "$bin_dir/tgscout" ./apps/cli)
   step "E2E (godog)"
   (cd "$root/e2e" && go vet ./... && golangci-lint run --config "$root/.golangci.yml" ./... &&
     go mod tidy -diff && SUT_BIN="$bin_dir/tgscout" go test -race -count=1 ./...)

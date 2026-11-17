@@ -12,7 +12,7 @@ var (
 	ErrWrongCode      = errors.New("the login code is wrong")
 	ErrWrongPassword  = errors.New("the two-step password is wrong")
 	ErrPasswordNeeded = errors.New("the account has a two-step password")
-	ErrSessionRevoked = errors.New("Telegram no longer accepts the session")
+	ErrSessionRevoked = errors.New("the session is no longer accepted by Telegram")
 )
 
 // FloodWait means Telegram asks to wait before the same call again.

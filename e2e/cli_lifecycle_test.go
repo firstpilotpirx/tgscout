@@ -22,6 +22,7 @@ type world struct {
 	config string
 	run    *process
 	schema string
+	tg     telegramWorld
 }
 
 // validConfig is a made-up config with every required field.
@@ -45,7 +46,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	w := &world{}
 	sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		dir, err := os.MkdirTemp("", "tgscout-e2e-")
-		w.dir, w.config = dir, "tgscout.yaml"
+		w.dir, w.config, w.tg = dir, "tgscout.yaml", defaultTelegram()
 		return ctx, err
 	})
 	sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
@@ -58,6 +59,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	whenSteps(sc, w)
 	thenSteps(sc, w)
 	settingsSteps(sc, w)
+	telegramSteps(sc, w)
 }
 
 func givenSteps(sc *godog.ScenarioContext, w *world) {
@@ -99,7 +101,11 @@ func (w *world) start(extra ...string) error {
 	if w.config != "" {
 		args = append([]string{"--config", "./" + w.config}, extra...)
 	}
-	run, err := startProcess(w.dir, args...)
+	env, err := w.tg.write(w.dir)
+	if err != nil {
+		return err
+	}
+	run, err := startProcess(w.dir, env, args...)
 	if err != nil {
 		return err
 	}
