@@ -43,6 +43,7 @@ func TestNotificationTextCutsALongText(t *testing.T) {
 	lines := strings.SplitN(text, "\n", 4)
 	require.Len(t, lines, 4)
 	assert.Equal(t, "Match: kids-bike — a kids' bike, 16 inch, under 100 €", lines[0])
+	assert.Equal(t, "Chat: Made-up market", lines[1])
 	assert.Equal(t, "https://t.me/made_up_market/4211", lines[2])
 	assert.Equal(t, strings.Repeat("é", 1000)+"…", lines[3])
 }
