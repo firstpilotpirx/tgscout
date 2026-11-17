@@ -15,6 +15,7 @@ type CollectMessage struct {
 	messages MessageRepository
 	queue    MessageQueue
 	tracker  *domain.MessageTracker
+	stats    *domain.RunStats
 }
 
 // NewCollectMessage builds the use case from its ports and the shared tracker.
@@ -22,6 +23,9 @@ func NewCollectMessage(settings SettingsRepository, messages MessageRepository, 
 	tracker *domain.MessageTracker) *CollectMessage {
 	return &CollectMessage{settings: settings, messages: messages, queue: queue, tracker: tracker}
 }
+
+// Counting makes the use case count each live message it queues in stats.
+func (c *CollectMessage) Counting(stats *domain.RunStats) { c.stats = stats }
 
 // Collect drops a message with no text, of an unwatched chat, or seen
 // already, and queues the rest. It blocks while the queue is full.
@@ -33,7 +37,8 @@ func (c *CollectMessage) Collect(ctx context.Context, message domain.Message) er
 	if message.Edited {
 		return c.collectEdit(ctx, message, requests)
 	}
-	_, err := c.admit(ctx, domain.QueueItem{Message: message, Requests: requests}, func() {})
+	message.Live = true
+	_, err := c.admit(ctx, domain.QueueItem{Message: message, Requests: requests}, c.stats.In)
 	return err
 }
 

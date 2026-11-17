@@ -3,14 +3,14 @@
 ## 1. Domain and settings
 
 - [x] 1.1 Red: unit tests for `domain.P95` (empty gives no value, one sample, nearest rank over 20 samples); `domain.RunStats` (`Cut` gives the last interval's counts and p95 values and starts a new interval, `Total` covers the whole run, a nil `*RunStats` does nothing, latency counted only when given); `domain.LmStudio.Local` (`localhost`, `LOCALHOST`, `127.0.0.1`, `[::1]` local; another host not); the settings parser (`status_interval` read, default 5 minutes, `5s` refused with field and line)
-- [x] 1.2 Green: `core/domain/run_stats.go`, `percentile.go`, `LmStudio.Local`, `Message.Live`, `Settings.StatusInterval`, the YAML parser; `tgscout.yaml.example` names `status_interval`
+- [x] 1.2 Green: `core/domain/run_stats.go` (with `P95`), `LmStudio.Local`, `Message.Live`, `Settings.StatusInterval`, the YAML parser; `tgscout.yaml.example` names `status_interval`
 - [x] 1.3 Commit (`kit ship`)
 
 ## 2. Counting in the use cases
 
-- [ ] 2.1 Red: unit tests for `CollectMessage` (a live message queued counts `In` and is marked live; an edit, a duplicate and a history message do not count and are not live) and `MatchMessage` (each LLM call recorded, a judged live message records its latency, a history message is judged with no latency, a confirmed send counts a match, a failed judgment counts nothing)
-- [ ] 2.2 Green: `collect_message.go`, `match_message.go`, `matching.Ports.Stats`, `matching_config.go`
-- [ ] 2.3 Commit (`kit ship`)
+- [x] 2.1 Red: unit tests for `CollectMessage` (a live message queued counts `In` and is marked live; an edit, a duplicate and a history message do not count and are not live) and `MatchMessage` (each LLM call recorded, a judged live message records its latency, a history message is judged with no latency, a confirmed send counts a match, a failed judgment counts nothing)
+- [x] 2.2 Green: `collect_message.go`, `match_message.go`, `matching.Ports.Stats`, `matching_config.go`
+- [x] 2.3 Commit (`kit ship`)
 
 ## 3. Console and status loop
 
