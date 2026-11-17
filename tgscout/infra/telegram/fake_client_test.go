@@ -184,3 +184,39 @@ func TestFakeReadHistoryPausesFirst(t *testing.T) {
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, time.Since(began), 100*time.Millisecond)
 }
+
+func TestFakeListenPlaysADropAndKeepsALostUpdateForTheHistory(t *testing.T) {
+	fake, _ := newTestFake(t, `{"chats": {"*": "joined"}, "updates": [
+		{"chat": "@made_up_market", "id": 1, "text": "before"},
+		{"connection_lost": true},
+		{"chat": "@made_up_market", "id": 2, "text": "Selling a bike", "lost": true},
+		{"connection_back": true},
+		{"chat": "@made_up_market", "id": 3, "text": "after"}]}`)
+	var events []ConnectionEvent
+	fake.WatchConnection(func(event ConnectionEvent) { events = append(events, event) })
+	id := fake.scenario.info("@made_up_market").ID
+	ctx, stop := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer stop()
+	var got []int
+
+	_ = fake.Listen(ctx, func(_ context.Context, update Update) { got = append(got, update.MessageID) })
+
+	assert.Equal(t, []int{1, 3}, got, "a lost update is never delivered live")
+	assert.Equal(t, []ConnectionEvent{ConnectionLost, ConnectionBack}, events)
+	history, err := fake.ReadHistory(context.Background(), id, HistoryWindow{Limit: 10, Since: time.Now().Add(-time.Hour)})
+	require.NoError(t, err)
+	require.Len(t, history.Messages, 1)
+	assert.Equal(t, "Selling a bike", history.Messages[0].Text)
+}
+
+func TestFakeSendToOwnerHangsAfterTheSendWhenTheScenarioSaysSo(t *testing.T) {
+	fake, sent := newTestFake(t, `{"send_hang_ms": 150}`)
+	began := time.Now()
+
+	require.NoError(t, fake.SendToOwner(context.Background(), "@made_up_owner", "a match"))
+
+	assert.GreaterOrEqual(t, time.Since(began), 150*time.Millisecond)
+	data, err := os.ReadFile(sent)
+	require.NoError(t, err)
+	assert.Contains(t, string(data), "a match", "the send is written before the hang")
+}

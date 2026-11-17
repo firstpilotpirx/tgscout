@@ -88,4 +88,7 @@ type Client interface {
 	// ReadHistory reads the window of a found chat's history, by its bare
 	// peer ID; it runs inside Run and calls Telegram, never writes.
 	ReadHistory(ctx context.Context, chatID int64, window HistoryWindow) (History, error)
+	// WatchConnection calls f with every drop of the connection and every
+	// return after one, on its own goroutine; f should not wait long.
+	WatchConnection(f func(ConnectionEvent))
 }

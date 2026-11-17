@@ -31,6 +31,7 @@ type gotdClient struct {
 	client  *telegram.Client
 	gaps    *updates.Manager
 	updates *updateSink
+	watch   *connectionWatch
 	mu      sync.Mutex
 	owners  map[string]*tg.InputPeerUser // the found owner's peer, by config text
 	peers   map[int64]tg.InputPeerClass  // the found chats' peers, by bare ID
@@ -41,10 +42,13 @@ func newGotdClient(cfg Config) *gotdClient {
 	dispatcher := tg.NewUpdateDispatcher()
 	sink.register(dispatcher)
 	gaps := updates.New(updates.Config{Handler: dispatcher})
+	watch := newConnectionWatch()
 	return &gotdClient{
-		client:  telegram.NewClient(cfg.APIID, cfg.APIHash, telegram.Options{SessionStorage: cfg.Storage, UpdateHandler: gaps}),
+		client: telegram.NewClient(cfg.APIID, cfg.APIHash, telegram.Options{SessionStorage: cfg.Storage, UpdateHandler: gaps,
+			OnConnectionState: watch.state}),
 		gaps:    gaps,
 		updates: sink,
+		watch:   watch,
 		owners:  map[string]*tg.InputPeerUser{},
 		peers:   map[int64]tg.InputPeerClass{},
 	}
@@ -63,6 +67,8 @@ func (c *gotdClient) Listen(ctx context.Context, f func(context.Context, Update)
 	}
 	return mapError(err)
 }
+
+func (c *gotdClient) WatchConnection(f func(ConnectionEvent)) { c.watch.watch(f) }
 
 func (c *gotdClient) Run(ctx context.Context, f func(context.Context) error) error {
 	var inner error

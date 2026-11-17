@@ -256,3 +256,5 @@ func chatRef(t *testing.T, text string) domain.ChatRef {
 func (f *fakeTelegram) ReadHistory(_ context.Context, chatID int64, _ telegram.HistoryWindow) (telegram.History, error) {
 	return telegram.History{Messages: f.history[chatID]}, nil
 }
+
+func (f *fakeTelegram) WatchConnection(func(telegram.ConnectionEvent)) {}

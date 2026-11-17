@@ -22,9 +22,9 @@
 
 ## 4. Telegram connection events
 
-- [ ] 4.1 Red: unit tests for the gotd connection-state mapping (first Ready no event, Disconnected gives Lost, the next Ready gives Back, the callback never blocks); the fake client plays `connection_lost`, `connection_back`, a `lost` update (not delivered, served by `ReadHistory` after it is played) and `send_hang_ms`; every stub of `Client` gets `WatchConnection`
-- [ ] 4.2 Green: `infra/telegram` `ConnectionEvent`, `WatchConnection` in the port, the gotd client (`OnConnectionState`), the fake client
-- [ ] 4.3 Commit (`kit ship`)
+- [x] 4.1 Red: unit tests for the gotd connection-state mapping (first Ready no event, Disconnected gives Lost, the next Ready gives Back, the callback never blocks); the fake client plays `connection_lost`, `connection_back`, a `lost` update (not delivered, served by `ReadHistory` after it is played) and `send_hang_ms`; every stub of `Client` gets `WatchConnection`
+- [x] 4.2 Green: `infra/telegram` `ConnectionEvent`, `WatchConnection` in the port, the gotd client (`OnConnectionState`), the fake client
+- [x] 4.3 Commit (`kit ship`)
 
 ## 5. Reconnect and gap read
 
