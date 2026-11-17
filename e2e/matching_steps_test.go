@@ -38,6 +38,7 @@ func matchingSteps(sc *godog.ScenarioContext, w *world) {
 	matchingGivenSteps(sc, w)
 	matchingWhenSteps(sc, w)
 	matchingThenSteps(sc, w)
+	consoleThenSteps(sc, w)
 	decisionThenSteps(sc, w)
 }
 
@@ -142,6 +143,9 @@ func matchingThenSteps(sc *godog.ScenarioContext, w *world) {
 		return nil
 	})
 	sc.Step(`^the call holds the request text and the message text apart from the fixed matching rules$`, w.textsApart)
+}
+
+func consoleThenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^the console shows a warning line with the raw answer$`, func() error {
 		return w.allStderrHas("[warn] unclear LLM answer for kids-bike on @made_up_market/4211, saved as no",
 			`answer: "`+unclearReply+`"`)
