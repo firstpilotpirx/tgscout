@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/firstpilotpirx/tgscout/components/matching"
 	"github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/persistence/sqlite"
 	"github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/settings/yaml"
 	sqlitedb "github.com/firstpilotpirx/tgscout/infra/sqlite"
@@ -33,8 +32,8 @@ func start(ctx context.Context, opts options, con *console, deps startDeps) int 
 	if !ok {
 		return exitError
 	}
-	_ = matching.NewMatchingConfig(matching.Ports{Settings: repository}) // the next slices pass their other adapters here
-	if watch(ctx, con, deps, opts.config, repository.Settings()) != exitOK {
+	matcher := newLive(repository, db, con)
+	if watch(ctx, con, deps, opts.config, repository.Settings(), matcher) != exitOK {
 		_ = db.Close() // the Telegram error is the one to report
 		return exitError
 	}

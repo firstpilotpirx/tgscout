@@ -34,15 +34,15 @@
 - [x] 4.4 Green: `adapters/primary/collect/telegram`; `.go-arch-lint.yml` lets `adapters` depend on `infra`
 - [x] 4.5 Red: the matcher scenario in the same slice feature: a full queue holds new messages back (a real `ChannelMessageQueue` of size 1, one worker, a slow fake `Llm`, the real `MatchMessage`); an integration test for the workers (real queue, mocked use case): an error and a warning reported, workers stop with `ctx`
 - [x] 4.6 Green: `adapters/primary/match/channel`
-- [ ] 4.7 Commit (`kit ship`)
+- [x] 4.7 Commit (`kit ship`)
 
 ## 5. CLI
 
-- [ ] 5.1 Red: unit tests for the console lines of the mock — match line and text start (80 characters, line breaks as spaces, `…`), warning with the raw answer, error without request or message text, plain marks
-- [ ] 5.2 Green: `apps/cli/console_matching.go` (the console implements `MatchPrinter`)
-- [ ] 5.3 Red: update the start unit tests — the workers and the listener start after `connect`, before «running»; the stop ends them before the database closes
-- [ ] 5.4 Green: wiring in `apps/cli/start.go` and `start_telegram.go`
-- [ ] 5.5 Commit (`kit ship`)
+- [x] 5.1 Red: unit tests for the console lines of the mock — match line and text start (80 characters, line breaks as spaces, `…`), warning with the raw answer, error without request or message text, plain marks
+- [x] 5.2 Green: `apps/cli/console_matching.go` (the console implements `MatchPrinter`)
+- [x] 5.3 Red: update the start unit tests — the workers start after `connect`, before «running», the listener right after it; the stop ends them before the database closes
+- [x] 5.4 Green: wiring in `apps/cli/start.go` and `start_telegram.go`
+- [x] 5.5 Commit (`kit ship`)
 
 ## 6. E2E
 

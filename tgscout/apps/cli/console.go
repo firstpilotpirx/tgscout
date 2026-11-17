@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/fatih/color"
 )
@@ -19,6 +20,7 @@ var (
 
 // console writes the status lines of tgscout: results to out, errors to errOut.
 type console struct {
+	mu          sync.Mutex // the workers and the listener print at once
 	out, errOut io.Writer
 	marks       marks
 	green, red  *color.Color
@@ -85,10 +87,21 @@ func (c *console) fail(text, hint string, paths ...string) {
 }
 
 func (c *console) println(w io.Writer, line string) {
-	_, _ = fmt.Fprintln(w, line) // a lost console line cannot be reported anywhere
+	_ = c.block(w, line) // a lost console line cannot be reported anywhere
+}
+
+// block writes the lines in one write, so lines of other goroutines never
+// come between them.
+func (c *console) block(w io.Writer, lines ...string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	_, err := fmt.Fprint(w, strings.Join(lines, "\n")+"\n")
+	return err
 }
 
 // print writes a prompt to out without a line end.
 func (c *console) print(text string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	_, _ = fmt.Fprint(c.out, text) // a lost prompt cannot be reported anywhere
 }

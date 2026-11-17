@@ -27,6 +27,7 @@ var (
 
 // OpenAiLlmClient judges a message with one chat completion per question.
 type OpenAiLlmClient struct {
+	base  string
 	url   string
 	model string
 	http  *http.Client
@@ -34,8 +35,10 @@ type OpenAiLlmClient struct {
 
 // NewOpenAiLlmClient builds the client for the configured LM Studio.
 func NewOpenAiLlmClient(settings domain.LmStudio) *OpenAiLlmClient {
+	base := strings.TrimRight(settings.URL, "/")
 	return &OpenAiLlmClient{
-		url:   strings.TrimRight(settings.URL, "/") + "/chat/completions",
+		base:  base,
+		url:   base + "/chat/completions",
 		model: settings.Model,
 		http:  &http.Client{Timeout: settings.Timeout},
 	}
@@ -101,11 +104,11 @@ func (c *OpenAiLlmClient) ask(ctx context.Context, system, user string) (string,
 	request.Header.Set("Content-Type", "application/json")
 	response, err := c.http.Do(request)
 	if err != nil {
-		return "", fmt.Errorf("cannot reach %s: %w", c.url, unwrapURL(err))
+		return "", reachError(c.base, c.http.Timeout, err)
 	}
 	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return "", fmt.Errorf("%s answered %s", c.url, response.Status)
+		return "", fmt.Errorf("%s answered %s", c.base, response.Status)
 	}
 	var completion completionResponse
 	if err := json.NewDecoder(response.Body).Decode(&completion); err != nil {

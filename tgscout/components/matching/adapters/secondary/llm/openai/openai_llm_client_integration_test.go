@@ -5,6 +5,7 @@ package openai_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -115,8 +116,7 @@ func TestJudgeReportsAnErrorStatus(t *testing.T) {
 	_, err := client(server, time.Second).Judge(context.Background(), "a desk lamp", "Desk lamp")
 
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "503")
-	assert.NotContains(t, err.Error(), "Desk lamp")
+	assert.Equal(t, server.URL+"/v1 answered 503 Service Unavailable", err.Error())
 }
 
 func TestJudgeReportsATimeout(t *testing.T) {
@@ -131,4 +131,16 @@ func TestJudgeReportsATimeout(t *testing.T) {
 	_, err := client(server, 50*time.Millisecond).Judge(context.Background(), "a desk lamp", "Desk lamp")
 
 	require.Error(t, err)
+	assert.Equal(t, server.URL+"/v1 did not answer within 50ms", err.Error())
+}
+
+func TestJudgeReportsAnAddressThatDoesNotAnswer(t *testing.T) {
+	server := httptest.NewServer(http.NotFoundHandler())
+	server.Close()
+
+	_, err := client(server, time.Second).Judge(context.Background(), "a desk lamp", "Desk lamp")
+
+	require.Error(t, err)
+	assert.Equal(t, "cannot reach "+server.URL+"/v1", err.Error())
+	assert.Error(t, errors.Unwrap(err), "the cause stays for errors.Is")
 }
