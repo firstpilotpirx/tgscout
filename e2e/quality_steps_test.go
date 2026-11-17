@@ -79,6 +79,9 @@ func qualityLlmSteps(sc *godog.ScenarioContext, w *world) {
 		return w.run.signal(syscall.SIGINT)
 	})
 	sc.Step(`^tgscout prints no warning about chat texts leaving the machine$`, func() error {
+		if err := w.stdoutHas("running — press Ctrl+C to stop"); err != nil {
+			return err
+		}
 		if strings.Contains(w.run.output(), leaveWarning) {
 			return fmt.Errorf("a warning about a local LLM; output: %s", w.run.output())
 		}

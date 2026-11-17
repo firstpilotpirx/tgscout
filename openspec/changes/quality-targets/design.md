@@ -87,6 +87,7 @@ A root duration key in the YAML parser, default `5m`; below `10s` is a field err
 | a status interval below 10 seconds is refused | unit (parser) |
 | defaults fill what the file leaves out | unit (parser) |
 | every form of chat reference is accepted | unit (parser), unchanged |
+| an invalid config stops the start | E2E (`settings.feature`), unchanged |
 | every problem is listed at once | E2E (`settings.feature`), unchanged |
 | a retry cap that is not a duration is refused | unit (parser), unchanged |
 

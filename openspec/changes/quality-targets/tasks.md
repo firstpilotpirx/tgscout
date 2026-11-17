@@ -34,6 +34,6 @@
 
 - [x] 6.1 `README.md` § Targets: the numbers, how to read the status line, `status_interval`, the real-model condition (p95 ≤ 10 s needs a model answering within about 2 s; with a local model the 15-minute catch-up holds for about 2,000 judged messages); `docs/architecture/quality-attributes.html` names the tests that now prove each target
 - [x] 6.2 Bump `VERSION` to 0.8.0
-- [ ] 6.3 Commit (`kit ship`)
+- [x] 6.3 Commit (`kit ship`)
 
 Manual checks by the user: none (`manual_run` lists no area); the run with a real LM Studio stays with the owner, before 1.0.0.
