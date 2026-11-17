@@ -19,9 +19,10 @@ var configs = map[string]string{
 	"a request without chats": header + "requests:\n  - id: bike\n    find: a kids bike\n    chats: []\n",
 	"two requests with one id": header + "requests:\n" + bikeRequest +
 		"  - id: bike\n    find: a desk lamp\n    chats: ['@made_up_street']\n",
-	"an unknown key":  header + "colour: red\nrequests:\n" + bikeRequest,
-	"a zero depth":    header + "catch_up: {days: 0}\nrequests:\n" + bikeRequest,
-	"an api_hash key": header + "api_hash: made-up\nrequests:\n" + bikeRequest,
+	"an unknown key":    header + "colour: red\nrequests:\n" + bikeRequest,
+	"a zero depth":      header + "catch_up: {days: 0}\nrequests:\n" + bikeRequest,
+	"an api_hash key":   header + "api_hash: made-up\nrequests:\n" + bikeRequest,
+	"a zero queue size": header + "queue_size: 0\nrequests:\n" + bikeRequest,
 	"a request without chats, a second request with the same id and an api_hash key": header +
 		"requests:\n  - id: bike\n    find: a kids bike\n    chats: []\n" + bikeRequest + "api_hash: made-up\n",
 	"a request whose chats are a username, a public chat link and a numeric ID": header +

@@ -29,6 +29,7 @@ Feature: settings — what the owner writes into the config file and how tgscout
         | an unknown key           | colour            |
         | a zero depth             | catch_up.days     |
         | an api_hash key          | api_hash          |
+        | a zero queue size        | queue_size        |
 
     Scenario: every problem is listed at once
       Given a config with a request without chats, a second request with the same id and an api_hash key

@@ -18,12 +18,13 @@ import (
 // The world of one scenario: a temp folder with the config, the database and
 // the last tgscout run.
 type world struct {
-	dir    string
-	config string
-	run    *process
-	schema string
-	tg     telegramWorld
-	echo   bool // a run on a terminal shows what the owner types
+	dir      string
+	config   string
+	run      *process
+	schema   string
+	tg       telegramWorld
+	matching matchingWorld
+	echo     bool // a run on a terminal shows what the owner types
 }
 
 // validConfig is a made-up config with every required field.
@@ -48,11 +49,15 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		dir, err := os.MkdirTemp("", "tgscout-e2e-")
 		w.dir, w.config, w.tg, w.echo = dir, "tgscout.yaml", defaultTelegram(), false
+		w.matching = matchingWorld{}
 		return ctx, err
 	})
 	sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
 		if w.run != nil {
 			w.run.stop()
+		}
+		if w.matching.lm != nil {
+			w.matching.lm.server.Close()
 		}
 		return ctx, errors.Join(err, os.RemoveAll(w.dir))
 	})
@@ -61,6 +66,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	thenSteps(sc, w)
 	settingsSteps(sc, w)
 	telegramSteps(sc, w)
+	matchingSteps(sc, w)
 }
 
 func givenSteps(sc *godog.ScenarioContext, w *world) {

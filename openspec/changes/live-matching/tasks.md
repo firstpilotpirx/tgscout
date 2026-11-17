@@ -46,9 +46,9 @@
 
 ## 6. E2E
 
-- [ ] 6.1 Red: `e2e/features/message_matching.feature` (`@message_matching @e2e`), one `Rule:` per requirement, every E2E scenario of design § Test levels (the slice scenarios run in the adapters' features); the world's fake LM Studio (`httptest`, answers per request text, records calls), the fake Telegram `updates`, reading `tgscout.db` after the stop; the zero queue size row in `e2e/features/settings.feature`
-- [ ] 6.2 Green: fix what the scenarios find
-- [ ] 6.3 Commit (`kit ship`)
+- [x] 6.1 Red: `e2e/features/message_matching.feature` (`@message_matching @e2e`), one `Rule:` per requirement, every E2E scenario of design § Test levels (the slice scenarios run in the adapters' features); the world's fake LM Studio (`httptest`, answers per request text, records calls), the fake Telegram `updates`, reading `tgscout.db` after the stop; the zero queue size row in `e2e/features/settings.feature`
+- [x] 6.2 Green: fix what the scenarios find
+- [x] 6.3 Commit (`kit ship`)
 
 ## 7. Docs and version
 

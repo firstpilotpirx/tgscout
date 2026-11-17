@@ -31,6 +31,16 @@ type fakeTelegram struct {
 	Chats            map[string]string `json:"chats"`
 	Contacts         []string          `json:"contacts"`
 	FloodWaitSeconds int               `json:"flood_wait_seconds"`
+	Updates          []fakeUpdate      `json:"updates"`
+}
+
+// fakeUpdate is a made-up message the fake Telegram plays after the start.
+type fakeUpdate struct {
+	Chat    string `json:"chat"`
+	ID      int    `json:"id"`
+	Text    string `json:"text"`
+	Edited  bool   `json:"edited"`
+	AfterMs int    `json:"after_ms"`
 }
 
 // telegramWorld is the Telegram side of a scenario: by default a valid
