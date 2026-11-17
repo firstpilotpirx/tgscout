@@ -43,6 +43,6 @@ Feature: catch-up — the history collector through the real use cases
   Rule: Gap read after a reconnect
 
     Scenario: a message processed during the drop is not judged twice
-      Given a message reached tgscout and was processed just before the connection dropped
+      Given a message reached tgscout before the connection dropped and was processed during the drop
       When the connection is back and tgscout reads the gap
       Then that message is not judged again

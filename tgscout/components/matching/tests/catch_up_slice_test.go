@@ -50,15 +50,15 @@ func (c *catchUpSlice) steps(sc *godog.ScenarioContext) {
 
 // reconnectSteps: a drop of the connection while a live message is judged.
 func (c *catchUpSlice) reconnectSteps(sc *godog.ScenarioContext) {
-	sc.Step(`^a message reached tgscout and was processed just before the connection dropped$`, func() {
+	sc.Step(`^a message reached tgscout before the connection dropped and was processed during the drop$`, func() {
 		c.repository.cursor[watchedChatID] = 1
 		c.repository.cursorAt[watchedChatID] = catchUpNow.Add(-time.Hour)
-		c.postAt(2, 30*time.Minute, "processed before the drop")
+		c.postAt(2, 30*time.Minute, "processed during the drop")
 		c.postAt(3, 20*time.Minute, "posted during the drop")
 	})
 	sc.Step(`^the connection is back and tgscout reads the gap$`, c.dropAndBack)
 	sc.Step(`^that message is not judged again$`, func() error {
-		if err := c.askedTexts("processed before the drop", "posted during the drop"); err != nil {
+		if err := c.askedTexts("processed during the drop", "posted during the drop"); err != nil {
 			return err
 		}
 		c.repository.mu.Lock()
