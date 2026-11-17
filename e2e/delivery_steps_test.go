@@ -55,57 +55,23 @@ func deliveryGivenSteps(sc *godog.ScenarioContext, w *world) {
 func deliveryWhenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^a new message appears in a watched chat and LM Studio comes back$`, func() error {
 		w.tg.fake.Updates = []fakeUpdate{{Chat: market, ID: firstID, Text: bikeText}}
-		return w.runUntil(func() bool { return strings.Contains(w.run.stderr.String(), llmDownLine) },
-			func() { w.lmStudio().setDown(false) },
+		return w.runUntil(w.stderrSays(llmDownLine), func() { w.lmStudio().setDown(false) },
 			func() bool { return w.processedCount() == 1 })
 	})
 	sc.Step(`^three new messages appear and LM Studio comes back after the queue is full$`, func() error {
 		w.tg.fake.Updates = threeMessages()
-		return w.runUntil(func() bool { return strings.Contains(w.run.stderr.String(), "queue is full") },
-			func() { w.lmStudio().setDown(false) },
+		return w.runUntil(w.stderrSays("queue is full"), func() { w.lmStudio().setDown(false) },
 			func() bool { return w.processedCount() == 3 })
 	})
-	sc.Step(`^the connection drops, a message is posted during the drop and the connection is back$`, func() error {
-		w.tg.fake.Updates = []fakeUpdate{
-			{ConnectionLost: true, AfterMs: 300},
-			{Chat: market, ID: firstID, Text: bikeText, Lost: true, AfterMs: 100},
-			{ConnectionBack: true, AfterMs: 100},
-		}
-		w.matching.until = func() bool { return strings.Contains(w.run.stdout.String(), "gap read done") }
-		return w.runToIdle()
-	})
+	sc.Step(`^the connection drops, a message is posted during the drop and the connection is back$`, w.dropAndBack)
 	sc.Step(`^the owner presses Ctrl\+C while a message is judged$`, func() error {
 		if err := w.startJudging(); err != nil {
 			return err
 		}
 		return w.run.send(syscall.SIGINT)
 	})
-	sc.Step(`^the owner presses Ctrl\+C while the message waits for its next try$`, func() error {
-		w.tg.fake.Updates = []fakeUpdate{{Chat: market, ID: firstID, Text: bikeText}}
-		if err := w.startMatching(); err != nil {
-			return err
-		}
-		if err := w.eventually("the not-answering line", func() bool {
-			return strings.Contains(w.run.stderr.String(), llmDownLine)
-		}); err != nil {
-			return err
-		}
-		return w.run.send(syscall.SIGINT)
-	})
-	sc.Step(`^the owner presses Ctrl\+C twice while a message is judged$`, func() error {
-		if err := w.startJudging(); err != nil {
-			return err
-		}
-		if err := w.run.send(syscall.SIGINT); err != nil {
-			return err
-		}
-		if err := w.eventually("the stopping line", func() bool {
-			return strings.Contains(w.run.stdout.String(), "-> stopping · ")
-		}); err != nil {
-			return err
-		}
-		return w.run.send(syscall.SIGINT)
-	})
+	sc.Step(`^the owner presses Ctrl\+C while the message waits for its next try$`, w.stopDuringPause)
+	sc.Step(`^the owner presses Ctrl\+C twice while a message is judged$`, w.stopTwice)
 }
 
 func deliveryCrashSteps(sc *godog.ScenarioContext, w *world) {
@@ -114,42 +80,13 @@ func deliveryCrashSteps(sc *godog.ScenarioContext, w *world) {
 		w.lmStudio().answers[bikeFind] = "yes"
 		w.tg.fake.SendHangMs = 60_000
 	})
-	sc.Step(`^the process is killed after the send and the owner starts tgscout again$`, func() error {
-		w.tg.fake.Updates = []fakeUpdate{{Chat: market, ID: firstID, Text: bikeText}}
-		if err := w.startMatching(); err != nil {
-			return err
-		}
-		if err := w.eventually("the send", func() bool { got, _ := w.sentTexts(); return len(got) == 1 }); err != nil {
-			return err
-		}
-		if err := w.kill(); err != nil {
-			return err
-		}
-		w.tg.fake.SendHangMs, w.tg.fake.Updates = 0, nil
-		w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 1}}
-		return w.runToIdle()
-	})
+	sc.Step(`^the process is killed after the send and the owner starts tgscout again$`, w.crashAfterSend)
 	sc.Step(`^one worker and LM Studio that never answers in time$`, func() {
 		w.request("kids-bike", bikeFind)
 		w.matching.workers = 1
 		w.lmStudio().delay = time.Minute
 	})
-	sc.Step(`^three messages arrive, the process is killed and the owner starts tgscout again$`, func() error {
-		w.tg.fake.Updates = threeMessages()
-		if err := w.startJudging(); err != nil {
-			return err
-		}
-		if err := w.kill(); err != nil {
-			return err
-		}
-		w.matching.before = len(w.lmStudio().allCalls())
-		w.lmStudio().setDelay(0)
-		w.tg.fake.Updates = nil
-		for _, each := range threeMessages() {
-			w.tg.fake.History = append(w.tg.fake.History, fakeHistory{Chat: market, ID: each.ID, Text: each.Text, AgeMinutes: 1})
-		}
-		return w.runToIdle()
-	})
+	sc.Step(`^three messages arrive, the process is killed and the owner starts tgscout again$`, w.crashWithQueue)
 	sc.Step(`^every message read so far is processed after a match$`, func() error {
 		w.request("kids-bike", bikeFind)
 		w.lmStudio().answers[bikeFind] = "yes"
@@ -196,40 +133,13 @@ func deliveryThenSteps(sc *godog.ScenarioContext, w *world) {
 		return errors.Join(w.exitCode(func(c int) bool { return c == 0 }), w.processed(true))
 	})
 	sc.Step(`^tgscout exits with code 0 within (\d+) seconds?$`, func(seconds int) error {
-		took, err := w.run.exitedWithin()
-		if err != nil {
-			return err
-		}
-		if limit := time.Duration(seconds) * time.Second; took > limit {
-			return fmt.Errorf("tgscout took %s to exit, want under %s", took, limit)
-		}
-		return w.exitCode(func(c int) bool { return c == 0 })
+		return w.exitsWithin(time.Duration(seconds)*time.Second, 0)
 	})
-	sc.Step(`^tgscout ends at once with exit code 130$`, func() error {
-		took, err := w.run.exitedWithin()
-		if err != nil {
-			return err
-		}
-		if took > time.Second {
-			return fmt.Errorf("tgscout took %s to end after the second Ctrl+C", took)
-		}
-		return w.exitCode(func(c int) bool { return c == 130 })
-	})
+	sc.Step(`^tgscout ends at once with exit code 130$`, func() error { return w.exitsWithin(time.Second, 130) })
 	sc.Step(`^the owner gets that match again, and no match is lost$`, func() error {
 		return errors.Join(w.ownerGot(bikeMatch, bikeMatch), w.processed(true))
 	})
-	sc.Step(`^every one of those messages is judged after the restart$`, func() error {
-		var got []string
-		for _, call := range w.lmStudio().allCalls()[w.matching.before:] {
-			got = append(got, call.Message)
-		}
-		for _, each := range threeMessages() {
-			if !strings.Contains(strings.Join(got, "\n"), each.Text) {
-				return fmt.Errorf("%q was not judged after the restart; asked about %q", each.Text, got)
-			}
-		}
-		return nil
-	})
+	sc.Step(`^every one of those messages is judged after the restart$`, w.judgedAfterRestart)
 	sc.Step(`^no match is sent again and the LLM is not asked again$`, func() error {
 		return errors.Join(w.ownerGot(bikeMatch), w.askedTimes(bikeFind, 1))
 	})
@@ -298,6 +208,104 @@ func (w *world) lineCount(stderr bool, prefix string, want int) error {
 	}
 	if got != want {
 		return fmt.Errorf("%d lines start with %q, want %d", got, prefix, want)
+	}
+	return nil
+}
+
+func (w *world) stderrSays(text string) func() bool {
+	return func() bool { return strings.Contains(w.run.stderr.String(), text) }
+}
+
+func (w *world) dropAndBack() error {
+	w.tg.fake.Updates = []fakeUpdate{
+		{ConnectionLost: true, AfterMs: 300},
+		{Chat: market, ID: firstID, Text: bikeText, Lost: true, AfterMs: 100},
+		{ConnectionBack: true, AfterMs: 100},
+	}
+	w.matching.until = func() bool { return strings.Contains(w.run.stdout.String(), "gap read done") }
+	return w.runToIdle()
+}
+
+func (w *world) stopDuringPause() error {
+	w.tg.fake.Updates = []fakeUpdate{{Chat: market, ID: firstID, Text: bikeText}}
+	if err := w.startMatching(); err != nil {
+		return err
+	}
+	if err := w.eventually("the not-answering line", w.stderrSays(llmDownLine)); err != nil {
+		return err
+	}
+	return w.run.send(syscall.SIGINT)
+}
+
+func (w *world) stopTwice() error {
+	if err := w.startJudging(); err != nil {
+		return err
+	}
+	if err := w.run.send(syscall.SIGINT); err != nil {
+		return err
+	}
+	if err := w.eventually("the stopping line", func() bool {
+		return strings.Contains(w.run.stdout.String(), "-> stopping · ")
+	}); err != nil {
+		return err
+	}
+	return w.run.send(syscall.SIGINT)
+}
+
+func (w *world) crashAfterSend() error {
+	w.tg.fake.Updates = []fakeUpdate{{Chat: market, ID: firstID, Text: bikeText}}
+	if err := w.startMatching(); err != nil {
+		return err
+	}
+	if err := w.eventually("the send", func() bool { got, _ := w.sentTexts(); return len(got) == 1 }); err != nil {
+		return err
+	}
+	if err := w.kill(); err != nil {
+		return err
+	}
+	w.tg.fake.SendHangMs, w.tg.fake.Updates = 0, nil
+	w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 1}}
+	return w.runToIdle()
+}
+
+func (w *world) crashWithQueue() error {
+	w.tg.fake.Updates = threeMessages()
+	if err := w.startJudging(); err != nil {
+		return err
+	}
+	if err := w.kill(); err != nil {
+		return err
+	}
+	w.matching.before = len(w.lmStudio().allCalls())
+	w.lmStudio().setDelay(0)
+	w.tg.fake.Updates = nil
+	for _, each := range threeMessages() {
+		w.tg.fake.History = append(w.tg.fake.History, fakeHistory{Chat: market, ID: each.ID, Text: each.Text, AgeMinutes: 1})
+	}
+	return w.runToIdle()
+}
+
+// exitsWithin checks tgscout exits with the code in under the limit.
+func (w *world) exitsWithin(limit time.Duration, code int) error {
+	took, err := w.run.exitedWithin()
+	if err != nil {
+		return err
+	}
+	if took > limit {
+		return fmt.Errorf("tgscout took %s to exit, want under %s", took, limit)
+	}
+	return w.exitCode(func(c int) bool { return c == code })
+}
+
+func (w *world) judgedAfterRestart() error {
+	var got []string
+	for _, call := range w.lmStudio().allCalls()[w.matching.before:] {
+		got = append(got, call.Message)
+	}
+	for _, each := range threeMessages() {
+		if !strings.Contains(strings.Join(got, "\n"), each.Text) {
+			return fmt.Errorf("%q was not judged after the restart; asked about %q", each.Text, got)
+		}
 	}
 	return nil
 }
