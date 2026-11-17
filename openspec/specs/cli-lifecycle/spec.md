@@ -46,7 +46,7 @@ After the config, `tgscout` SHALL open its SQLite file (`--db`, default `tgscout
 
 ### Requirement: Clean stop
 
-While it runs, `tgscout` SHALL say on the console that it is running and how to stop it. On an interrupt (Ctrl+C, SIGINT) or a terminate signal (SIGTERM), it SHALL close the database, say that it stopped and exit with code 0.
+While it runs, `tgscout` SHALL say on the console that it is running and how to stop it. On an interrupt (Ctrl+C, SIGINT) or a terminate signal (SIGTERM), it SHALL stop as the delivery capability's graceful stop says, close the database, say that it stopped and exit with code 0.
 
 #### Scenario: tgscout starts and stops cleanly
 
