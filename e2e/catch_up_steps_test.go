@@ -19,12 +19,14 @@ const (
 
 func catchUpSteps(sc *godog.ScenarioContext, w *world) {
 	catchUpGivenSteps(sc, w)
+	catchUpChatsGivenSteps(sc, w)
 	sc.Step(`^the owner starts tgscout and it catches up$`, w.runToIdle)
 	sc.Step(`^a new message appears in that chat while it is read$`, func() error {
 		w.tg.fake.Updates = []fakeUpdate{{Chat: market, ID: firstID, Text: bikeText}}
 		return w.runToIdle()
 	})
 	catchUpThenSteps(sc, w)
+	catchUpConsoleThenSteps(sc, w)
 }
 
 func catchUpGivenSteps(sc *godog.ScenarioContext, w *world) {
@@ -57,6 +59,10 @@ func catchUpGivenSteps(sc *godog.ScenarioContext, w *world) {
 		w.tg.fake.HistoryDelayMs = 600 // the live message arrives while the history is read
 		w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 1}}
 	})
+}
+
+// catchUpChatsGivenSteps: the waits and the scenarios of more than one chat.
+func catchUpChatsGivenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^Telegram asks to wait 1 second on the first history read$`, func() {
 		w.request("kids-bike", bikeFind)
 		w.tg.fake.HistoryFlood = 1
@@ -114,6 +120,9 @@ func catchUpThenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^the chat's history is read and judged after it$`, func() error {
 		return errors.Join(w.askedTimes(bikeFind, 1), w.allStdoutHas("[ok] catch-up: "+marketTitle+" · 1 message · first start"))
 	})
+}
+
+func catchUpConsoleThenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^the console shows a start line and one line per chat, in config order$`, func() error {
 		out := w.run.stdout.String()
 		start := strings.Index(out, "-> catch-up started · 2 chats · live listening is on\n")
