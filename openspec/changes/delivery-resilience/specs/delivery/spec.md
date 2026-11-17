@@ -91,7 +91,7 @@ When the connection to Telegram is back, tgscout SHALL print one line saying so 
 
 ### Requirement: Graceful stop
 
-On the first interrupt (Ctrl+C, SIGINT) or terminate signal (SIGTERM), tgscout SHALL stop taking messages from Telegram and from the queue and print one line with the number of messages in work, the grace time `stop_grace` (default 10 seconds) and that a second Ctrl+C stops at once. Each worker SHALL finish the message it holds within the grace time; a message not finished by then, or waiting in a pause between retries, SHALL stay unprocessed. tgscout SHALL then close the database, print one line saying it stopped and how many messages were left in the queue, and exit with code 0.
+On the first interrupt (Ctrl+C, SIGINT) or terminate signal (SIGTERM), tgscout SHALL stop taking messages from Telegram and from the queue and print one line with the number of messages in work, the grace time `stop_grace` (default 10 seconds) and that a second Ctrl+C stops at once. Each worker SHALL finish the message it holds within the grace time; a message not finished by then SHALL stay unprocessed.
 
 #### Scenario: the owner stops tgscout during work
 
@@ -104,6 +104,16 @@ On the first interrupt (Ctrl+C, SIGINT) or terminate signal (SIGTERM), tgscout S
 - **GIVEN** a grace time of 1 second and LM Studio that takes 5 seconds to answer
 - **WHEN** the owner presses Ctrl+C while a message is judged
 - **THEN** tgscout exits with code 0 within about 1 second and the message is not marked processed
+
+### Requirement: End of a stop
+
+A pause between retries SHALL end at the stop and leave its message unprocessed. Once the workers are done, tgscout SHALL close the database, print one line saying it stopped and how many messages were left in the queue, and exit with code 0.
+
+#### Scenario: a retry pause ends at the stop
+
+- **GIVEN** LM Studio does not answer and a message waits for its next try
+- **WHEN** the owner presses Ctrl+C
+- **THEN** tgscout exits with code 0 at once and the message is not marked processed
 
 ### Requirement: Second interrupt
 

@@ -98,6 +98,7 @@ The match line stays owner-notification's `✓ match sent  HH:MM  <id>`. The moc
 | a message processed during the drop is not judged twice | slice | `tests/features/slice/catch_up.feature`: the gap read over a stub client whose history holds a processed message |
 | the owner stops tgscout during work | E2E | feature: the fake LM Studio answers after 1 s; Ctrl+C while it judges; exit 0, the stopping line |
 | a judgment longer than the grace time | E2E | feature: `stop_grace: 1s`, the fake LM Studio answers after 5 s; exit 0 in under 3 s, not processed |
+| a retry pause ends at the stop | E2E | feature: the fake LM Studio answers 503; Ctrl+C after the not-answering line; exit 0 in under 1 s, not processed |
 | a second Ctrl+C stops at once | E2E | feature: the fake LM Studio answers after 5 s; two SIGINTs; exit 130 |
 | a crash between send and mark | E2E | feature: the fake Telegram holds `send_hang_ms` after it wrote the sent line; SIGKILL; the restart's history holds the message; two sends of it |
 | a crash with messages in the queue | E2E | feature: one worker, the fake LM Studio hangs, three messages; SIGKILL; the restart's history holds them; all three asked again |
