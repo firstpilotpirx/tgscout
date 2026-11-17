@@ -23,7 +23,7 @@ Design pages this slice implements:
 - When both limits are set, reading stops at whichever comes first.
 - A cursor older than the depth window: only the depth window is read; the summary counts the chats with a gap.
 - Each history match reaches the owner as its own private message, as in live matching; the summary goes to the console only; the context page line about «one summary message» is fixed on the board.
-- While a chat is being caught up, its cursor does not move past the caught-up range because of live messages; it moves once that chat's catch-up is done, so a crash in the middle loses nothing.
+- While a chat is being caught up, its cursor does not move past the caught-up range because of live messages; it moves once that chat's catch-up is done, so a crash in the middle loses nothing (this modifies message-matching «Processed mark and cursor»).
 - The summary also counts judging errors; such messages stay unprocessed and are judged again at the next start.
 
 Current stage: MVP. Target stage: MVP.
@@ -73,9 +73,13 @@ Interface: CLI — the summary line; matches go to the owner as in live matching
 
 - `catch-up`: reading the missed history of every watched chat at start, within its depth, through the same message path, ending with a summary.
 
+### Modified Capabilities
+
+- `message-matching`: the cursor of a chat waits while that chat is caught up.
+
 ## Impact
 
-- Changed: `adapters/primary/collect/telegram` (history reader), `CollectMessage` (requests filtered by depth), `apps/cli/main.go` (the fork of the start flow).
+- Changed: `adapters/primary/collect/telegram` (history reader), the `message-matching` cursor rule, `CollectMessage` (requests filtered by depth), `apps/cli/main.go` (the fork of the start flow).
 
 ## Decisions
 
