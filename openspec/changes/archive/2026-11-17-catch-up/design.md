@@ -119,3 +119,7 @@ Unit tests: `cutWindow`, the domain depth functions, `CatchUpTally`, `Cursor` ho
 ## Release
 
 MINOR, 0.5.0 → 0.6.0, bumped in the last task group.
+
+## Time budget
+
+Decided by the prepared run (replaces `time-budget.md` «accept only on the user's words»): the before-merge check grew from 13 s to 22 s with warm caches. The growth is the new catch-up tests — 9 E2E scenarios with real waits (a 1 s FLOOD_WAIT, a history delay, two starts in a row), the slice feature and the collector integration tests; none can be dropped or moved down without losing a check, so the new time is accepted as the baseline.
