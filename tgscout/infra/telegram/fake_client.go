@@ -11,6 +11,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -27,6 +28,17 @@ type fakeScenario struct {
 	Contacts         []string          `json:"contacts"`
 	FloodWaitSeconds int               `json:"flood_wait_seconds"`
 	Updates          []fakeUpdate      `json:"updates"`
+	Titles           map[string]string `json:"titles"`
+	OwnerChatClosed  bool              `json:"owner_chat_closed"`
+	SendFails        bool              `json:"send_fails"`
+	SendFloodSeconds int               `json:"send_flood_wait_seconds"`
+	SentFile         string            `json:"sent_file"`
+}
+
+// fakeSend is one line of the sent file: whom the fake sent which text.
+type fakeSend struct {
+	To   string `json:"to"`
+	Text string `json:"text"`
 }
 
 // fakeUpdate is a made-up message the fake plays after Listen starts; Chat
@@ -37,6 +49,7 @@ type fakeUpdate struct {
 	Text    string `json:"text"`
 	Service bool   `json:"service"`
 	Edited  bool   `json:"edited"`
+	Private bool   `json:"private"`
 	AfterMs int    `json:"after_ms"`
 }
 
@@ -44,12 +57,13 @@ type fakeUpdate struct {
 // its own, a username gets one from its name.
 func (s fakeScenario) info(ref string) ChatInfo {
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
-		return ChatInfo{State: s.state(ref), ID: bareChatID(ref)}
+		return ChatInfo{State: s.state(ref), ID: bareChatID(ref), Title: s.Titles[ref]}
 	}
 	name := strings.ToLower(ref[strings.LastIndexAny(ref, "@/")+1:])
 	hash := fnv.New32a()
 	_, _ = hash.Write([]byte(name))
-	return ChatInfo{State: s.state(ref), ID: 9_000_000_000 + int64(hash.Sum32()), Username: name}
+	return ChatInfo{State: s.state(ref), ID: 9_000_000_000 + int64(hash.Sum32()), Username: name,
+		Title: s.Titles[ref]}
 }
 
 func parseFakeScenario(data []byte) (fakeScenario, error) {
@@ -81,9 +95,11 @@ func (s fakeScenario) floodWait() time.Duration {
 
 // fakeClient plays the scenario; it stores a made-up session after a sign-in.
 type fakeClient struct {
-	scenario fakeScenario
-	storage  *FileStorage
-	flooded  bool
+	scenario    fakeScenario
+	storage     *FileStorage
+	flooded     bool
+	sendFlooded bool
+	sendMu      sync.Mutex
 }
 
 // NewClient builds the made-up Telegram of the E2E build.
@@ -148,6 +164,9 @@ func (c *fakeClient) Listen(ctx context.Context, f func(context.Context, Update)
 		if err := SleepContext(ctx, time.Duration(update.AfterMs)*time.Millisecond); err != nil {
 			return err
 		}
+		if update.Private {
+			continue // as gotd's mapping: a private chat with a user is never an update
+		}
 		f(ctx, Update{ChatID: c.scenario.info(update.Chat).ID, MessageID: update.ID, Date: time.Now(),
 			Text: update.Text, Service: update.Service, Edited: update.Edited})
 	}
@@ -155,6 +174,36 @@ func (c *fakeClient) Listen(ctx context.Context, f func(context.Context, Update)
 	return ctx.Err()
 }
 
-func (c *fakeClient) FindOwner(_ context.Context, owner string) (bool, error) {
-	return slices.Contains(c.scenario.Contacts, owner), nil
+func (c *fakeClient) FindOwner(_ context.Context, owner string) (OwnerState, error) {
+	switch {
+	case !slices.Contains(c.scenario.Contacts, owner):
+		return OwnerMissing, nil
+	case c.scenario.OwnerChatClosed:
+		return OwnerNoChat, nil
+	}
+	return OwnerReady, nil
+}
+
+// SendToOwner appends the send to the scenario's sent file; the workers send
+// at once, so the sends go one at a time.
+func (c *fakeClient) SendToOwner(_ context.Context, owner, text string) error {
+	c.sendMu.Lock()
+	defer c.sendMu.Unlock()
+	if wait := time.Duration(c.scenario.SendFloodSeconds) * time.Second; wait > 0 && !c.sendFlooded {
+		c.sendFlooded = true
+		return &FloodWait{Wait: wait}
+	}
+	if c.scenario.SendFails {
+		return errTelegram
+	}
+	line, err := json.Marshal(fakeSend{To: owner, Text: text})
+	if err != nil {
+		return fmt.Errorf("fake Telegram send: %w", err)
+	}
+	file, err := os.OpenFile(c.scenario.SentFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec // G703: the E2E build writes the file its test names
+	if err != nil {
+		return fmt.Errorf("fake Telegram send: %w", err)
+	}
+	_, err = file.Write(append(line, '\n'))
+	return errors.Join(err, file.Close())
 }

@@ -27,6 +27,12 @@ type OwnerNotFoundError struct{ Owner string }
 
 func (e *OwnerNotFoundError) Error() string { return "owner not found: " + e.Owner }
 
+// OwnerChatClosedError means the owner never wrote to the account, so the
+// account cannot write to the owner.
+type OwnerChatClosedError struct{ Owner string }
+
+func (e *OwnerChatClosedError) Error() string { return "cannot write to the owner: " + e.Owner }
+
 // Lookup finds the watched chats and the owner, waiting whenever Telegram
 // asks to.
 type Lookup struct {
@@ -41,7 +47,7 @@ func (l *Lookup) Find(ctx context.Context, chats []string, owner string) (map[st
 	var missing []MissingChat
 	found := map[string]ChatInfo{}
 	for _, chat := range chats {
-		info, err := retry(ctx, l, func() (ChatInfo, error) { return l.Client.ResolveChat(ctx, chat) })
+		info, err := Retry(ctx, l.Waiting, l.Sleep, func() (ChatInfo, error) { return l.Client.ResolveChat(ctx, chat) })
 		if err != nil {
 			return nil, err
 		}
@@ -58,12 +64,16 @@ func (l *Lookup) Find(ctx context.Context, chats []string, owner string) (map[st
 	if len(missing) > 0 {
 		chatsErr = &ChatsNotFoundError{Chats: missing}
 	}
-	ownerFound, err := retry(ctx, l, func() (bool, error) { return l.Client.FindOwner(ctx, owner) })
+	ownerState, err := Retry(ctx, l.Waiting, l.Sleep, func() (OwnerState, error) { return l.Client.FindOwner(ctx, owner) })
 	if err != nil {
 		return nil, err
 	}
-	if !ownerFound {
+	switch ownerState {
+	case OwnerMissing:
 		ownerErr = &OwnerNotFoundError{Owner: owner}
+	case OwnerNoChat:
+		ownerErr = &OwnerChatClosedError{Owner: owner}
+	case OwnerReady:
 	}
 	if err := errors.Join(chatsErr, ownerErr); err != nil {
 		return nil, err
@@ -71,16 +81,18 @@ func (l *Lookup) Find(ctx context.Context, chats []string, owner string) (map[st
 	return found, nil
 }
 
-// retry repeats call after every FLOOD_WAIT, reporting and sleeping the wait.
-func retry[T any](ctx context.Context, l *Lookup, call func() (T, error)) (T, error) {
+// Retry repeats call after every FLOOD_WAIT, reporting the wait to waiting
+// and sleeping it, with no upper limit; any other result is returned.
+func Retry[T any](ctx context.Context, waiting func(time.Duration),
+	sleep func(context.Context, time.Duration) error, call func() (T, error)) (T, error) {
 	for {
 		value, err := call()
 		var flood *FloodWait
 		if !errors.As(err, &flood) {
 			return value, err
 		}
-		l.Waiting(flood.Wait)
-		if err := l.Sleep(ctx, flood.Wait); err != nil {
+		waiting(flood.Wait)
+		if err := sleep(ctx, flood.Wait); err != nil {
 			return value, err
 		}
 	}

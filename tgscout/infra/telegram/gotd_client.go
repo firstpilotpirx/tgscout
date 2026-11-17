@@ -2,9 +2,13 @@ package telegram
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
@@ -27,6 +31,8 @@ type gotdClient struct {
 	client  *telegram.Client
 	gaps    *updates.Manager
 	updates *updateSink
+	mu      sync.Mutex
+	owners  map[string]*tg.InputPeerUser // the found owner's peer, by config text
 }
 
 func newGotdClient(cfg Config) *gotdClient {
@@ -38,6 +44,7 @@ func newGotdClient(cfg Config) *gotdClient {
 		client:  telegram.NewClient(cfg.APIID, cfg.APIHash, telegram.Options{SessionStorage: cfg.Storage, UpdateHandler: gaps}),
 		gaps:    gaps,
 		updates: sink,
+		owners:  map[string]*tg.InputPeerUser{},
 	}
 }
 
@@ -107,8 +114,8 @@ func (c *gotdClient) Self(ctx context.Context) (Account, error) {
 
 func (c *gotdClient) ResolveChat(ctx context.Context, ref string) (ChatInfo, error) {
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
-		state, err := c.dialogState(ctx, ref)
-		return ChatInfo{State: state, ID: bareChatID(ref)}, err
+		state, title, err := c.dialogState(ctx, ref)
+		return ChatInfo{State: state, ID: bareChatID(ref), Title: title}, err
 	}
 	resolved, err := c.resolve(ctx, ref)
 	if err != nil || resolved == nil {
@@ -122,9 +129,9 @@ func chatInfo(resolved *tg.ContactsResolvedPeer) ChatInfo {
 	for _, chat := range resolved.Chats {
 		switch chat := chat.(type) {
 		case *tg.Channel:
-			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Username: chat.Username}
+			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Username: chat.Username, Title: chat.Title}
 		case *tg.Chat:
-			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID}
+			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Title: chat.Title}
 		}
 	}
 	return ChatInfo{}
@@ -136,29 +143,105 @@ func bareChatID(ref string) int64 {
 	return id
 }
 
-func (c *gotdClient) FindOwner(ctx context.Context, owner string) (bool, error) {
+// FindOwner finds the owner's user and keeps its peer for SendToOwner, then
+// asks whether the account has a private chat with the owner.
+func (c *gotdClient) FindOwner(ctx context.Context, owner string) (OwnerState, error) {
+	peer, err := c.ownerPeer(ctx, owner)
+	if err != nil || peer == nil {
+		return OwnerMissing, err
+	}
+	c.mu.Lock()
+	c.owners[owner] = peer
+	c.mu.Unlock()
+	open, err := c.chatOpen(ctx, peer)
+	if err != nil || !open {
+		return OwnerNoChat, err
+	}
+	return OwnerReady, nil
+}
+
+// SendToOwner sends one plain message, link previews off, to the kept owner peer.
+func (c *gotdClient) SendToOwner(ctx context.Context, owner, text string) error {
+	c.mu.Lock()
+	peer := c.owners[owner]
+	c.mu.Unlock()
+	if peer == nil {
+		state, err := c.FindOwner(ctx, owner)
+		if err != nil {
+			return err
+		}
+		if state == OwnerMissing {
+			return &OwnerNotFoundError{Owner: owner}
+		}
+		c.mu.Lock()
+		peer = c.owners[owner]
+		c.mu.Unlock()
+	}
+	var random [8]byte
+	if _, err := rand.Read(random[:]); err != nil {
+		return fmt.Errorf("random message ID: %w", err)
+	}
+	_, err := c.client.API().MessagesSendMessage(ctx, &tg.MessagesSendMessageRequest{
+		Peer: peer, Message: text, NoWebpage: true, RandomID: int64(binary.LittleEndian.Uint64(random[:])), //nolint:gosec // G115: any 64 bits make a random ID
+	})
+	return mapError(err)
+}
+
+// ownerPeer finds the owner's user: a username through Telegram, a numeric ID
+// among the contacts; nil when not found.
+func (c *gotdClient) ownerPeer(ctx context.Context, owner string) (*tg.InputPeerUser, error) {
 	if strings.HasPrefix(owner, "@") {
 		resolved, err := c.resolve(ctx, owner)
-		return resolved != nil && len(resolved.Users) > 0, err
+		if err != nil || resolved == nil {
+			return nil, err
+		}
+		return firstUserPeer(resolved.Users, 0), nil
 	}
 	id, err := strconv.ParseInt(owner, 10, 64)
 	if err != nil {
-		return false, nil
+		return nil, nil
 	}
 	contacts, err := c.client.API().ContactsGetContacts(ctx, 0)
 	if err != nil {
-		return false, mapError(err)
+		return nil, mapError(err)
 	}
 	list, ok := contacts.(*tg.ContactsContacts)
 	if !ok {
-		return false, nil
+		return nil, nil
 	}
-	for _, user := range list.Users {
-		if user, ok := user.(*tg.User); ok && user.ID == id {
-			return true, nil
+	return firstUserPeer(list.Users, id), nil
+}
+
+// firstUserPeer is the peer of the user with the ID, or of the first user when id is 0.
+func firstUserPeer(users []tg.UserClass, id int64) *tg.InputPeerUser {
+	for _, user := range users {
+		if user, ok := user.(*tg.User); ok && (id == 0 || user.ID == id) {
+			return &tg.InputPeerUser{UserID: user.ID, AccessHash: user.AccessHash}
 		}
 	}
-	return false, nil
+	return nil
+}
+
+// chatOpen tells whether the account has a private chat with the user that
+// holds a message: a user who never wrote has none.
+func (c *gotdClient) chatOpen(ctx context.Context, peer *tg.InputPeerUser) (bool, error) {
+	dialogs, err := c.client.API().MessagesGetPeerDialogs(ctx, []tg.InputDialogPeerClass{&tg.InputDialogPeer{Peer: peer}})
+	if tgerr.Is(err, "PEER_ID_INVALID") {
+		return false, nil
+	}
+	if err != nil {
+		return false, mapError(err)
+	}
+	return hasTopMessage(dialogs.Dialogs), nil
+}
+
+func hasTopMessage(dialogs []tg.DialogClass) bool {
+	for _, dialog := range dialogs {
+		if dialog, ok := dialog.(*tg.Dialog); ok && dialog.TopMessage != 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // resolve finds a username; a name nobody holds gives nil.
@@ -175,21 +258,37 @@ func (c *gotdClient) resolve(ctx context.Context, ref string) (*tg.ContactsResol
 }
 
 // dialogState looks a numeric chat ID up among the account's dialogs: a chat
-// the account is in is one of them.
-func (c *gotdClient) dialogState(ctx context.Context, ref string) (ChatState, error) {
+// the account is in is one of them; its title comes from the dialog's entities.
+func (c *gotdClient) dialogState(ctx context.Context, ref string) (ChatState, string, error) {
 	want := strings.TrimPrefix(strings.TrimPrefix(ref, "-100"), "-")
 	errFound := errors.New("found")
+	title := ""
 	err := dialogs.NewQueryBuilder(c.client.API()).GetDialogs().BatchSize(100).ForEach(ctx,
 		func(_ context.Context, elem dialogs.Elem) error {
 			if peerID(elem.Peer) == want {
+				title = dialogTitle(elem)
 				return errFound
 			}
 			return nil
 		})
 	if errors.Is(err, errFound) {
-		return ChatJoined, nil
+		return ChatJoined, title, nil
 	}
-	return ChatMissing, mapError(err)
+	return ChatMissing, "", mapError(err)
+}
+
+func dialogTitle(elem dialogs.Elem) string {
+	switch peer := elem.Peer.(type) {
+	case *tg.InputPeerChannel:
+		if channel, ok := elem.Entities.Channel(peer.ChannelID); ok {
+			return channel.Title
+		}
+	case *tg.InputPeerChat:
+		if chat, ok := elem.Entities.Chat(peer.ChatID); ok {
+			return chat.Title
+		}
+	}
+	return ""
 }
 
 func peerID(peer tg.InputPeerClass) string {

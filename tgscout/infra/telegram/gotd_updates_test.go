@@ -54,7 +54,22 @@ func TestBareChatIDDropsTheMinusPrefixes(t *testing.T) {
 }
 
 func TestChannelInfoGivesTheIDAndTheUsername(t *testing.T) {
-	info := chatInfo(&tg.ContactsResolvedPeer{Chats: []tg.ChatClass{&tg.Channel{ID: 42, Username: "made_up_market"}}})
+	info := chatInfo(&tg.ContactsResolvedPeer{Chats: []tg.ChatClass{&tg.Channel{ID: 42, Username: "made_up_market",
+		Title: "Made-up market"}}})
 
-	assert.Equal(t, ChatInfo{State: ChatJoined, ID: 42, Username: "made_up_market"}, info)
+	assert.Equal(t, ChatInfo{State: ChatJoined, ID: 42, Username: "made_up_market", Title: "Made-up market"}, info)
+}
+
+func TestAPrivateChatIsOpenOnlyWithATopMessage(t *testing.T) {
+	assert.False(t, hasTopMessage(nil))
+	assert.False(t, hasTopMessage([]tg.DialogClass{&tg.Dialog{TopMessage: 0}}))
+	assert.True(t, hasTopMessage([]tg.DialogClass{&tg.Dialog{TopMessage: 17}}))
+}
+
+func TestFirstUserPeerKeepsTheAccessHash(t *testing.T) {
+	users := []tg.UserClass{&tg.User{ID: 5, AccessHash: 50}, &tg.User{ID: 6, AccessHash: 60}}
+
+	assert.Equal(t, &tg.InputPeerUser{UserID: 5, AccessHash: 50}, firstUserPeer(users, 0))
+	assert.Equal(t, &tg.InputPeerUser{UserID: 6, AccessHash: 60}, firstUserPeer(users, 6))
+	assert.Nil(t, firstUserPeer(users, 7))
 }

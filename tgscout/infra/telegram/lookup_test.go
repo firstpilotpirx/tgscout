@@ -24,7 +24,7 @@ func newTestLookup(client Client) (*Lookup, *[]time.Duration, *[]time.Duration) 
 
 func TestLookupFindsEveryChatAndTheOwner(t *testing.T) {
 	client := &stubClient{chats: map[string]ChatState{"@made_up_market": ChatJoined, "-1001": ChatJoined},
-		contacts: map[string]bool{"@made_up_owner": true}}
+		owners: map[string]OwnerState{"@made_up_owner": OwnerReady}}
 	lookup, _, _ := newTestLookup(client)
 
 	found, err := lookup.Find(context.Background(), []string{"@made_up_market", "-1001"}, "@made_up_owner")
@@ -37,7 +37,7 @@ func TestLookupFindsEveryChatAndTheOwner(t *testing.T) {
 
 func TestLookupListsEveryChatNotFound(t *testing.T) {
 	client := &stubClient{chats: map[string]ChatState{"@made_up_market": ChatJoined, "@made_up_river": ChatNotJoined},
-		contacts: map[string]bool{"@made_up_owner": true}}
+		owners: map[string]OwnerState{"@made_up_owner": OwnerReady}}
 	lookup, _, _ := newTestLookup(client)
 
 	_, err := lookup.Find(context.Background(), []string{"@made_up_market", "@made_up_river", "@no_such_chat"},
@@ -64,8 +64,8 @@ func TestLookupSaysWhenTheOwnerIsNotFound(t *testing.T) {
 
 func TestLookupWaitsWhenTelegramAsksAndGoesOn(t *testing.T) {
 	client := &stubClient{chats: map[string]ChatState{"@made_up_market": ChatJoined},
-		contacts: map[string]bool{"@made_up_owner": true},
-		floods:   map[string]time.Duration{"@made_up_market": 12 * time.Second}}
+		owners: map[string]OwnerState{"@made_up_owner": OwnerReady},
+		floods: map[string]time.Duration{"@made_up_market": 12 * time.Second}}
 	lookup, reported, slept := newTestLookup(client)
 
 	_, err := lookup.Find(context.Background(), []string{"@made_up_market"}, "@made_up_owner")
@@ -73,4 +73,27 @@ func TestLookupWaitsWhenTelegramAsksAndGoesOn(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, []time.Duration{12 * time.Second}, *reported)
 	assert.Equal(t, []time.Duration{12 * time.Second}, *slept)
+}
+
+func TestLookupSaysWhenTheOwnersPrivateChatIsNotOpen(t *testing.T) {
+	client := &stubClient{chats: map[string]ChatState{"@made_up_market": ChatJoined},
+		owners: map[string]OwnerState{"@made_up_owner": OwnerNoChat}}
+	lookup, _, _ := newTestLookup(client)
+
+	_, err := lookup.Find(context.Background(), []string{"@made_up_market"}, "@made_up_owner")
+
+	var closed *OwnerChatClosedError
+	require.True(t, errors.As(err, &closed))
+	assert.Equal(t, "@made_up_owner", closed.Owner)
+}
+
+func TestLookupGivesTheChatTitle(t *testing.T) {
+	client := &stubClient{chats: map[string]ChatState{"@made_up_market": ChatJoined},
+		owners: map[string]OwnerState{"@made_up_owner": OwnerReady}}
+	lookup, _, _ := newTestLookup(client)
+
+	found, err := lookup.Find(context.Background(), []string{"@made_up_market"}, "@made_up_owner")
+
+	require.NoError(t, err)
+	assert.Equal(t, "Made-up title of made_up_market", found["@made_up_market"].Title)
 }
