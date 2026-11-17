@@ -20,7 +20,7 @@ Design pages this slice implements:
 
 Current stage: PoC. Target stage: MVP.
 Scope: the Telegram notifier, the message format, send-then-mark order, FLOOD_WAIT handling, writing only to the owner.
-Acceptance bar: the scenarios below pass as slice tests with a faked Telegram send; a manual run with real accounts brings a match for a made-up message to the owner's Telegram within seconds.
+Acceptance bar: the scenarios below pass as slice and E2E tests with a faked Telegram send; a manual run with real accounts brings a match for a made-up message to the owner's Telegram within seconds.
 Out of scope: owner feedback (👍/👎) and commands (later, not now); a summary message of catch-up (`catch-up`); retries of a long outage and crash tests (`delivery-resilience`).
 Interface: Telegram private chat (the owner's own account) and the console.
 
@@ -58,6 +58,11 @@ Interface: Telegram private chat (the owner's own account) and the console.
 
 - `owner-notification`: sending each match to the owner as a private Telegram message and to the console, with the send confirmed before the message counts as processed.
 
+### Modified Capabilities
+
+- `message-matching`: a «yes» is sent to the owner, not only shown; the processed mark waits for the confirmed send; an edit is judged again where no «yes» was sent.
+- `telegram-session`: the owner lookup also checks that the private chat with the owner is open.
+
 ## Impact
 
 - New: `adapters/secondary/notify/telegram`.
@@ -65,9 +70,15 @@ Interface: Telegram private chat (the owner's own account) and the console.
 
 ## Open points
 
-- The owner never wrote to tgscout's account first: Telegram may limit messages to a stranger. Proposed: the README asks the owner to write «hi» to tgscout's account once and add it to contacts; at start tgscout checks it can open the private chat and stops with a clear error if not.
-- Length limit: proposed — shorten the text to 1,000 characters with «…», the link always kept.
-- Link for a private chat with no username: proposed — the `t.me/c/<id>/<msg>` form, which works for members.
+Settled by the preparation:
+
+- The owner never wrote to tgscout's account: the README asks the owner to write «hi» to tgscout's account once and add it to contacts; at start tgscout checks the private chat with the owner is open and stops with «cannot write to the owner» if not.
+- Length limit: the message text is cut to 1,000 characters with «…»; the link is always kept.
+- Link for a chat with no username: the `t.me/c/<id>/<msg>` form.
+- The private message names the request by its id and its text.
+- FLOOD_WAIT: wait as long as Telegram says, no cap, then send again.
+- The console shows the same text as the private message, under the match line.
+- No «tgscout started» message.
 
 ## Release
 
