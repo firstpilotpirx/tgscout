@@ -36,6 +36,20 @@ func (t *MessageTracker) Finish(key MessageKey) (int, bool) {
 	return t.cursor(key.ChatID).Finish(key.MessageID)
 }
 
+// Hold stops the chat's cursor from moving while its history is caught up.
+func (t *MessageTracker) Hold(chatID int64) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.cursor(chatID).Hold()
+}
+
+// Release lets the chat's cursor move again and returns it and whether it moved.
+func (t *MessageTracker) Release(chatID int64) (int, bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.cursor(chatID).Release()
+}
+
 // Fail keeps a message in flight for the rest of the run.
 func (t *MessageTracker) Fail(key MessageKey) {
 	t.mu.Lock()

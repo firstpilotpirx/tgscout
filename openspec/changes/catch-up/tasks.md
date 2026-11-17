@@ -1,8 +1,8 @@
 ## 1. Domain
 
-- [ ] 1.1 Red: unit tests for `Settings.CatchUpWindow` (larger messages and days over two requests) and `Settings.CoveringRequests` (rank and days per request; none covers); `CatchUpTally` (expect, settle with matches and a failure, an unexpected key ignored, `Wait` returns once all settled and on ctx end, counts); `Cursor.Hold`/`Release` and `MessageTracker.Hold`/`Release` (a live finish while held does not move; release moves up to the lowest in-flight message)
-- [ ] 1.2 Green: `core/domain/catch_up.go`, `catch_up_tally.go`, the hold in `cursor.go` and `message_tracker.go`
-- [ ] 1.3 Commit (`kit ship`)
+- [x] 1.1 Red: unit tests for `Settings.CatchUpWindow` (larger messages and days over two requests) and `Settings.CoveringRequests` (rank and days per request; none covers); `CatchUpTally` (expect, settle with matches and a failure, an unexpected key ignored, `Wait` returns once all settled and on ctx end, counts); `Cursor.Hold`/`Release` and `MessageTracker.Hold`/`Release` (a live finish while held does not move; release moves up to the lowest in-flight message)
+- [x] 1.2 Green: `core/domain/catch_up.go`, `catch_up_tally.go`, the hold in `cursor.go` and `message_tracker.go`
+- [x] 1.3 Commit (`kit ship`)
 
 ## 2. Use cases and repository
 

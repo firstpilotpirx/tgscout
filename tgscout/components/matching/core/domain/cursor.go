@@ -2,9 +2,11 @@ package domain
 
 // Cursor is the position of one chat in memory: the highest message ID below
 // which every begun message is finished. It never moves back and never
-// passes a message that is begun and not finished.
+// passes a message that is begun and not finished. A held cursor records
+// finished messages but does not move until it is released.
 type Cursor struct {
 	position int
+	held     bool
 	inFlight map[int]bool
 	finished map[int]bool
 }
@@ -21,6 +23,22 @@ func (c *Cursor) Begin(id int) { c.inFlight[id] = true }
 func (c *Cursor) Finish(id int) (int, bool) {
 	delete(c.inFlight, id)
 	c.finished[id] = true
+	if c.held {
+		return c.position, false
+	}
+	return c.advance()
+}
+
+// Hold stops the cursor from moving until Release.
+func (c *Cursor) Hold() { c.held = true }
+
+// Release lets the cursor move again and moves it as far as it may now go.
+func (c *Cursor) Release() (int, bool) {
+	c.held = false
+	return c.advance()
+}
+
+func (c *Cursor) advance() (int, bool) {
 	lowestInFlight, blocked := c.lowestInFlight()
 	next := c.position
 	for finished := range c.finished {
