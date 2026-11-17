@@ -13,8 +13,8 @@ Design pages this slice implements:
 - Each match line shows its latency: from the message's time in the chat to the confirmed send to the owner.
 - Every `status_interval` (a new root setting in `tgscout.yaml`, default `5m`, at least `10s`), and at stop, the console shows one status line: messages in, judged, matches, queue length, p95 latency and p95 LLM call time over the last interval (the stop line covers the whole run), each p95 marked against its target; a warning when the queue length grew in 3 status lines in a row (the local model cannot keep up).
 - The catch-up summary shows its time against the 15-minute target.
-- A load test in `e2e/` with a fake Telegram and a fake LLM answering in 0.5 s with 4 workers runs 100 chats and a peak burst of 10 messages per second for 10 s inside a day's flow, and checks p95 ≤ 10 s from message to send; the day's 5,000 messages run with time scaled down.
-- A catch-up test runs 100 chats × 500 messages with time scaled 60 times (15 minutes → 15 s, the fake LLM's answer time scaled the same way) and checks the summary comes within the scaled 15 minutes.
+- A load test in `e2e/` with a fake Telegram and a fake LLM answering in 0.5 s with 4 workers runs 100 chats and a peak burst of 10 messages per second for 10 s inside a day's flow, and checks p95 ≤ 10 s from message to send; the day's flow runs at its average rate (5,000 a day) scaled up 20 times, 10 s before and 10 s after the peak.
+- A catch-up test runs 100 chats × 500 messages with time scaled 60 times (15 minutes → 15 s; the fake LLM answers at once, so the test proves tgscout's own work fits) and checks the summary comes within the scaled 15 minutes.
 - A size test fills the store with 100,000 made-up decisions, measures bytes per row and projects a year (5,000 messages a day × the requests of their chats) under 10 GB.
 - Privacy: at start tgscout warns (and keeps running) when the host of `lm_studio.url` is not `localhost`, `127.0.0.1` or `::1` (chat texts would leave it); the session file mode 600 check from `telegram-sign-in` stays; no message text goes into logs beyond the console match line.
 - `README.md` gets a short «Targets» section: what the numbers are, how to read the status line, and the real-model condition: p95 ≤ 10 s needs a model that answers within about 2 s, and with a local model the 15-minute catch-up holds only for about 2,000 judged messages.
@@ -64,6 +64,10 @@ Interface: CLI — the status line, latency on match lines, the catch-up target 
 
 - `quality-targets`: the version 1 targets made visible on the console and proven by load, catch-up and size tests.
 
+### Modified Capabilities
+
+- `settings`: the new root key `status_interval` (default 5 minutes, at least 10 seconds) and its check.
+
 ## Impact
 
 - New: metrics in the core (latency, queue length), the status line printer, `e2e/` load, catch-up and size tests.
@@ -79,6 +83,13 @@ Interface: CLI — the status line, latency on match lines, the catch-up target 
 - «Model is behind»: the queue grew in 3 status lines in a row.
 - Size test: a 100,000-row sample projected to a year.
 - Version: 0.8.0; 1.0.0 comes later, after the owner's manual run.
+
+## Decided by the prepared run
+
+- The mock's content (latency, status block, behind warning, target marks, start warning, stop status) is kept in the console's existing style: status marks and indented detail lines, no clock time or INFO/WARN prefix, so every line stays like the lines before it.
+- The day's flow of the load test: its average rate (5,000 a day) scaled up 20 times, played 10 s before and 10 s after the peak; the full 5,000 messages cannot pass a 0.5 s LLM with 4 workers in under a minute (at least 625 s).
+- The made-up LLM of the catch-up test answers at once: 0.5 s scaled 60 times would still need over 100 s for 50,000 calls; the test proves tgscout's own work for 50,000 messages fits the scaled 15 s, and the README states the real-model limit.
+- Size projection: bytes per judged message with one decision, times 10 requests per message (a bound above the real mix), times 5,000 a day for a year.
 
 ## Release
 
