@@ -141,8 +141,11 @@ func catchUpConsoleThenSteps(sc *godog.ScenarioContext, w *world) {
 			"  [ok] messages   3 read · 0 skipped · 3 judged\n",
 			"  [run] matches    0  (sent to you in Telegram)\n", "  [ok] errors     0\n")
 	})
-	sc.Step(`^the summary counts the failed messages as errors$`, func() error {
-		return w.stdoutHas("  [fail] errors     1  (not marked processed; judged again at next start)\n")
+	sc.Step(`^the console shows no summary while LM Studio is away$`, func() error {
+		if strings.Contains(w.run.stdout.String(), "catch-up done") {
+			return fmt.Errorf("a summary while LM Studio was away; stdout:\n%s", w.run.stdout.String())
+		}
+		return w.stderrHas(llmDownLine)
 	})
 	sc.Step(`^those messages are not marked processed$`, func() error { return w.processed(false) })
 }

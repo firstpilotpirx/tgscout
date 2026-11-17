@@ -12,6 +12,14 @@ workers: 2
 # tgscout waits before it takes more messages from Telegram; none is dropped.
 queue_size: 1000
 
+# Longest pause between two tries of LM Studio or of a send to you (default
+# 60s). Pauses start at 1s and double; no message is dropped while it waits.
+retry_max_pause: 60s
+
+# How long Ctrl+C waits for the messages in work before tgscout stops
+# (default 10s). A second Ctrl+C stops at once.
+stop_grace: 10s
+
 # LM Studio, through its OpenAI-compatible API.
 lm_studio:
   url: http://localhost:1234/v1   # default

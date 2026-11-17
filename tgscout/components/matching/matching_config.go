@@ -16,6 +16,8 @@ type Ports struct {
 	Queue    application.MessageQueue
 	Llm      application.Llm
 	Notifier application.Notifier
+	// Delivery is how judging and sending retry: the pauses, the sleep, the reports.
+	Delivery application.Delivery
 }
 
 // MatchingConfig holds the wired use cases of the component.
@@ -33,7 +35,7 @@ func NewMatchingConfig(ports Ports) *MatchingConfig {
 	collect := application.NewCollectMessage(ports.Settings, ports.Messages, ports.Queue, tracker)
 	return &MatchingConfig{
 		CollectMessage: collect,
-		MatchMessage:   application.NewMatchMessage(ports.Messages, ports.Llm, ports.Notifier, tracker),
+		MatchMessage:   application.NewMatchMessage(ports.Messages, ports.Llm, ports.Notifier, tracker, ports.Delivery),
 		CatchUp:        application.NewCatchUp(ports.Settings, ports.Messages, collect, tracker, time.Now),
 	}
 }

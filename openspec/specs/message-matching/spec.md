@@ -93,7 +93,7 @@ For each request asked, tgscout SHALL save a decision with whether it matched an
 
 ### Requirement: Processed mark and cursor
 
-tgscout SHALL mark a message processed only after every request of its chat was decided and every «yes» was sent to the owner and confirmed by Telegram; then it SHALL move the chat's cursor, except while that chat is being caught up: then the cursor SHALL wait until every history message of the chat is handed to the judge. The cursor of a chat SHALL move only past messages that are all processed: with several messages judged at once and finishing out of order, it SHALL never pass a message that is not processed yet.
+tgscout SHALL mark a message processed only after every request of its chat was decided and every «yes» was sent to the owner and confirmed by Telegram; then it SHALL move the chat's cursor, except while that chat is being caught up, and while the connection to Telegram is away until the gap is read: then the cursor SHALL wait until every history message of the chat is handed to the judge. The cursor of a chat SHALL move only past messages that are all processed: with several messages judged at once and finishing out of order, it SHALL never pass a message that is not processed yet.
 
 #### Scenario: the cursor never passes an unprocessed message
 
@@ -103,13 +103,13 @@ tgscout SHALL mark a message processed only after every request of its chat was 
 
 ### Requirement: LLM failure
 
-When the LLM call fails (LM Studio down, an error answer, the timeout), tgscout SHALL print an error line that names the chat and the message, leave the message unprocessed, keep the cursor from moving past it, and go on with the next messages.
+When the LLM call fails (LM Studio down, an error answer, the timeout), tgscout SHALL try it again as the delivery capability's LLM retries say. While the message waits for a retry, it SHALL stay unprocessed, its chat's cursor SHALL not move past it, and the other workers SHALL go on with the next messages.
 
 #### Scenario: LM Studio is down
 
 - **GIVEN** LM Studio does not answer
 - **WHEN** a new message appears in a watched chat
-- **THEN** the console shows an error line
+- **THEN** the console shows a line that LM Studio is not answering
 - **AND** the message is not marked processed and the cursor does not move past it
 
 ### Requirement: Edited messages

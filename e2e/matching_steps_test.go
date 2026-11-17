@@ -33,6 +33,10 @@ type matchingWorld struct {
 	lm       *fakeLmStudio
 	runs     []*process // every start of the scenario, in order
 	chats    []string   // the watched chats of every request; the market when empty
+	workers  int        // 2 when zero
+	extra    string     // more root lines of the config: queue_size, stop_grace, retry_max_pause
+	until    func() bool
+	before   int // LM Studio calls before a restart
 }
 
 func matchingSteps(sc *godog.ScenarioContext, w *world) {
@@ -157,9 +161,8 @@ func consoleThenSteps(sc *godog.ScenarioContext, w *world) {
 			"\n  https://t.me/made_up_market/4211\n  "+bikeText+"\n")
 	})
 	sc.Step(`^the console shows no match line$`, func() error { return w.matchLines("", 0) })
-	sc.Step(`^the console shows an error line$`, func() error {
-		return w.allStderrHas("[fail] LLM failed on @made_up_market/4211: "+w.lmStudio().url()+" answered 503",
-			"the message stays unprocessed; is LM Studio running?")
+	sc.Step(`^the console shows a line that LM Studio is not answering$`, func() error {
+		return w.allStderrHas("[warn] LM Studio is not answering · retry in 1s, 2s, 4s … up to 60s · messages wait in the queue\n")
 	})
 }
 
@@ -193,8 +196,12 @@ func (w *world) request(id, find string) {
 // matchingConfig is the made-up config of the scenario's requests, all on one chat.
 func (w *world) matchingConfig() string {
 	var text strings.Builder
-	fmt.Fprintf(&text, "owner: '@made_up_owner'\nworkers: 2\nlm_studio:\n  url: %s\n  model: example-model\n  timeout: 5s\nrequests:\n",
-		w.lmStudio().url())
+	workers := w.matching.workers
+	if workers == 0 {
+		workers = 2
+	}
+	fmt.Fprintf(&text, "owner: '@made_up_owner'\nworkers: %d\n%slm_studio:\n  url: %s\n  model: example-model\n  timeout: 5s\nrequests:\n",
+		workers, w.matching.extra, w.lmStudio().url())
 	chats := w.matching.chats
 	if len(chats) == 0 {
 		chats = []string{market}
@@ -205,9 +212,9 @@ func (w *world) matchingConfig() string {
 	return text.String()
 }
 
-// runToIdle starts tgscout over the scenario's database, waits until every
-// update was played and judged, then stops it.
-func (w *world) runToIdle() error {
+// startMatching starts tgscout over the scenario's config and database and
+// leaves it running.
+func (w *world) startMatching() error {
 	if err := w.writeConfig(w.matchingConfig()); err != nil {
 		return err
 	}
@@ -215,6 +222,15 @@ func (w *world) runToIdle() error {
 		return err
 	}
 	w.matching.runs = append(w.matching.runs, w.run)
+	return nil
+}
+
+// runToIdle starts tgscout over the scenario's database, waits until every
+// update was played and judged (and the scenario's until holds), then stops it.
+func (w *world) runToIdle() error {
+	if err := w.startMatching(); err != nil {
+		return err
+	}
 	last := w.tg.fake.HistoryDelayMs + w.tg.fake.HistoryFlood*1000 // the history read before it settles
 	updates := 0
 	for _, each := range w.tg.fake.Updates {
@@ -222,26 +238,15 @@ func (w *world) runToIdle() error {
 	}
 	last = max(last, updates)
 	time.Sleep(time.Duration(last) * time.Millisecond)
+	if w.matching.until != nil {
+		if err := w.eventually("the scenario's condition", w.matching.until); err != nil {
+			return err
+		}
+	}
 	if err := w.waitIdle(); err != nil {
 		return err
 	}
 	return w.run.signal(syscall.SIGINT)
-}
-
-// waitIdle waits until the LLM calls and the console stay the same for idleFor.
-func (w *world) waitIdle() error {
-	deadline := time.Now().Add(waitLimit)
-	seen, since := "", time.Now()
-	for time.Now().Before(deadline) {
-		now := fmt.Sprintf("%d|%s", len(w.lmStudio().allCalls()), w.run.output())
-		if now != seen {
-			seen, since = now, time.Now()
-		} else if time.Since(since) >= idleFor {
-			return nil
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
-	return fmt.Errorf("tgscout never settled in %s; output: %s", waitLimit, w.run.output())
 }
 
 func (w *world) askedTimes(find string, want int) error {
@@ -259,35 +264,6 @@ func (w *world) textsApart() error {
 		if each.Request != lampFind || each.Message != "Desk lamp, clamp mount, 10 €" {
 			return fmt.Errorf("the call holds %q", each.Original)
 		}
-	}
-	return nil
-}
-
-func (w *world) allOut(stderr bool) string {
-	var text strings.Builder
-	for _, run := range w.matching.runs {
-		if stderr {
-			text.WriteString(run.stderr.String())
-		} else {
-			text.WriteString(run.stdout.String())
-		}
-	}
-	return text.String()
-}
-
-func (w *world) allStdoutHas(want ...string) error { return has("stdout", w.allOut(false), want) }
-func (w *world) allStderrHas(want ...string) error { return has("stderr", w.allOut(true), want) }
-
-// matchLines checks how many match lines of a request (any, when empty) every run printed.
-func (w *world) matchLines(request string, want int) error {
-	got := 0
-	for _, line := range strings.Split(w.allOut(false), "\n") {
-		if strings.HasPrefix(line, "[ok] match sent  ") && strings.Contains(line, "  "+request) {
-			got++
-		}
-	}
-	if got != want {
-		return fmt.Errorf("%d match lines of %q, want %d; stdout:\n%s", got, request, want, w.allOut(false))
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -108,14 +109,18 @@ func (c *OpenAiLlmClient) ask(ctx context.Context, system, user string) (string,
 	}
 	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return "", fmt.Errorf("%s answered %s", c.base, response.Status)
+		text := fmt.Sprintf("%s answered %s", c.base, response.Status)
+		if response.StatusCode >= 400 && response.StatusCode < 500 {
+			return "", &rejectedError{text: text}
+		}
+		return "", errors.New(text)
 	}
 	var completion completionResponse
 	if err := json.NewDecoder(response.Body).Decode(&completion); err != nil {
-		return "", fmt.Errorf("read the LLM answer: %w", err)
+		return "", &rejectedError{text: "read the LLM answer: " + err.Error(), cause: err}
 	}
 	if len(completion.Choices) == 0 {
-		return "", fmt.Errorf("the LLM answer holds no choice")
+		return "", &rejectedError{text: "the LLM answer holds no choice"}
 	}
 	return completion.Choices[0].Message.Content, nil
 }

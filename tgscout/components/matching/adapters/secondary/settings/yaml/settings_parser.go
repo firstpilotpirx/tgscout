@@ -20,6 +20,10 @@ const (
 	DefaultQueueSize = 1000
 	DefaultURL       = "http://localhost:1234/v1"
 	DefaultTimeout   = 60 * time.Second
+	// DefaultRetryMaxPause is the longest pause between two tries.
+	DefaultRetryMaxPause = 60 * time.Second
+	// DefaultStopGrace is how long a stop waits for the messages in work.
+	DefaultStopGrace = 10 * time.Second
 	// MaxChats is the design maximum of distinct chats; more gives a warning.
 	MaxChats = 100
 )
@@ -61,18 +65,26 @@ func (w *walker) root(body ast.Node) domain.Settings {
 	if isNull(body) {
 		body = &ast.MappingNode{BaseNode: &ast.BaseNode{}}
 	}
-	found, ok := w.fields(body, "", "owner", "workers", "queue_size", "lm_studio", "catch_up", "requests")
+	found, ok := w.fields(body, "", "owner", "workers", "queue_size", "retry_max_pause", "stop_grace", "lm_studio", "catch_up", "requests")
 	if !ok {
 		return domain.Settings{}
 	}
 	settings := domain.Settings{
-		Owner:     w.owner(found["owner"], lineOf(body)),
-		Workers:   DefaultWorkers,
-		QueueSize: DefaultQueueSize,
-		LmStudio:  w.lmStudio(found["lm_studio"], lineOf(body)),
+		Owner:         w.owner(found["owner"], lineOf(body)),
+		Workers:       DefaultWorkers,
+		QueueSize:     DefaultQueueSize,
+		RetryMaxPause: DefaultRetryMaxPause,
+		StopGrace:     DefaultStopGrace,
+		LmStudio:      w.lmStudio(found["lm_studio"], lineOf(body)),
 	}
 	if queueSize := found["queue_size"]; queueSize != nil {
 		settings.QueueSize, _ = w.number(queueSize.Value, "queue_size", 1)
+	}
+	if pause := found["retry_max_pause"]; pause != nil {
+		settings.RetryMaxPause, _ = w.duration(pause.Value, "retry_max_pause")
+	}
+	if grace := found["stop_grace"]; grace != nil {
+		settings.StopGrace, _ = w.duration(grace.Value, "stop_grace")
 	}
 	if workers := found["workers"]; workers != nil {
 		settings.Workers, _ = w.number(workers.Value, "workers", 1)

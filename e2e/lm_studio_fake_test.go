@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"sync"
+	"time"
 )
 
 // lmCall is one chat completion tgscout asked the fake LM Studio.
@@ -25,6 +26,7 @@ type fakeLmStudio struct {
 	calls   []lmCall
 	answers map[string]string // request text → answer; "" is the answer to any other
 	down    bool              // every call gets 503
+	delay   time.Duration     // each answer comes this late, or never when the caller leaves first
 }
 
 func newFakeLmStudio() *fakeLmStudio {
@@ -57,8 +59,15 @@ func (lm *fakeLmStudio) serve(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		answer = lm.answers[""]
 	}
-	down := lm.down
+	down, delay := lm.down, lm.delay
 	lm.mu.Unlock()
+	if delay > 0 {
+		select {
+		case <-time.After(delay):
+		case <-r.Context().Done():
+			return // tgscout gave the call up
+		}
+	}
 	if down {
 		http.Error(w, "made-up LM Studio is down", http.StatusServiceUnavailable)
 		return
@@ -67,6 +76,20 @@ func (lm *fakeLmStudio) serve(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{ // a lost answer fails the scenario on its own
 		"choices": []map[string]any{{"message": map[string]string{"role": "assistant", "content": answer}}},
 	})
+}
+
+// setDown makes LM Studio go away or come back while tgscout runs.
+func (lm *fakeLmStudio) setDown(down bool) {
+	lm.mu.Lock()
+	defer lm.mu.Unlock()
+	lm.down = down
+}
+
+// setDelay makes every later answer come this late.
+func (lm *fakeLmStudio) setDelay(delay time.Duration) {
+	lm.mu.Lock()
+	defer lm.mu.Unlock()
+	lm.delay = delay
 }
 
 // callsAbout gives the calls about one request text, in order.

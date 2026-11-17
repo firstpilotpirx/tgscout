@@ -83,9 +83,9 @@ func TestCollectQueuesAHistoryMessageWithTheRequestsThatCoverIt(t *testing.T) {
 	f := newCatchUp(t)
 	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
 
-	require.NoError(t, f.catchUp.Collect(context.Background(), chat, historyMessage(t, 1, 5*24*time.Hour), 50))
-	require.NoError(t, f.catchUp.Collect(context.Background(), chat, historyMessage(t, 2, time.Hour), 150))
-	require.NoError(t, f.catchUp.Collect(context.Background(), chat, historyMessage(t, 3, 5*24*time.Hour), 150))
+	f.collect(t, chat, historyMessage(t, 1, 5*24*time.Hour), 50)
+	f.collect(t, chat, historyMessage(t, 2, time.Hour), 150)
+	f.collect(t, chat, historyMessage(t, 3, 5*24*time.Hour), 150)
 
 	require.Len(t, f.queue.items, 2)
 	assert.Equal(t, []string{"week"}, requestIDs(f.queue.items[0]))
@@ -109,7 +109,7 @@ func TestCollectSkipsWhatNeedsNoJudgment(t *testing.T) {
 	blank.Text = " "
 
 	for _, each := range []domain.Message{historyMessage(t, 1, time.Hour), historyMessage(t, 2, time.Hour), blank} {
-		require.NoError(t, f.catchUp.Collect(context.Background(), chat, each, 1))
+		f.collect(t, chat, each, 1)
 	}
 
 	assert.Empty(t, f.queue.items)
@@ -121,9 +121,9 @@ func TestCollectSkipsWhatNeedsNoJudgment(t *testing.T) {
 func TestWaitGivesTheCountsOnceTheJudgeSettledEveryMessage(t *testing.T) {
 	f := newCatchUp(t)
 	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
-	require.NoError(t, f.catchUp.Collect(context.Background(), chat, historyMessage(t, 1, time.Hour), 1))
+	f.collect(t, chat, historyMessage(t, 1, time.Hour), 1)
 	match := application.NewMatchMessage(f.repository, &fakeLlm{answers: map[string]domain.Judgment{
-		"a kids bike": {Matched: true, Raw: "yes"}}}, &fakeNotifier{}, f.tracker)
+		"a kids bike": {Matched: true, Raw: "yes"}}}, &fakeNotifier{}, f.tracker, application.Delivery{})
 
 	_, err := match.Match(context.Background(), f.queue.items[0])
 	require.NoError(t, err)
@@ -138,17 +138,18 @@ func TestCollectCountsARepositoryErrorAsAnError(t *testing.T) {
 	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
 	f.repository.err = errBoom
 
-	err := f.catchUp.Collect(context.Background(), chat, historyMessage(t, 1, time.Hour), 1)
+	_, err := f.catchUp.Collect(context.Background(), chat, historyMessage(t, 1, time.Hour), 1)
 
 	assert.ErrorIs(t, err, errBoom)
 	counts, _ := f.catchUp.Wait(context.Background())
 	assert.Equal(t, 1, counts.Errors)
+	assert.Empty(t, f.repository.processed, "the failed message is not marked processed")
 }
 
 func TestTheCursorWaitsUntilTheChatIsClosed(t *testing.T) {
 	f := newCatchUp(t)
 	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
-	match := application.NewMatchMessage(f.repository, &fakeLlm{}, &fakeNotifier{}, f.tracker)
+	match := application.NewMatchMessage(f.repository, &fakeLlm{}, &fakeNotifier{}, f.tracker, application.Delivery{})
 	live := domain.QueueItem{Message: message(t, 50, "Selling a lamp"), Requests: depthRequests(t).Requests}
 	require.True(t, f.tracker.Begin(live.Message.Key))
 
@@ -163,8 +164,9 @@ func TestTheCursorWaitsUntilTheChatIsClosed(t *testing.T) {
 func TestMatchSettlesOnlyAnExpectedNewMessage(t *testing.T) {
 	f := newCatchUp(t)
 	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
-	require.NoError(t, f.catchUp.Collect(context.Background(), chat, historyMessage(t, 1, time.Hour), 1))
-	match := application.NewMatchMessage(f.repository, &fakeLlm{err: errBoom}, &fakeNotifier{}, f.tracker)
+	f.collect(t, chat, historyMessage(t, 1, time.Hour), 1)
+	match := application.NewMatchMessage(f.repository, &fakeLlm{}, &fakeNotifier{}, f.tracker, application.Delivery{})
+	f.repository.err = errBoom // a failed database read ends the judgment
 	edit := f.queue.items[0]
 	edit.Message.Edited = true
 
@@ -180,4 +182,38 @@ func TestMatchSettlesOnlyAnExpectedNewMessage(t *testing.T) {
 	counts, err := f.catchUp.Wait(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, 1, counts.Errors)
+}
+
+// collect hands one history message on and requires no error.
+func (f catchUpFixture) collect(t *testing.T, chat domain.CatchUpChat, message domain.Message, rank int) bool {
+	t.Helper()
+	handed, err := f.catchUp.Collect(context.Background(), chat, message, rank)
+	require.NoError(t, err)
+	return handed
+}
+
+func TestCollectSaysWhetherTheMessageWasHandedOn(t *testing.T) {
+	f := newCatchUp(t)
+	chat, _ := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
+	f.repository.processed[domain.MessageKey{ChatID: 7, MessageID: 2}] = true
+
+	assert.True(t, f.collect(t, chat, historyMessage(t, 1, time.Hour), 1))
+	assert.False(t, f.collect(t, chat, historyMessage(t, 2, time.Hour), 1), "a processed message is not handed on")
+}
+
+func TestPauseHoldsTheCursorOfEachChatUntilItIsReadAgain(t *testing.T) {
+	f := newCatchUp(t)
+	match := application.NewMatchMessage(f.repository, &fakeLlm{}, &fakeNotifier{}, f.tracker, application.Delivery{})
+	live := domain.QueueItem{Message: message(t, 50, "Selling a lamp"), Requests: depthRequests(t).Requests}
+	require.True(t, f.tracker.Begin(live.Message.Key))
+
+	f.catchUp.Pause([]int64{7})
+	_, err := match.Match(context.Background(), live)
+	require.NoError(t, err)
+	assert.Zero(t, f.repository.cursor[7], "the cursor waits while the connection is away")
+
+	chat, err := f.catchUp.Open(context.Background(), 7, ref(t, "@made_up_market"))
+	require.NoError(t, err)
+	require.NoError(t, f.catchUp.Close(context.Background(), chat))
+	assert.Equal(t, 50, f.repository.cursor[7])
 }

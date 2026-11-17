@@ -46,6 +46,9 @@ func (c *historyClient) ReadHistory(_ context.Context, chatID int64, window tele
 
 // recordingCatchUp records what the collector hands it.
 type recordingCatchUp struct {
+	mu        sync.Mutex
+	paused    []int64
+	skipped   map[int]bool // message IDs not handed on
 	opened    []int64
 	closed    []int64
 	collected []domain.Message
@@ -55,19 +58,31 @@ type recordingCatchUp struct {
 }
 
 func (r *recordingCatchUp) Open(_ context.Context, chatID int64, ref domain.ChatRef) (domain.CatchUpChat, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.opened = append(r.opened, chatID)
 	after := r.cursor[chatID]
 	return domain.CatchUpChat{ChatID: chatID, Ref: ref, After: after, HasCursor: after > 0,
 		Depth: domain.CatchUp{Messages: 500, Days: 3}, Start: time.Now()}, nil
 }
 
-func (r *recordingCatchUp) Collect(_ context.Context, _ domain.CatchUpChat, message domain.Message, rank int) error {
+func (r *recordingCatchUp) Collect(_ context.Context, _ domain.CatchUpChat, message domain.Message, rank int) (bool, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.collected = append(r.collected, message)
 	r.ranks = append(r.ranks, rank)
-	return nil
+	return !r.skipped[message.Key.MessageID], nil
+}
+
+func (r *recordingCatchUp) Pause(chatIDs []int64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.paused = append(r.paused, chatIDs...)
 }
 
 func (r *recordingCatchUp) Close(_ context.Context, chat domain.CatchUpChat) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.closed = append(r.closed, chat.ChatID)
 	return r.closeErr
 }
@@ -154,7 +169,7 @@ func TestHistoryCollectorWaitsOutAFloodWait(t *testing.T) {
 	require.Len(t, useCase.collected, 1)
 }
 
-func TestHistoryCollectorGoesOnAfterAFailedRead(t *testing.T) {
+func TestHistoryCollectorGoesOnAfterAFailedReadAndKeepsItsCursorHeld(t *testing.T) {
 	useCase := &recordingCatchUp{}
 	reports := &recordedReports{}
 	client := &historyClient{broken: map[int64]bool{42: true}, history: map[int64]telegram.History{
@@ -164,7 +179,7 @@ func TestHistoryCollectorGoesOnAfterAFailedRead(t *testing.T) {
 
 	require.NoError(t, collector.CatchUp(context.Background(), client, historyChats(t)))
 
-	assert.Equal(t, []int64{42, 1234567890}, useCase.closed)
+	assert.Equal(t, []int64{1234567890}, useCase.closed, "a chat whose read failed keeps its cursor held")
 	require.Len(t, reports.chats, 2)
 	require.ErrorIs(t, reports.chats[0].Err, errRead)
 	assert.Len(t, useCase.collected, 1)
@@ -192,4 +207,36 @@ func TestHistoryCollectorReportsAFailedClose(t *testing.T) {
 
 	require.Len(t, reports.chats, 1)
 	require.ErrorIs(t, reports.chats[0].Err, errRead, "the stored cursor was not saved")
+}
+
+func TestGapReadReadsEachChatFromItsCursorAndCountsWhatItHanded(t *testing.T) {
+	useCase := &recordingCatchUp{cursor: map[int64]int{42: 9}, skipped: map[int]bool{10: true}}
+	client := &historyClient{history: map[int64]telegram.History{
+		42: {Messages: []telegram.Update{
+			{ChatID: 42, MessageID: 10, Text: "processed before the drop"},
+			{ChatID: 42, MessageID: 11, Text: "posted during the drop"},
+		}},
+		1234567890: {Messages: []telegram.Update{{ChatID: 1234567890, MessageID: 5, Text: "street"}}},
+	}}
+	collector := collect.NewHistoryCollector(useCase, collect.HistoryReports{}, noSleep)
+
+	handed, failed := collector.GapRead(context.Background(), client, historyChats(t))
+
+	assert.Equal(t, 2, handed)
+	assert.Empty(t, failed)
+	assert.Equal(t, 9, client.windows[0].After)
+	assert.Equal(t, []int64{42, 1234567890}, useCase.closed)
+}
+
+func TestGapReadReportsAChatWhoseReadFailed(t *testing.T) {
+	useCase := &recordingCatchUp{}
+	client := &historyClient{broken: map[int64]bool{42: true}}
+	collector := collect.NewHistoryCollector(useCase, collect.HistoryReports{}, noSleep)
+
+	handed, failed := collector.GapRead(context.Background(), client, historyChats(t))
+
+	assert.Zero(t, handed)
+	require.Len(t, failed, 1)
+	require.ErrorIs(t, failed[0].Err, errRead)
+	assert.Equal(t, []int64{1234567890}, useCase.closed)
 }

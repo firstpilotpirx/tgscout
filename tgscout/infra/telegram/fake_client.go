@@ -36,6 +36,7 @@ type fakeScenario struct {
 	History          []fakeHistory     `json:"history"`
 	HistoryFlood     int               `json:"history_flood_wait_seconds"`
 	HistoryDelayMs   int               `json:"history_delay_ms"`
+	SendHangMs       int               `json:"send_hang_ms"`
 }
 
 // fakeHistory is a made-up message posted before the start; Chat is the
@@ -64,6 +65,12 @@ type fakeUpdate struct {
 	Edited  bool   `json:"edited"`
 	Private bool   `json:"private"`
 	AfterMs int    `json:"after_ms"`
+	// ConnectionLost and ConnectionBack play a drop of the connection and its return.
+	ConnectionLost bool `json:"connection_lost"`
+	ConnectionBack bool `json:"connection_back"`
+	// Lost is a message posted while the connection is away: never delivered
+	// live, served by the history from the moment it is played.
+	Lost bool `json:"lost"`
 }
 
 // info gives a chat its state and a made-up ID: a numeric reference keeps
@@ -115,6 +122,25 @@ type fakeClient struct {
 	sendMu      sync.Mutex
 	historyMu   sync.Mutex
 	histFlooded bool
+	lostHistory []fakeHistory
+	watchMu     sync.Mutex
+	watcher     func(ConnectionEvent)
+}
+
+// WatchConnection keeps f for the drops and returns the scenario plays.
+func (c *fakeClient) WatchConnection(f func(ConnectionEvent)) {
+	c.watchMu.Lock()
+	defer c.watchMu.Unlock()
+	c.watcher = f
+}
+
+func (c *fakeClient) connection(event ConnectionEvent) {
+	c.watchMu.Lock()
+	f := c.watcher
+	c.watchMu.Unlock()
+	if f != nil {
+		f(event)
+	}
 }
 
 // NewClient builds the made-up Telegram of the E2E build.
@@ -179,7 +205,20 @@ func (c *fakeClient) Listen(ctx context.Context, f func(context.Context, Update)
 		if err := SleepContext(ctx, time.Duration(update.AfterMs)*time.Millisecond); err != nil {
 			return err
 		}
-		if update.Private {
+		switch {
+		case update.ConnectionLost:
+			c.connection(ConnectionLost)
+			continue
+		case update.ConnectionBack:
+			c.connection(ConnectionBack)
+			continue
+		case update.Lost:
+			c.historyMu.Lock()
+			c.lostHistory = append(c.lostHistory, fakeHistory{Chat: update.Chat, ID: update.ID, Text: update.Text,
+				Service: update.Service})
+			c.historyMu.Unlock()
+			continue
+		case update.Private:
 			continue // as gotd's mapping: a private chat with a user is never an update
 		}
 		f(ctx, Update{ChatID: c.scenario.info(update.Chat).ID, MessageID: update.ID, Date: time.Now(),
@@ -200,8 +239,16 @@ func (c *fakeClient) FindOwner(_ context.Context, owner string) (OwnerState, err
 }
 
 // SendToOwner appends the send to the scenario's sent file; the workers send
-// at once, so the sends go one at a time.
-func (c *fakeClient) SendToOwner(_ context.Context, owner, text string) error {
+// at once, so the sends go one at a time. With send_hang_ms it waits after
+// the send, as a confirmation that never comes in time.
+func (c *fakeClient) SendToOwner(ctx context.Context, owner, text string) error {
+	if err := c.send(owner, text); err != nil {
+		return err
+	}
+	return SleepContext(ctx, time.Duration(c.scenario.SendHangMs)*time.Millisecond)
+}
+
+func (c *fakeClient) send(owner, text string) error {
 	c.sendMu.Lock()
 	defer c.sendMu.Unlock()
 	if wait := time.Duration(c.scenario.SendFloodSeconds) * time.Second; wait > 0 && !c.sendFlooded {
@@ -237,7 +284,7 @@ func (c *fakeClient) ReadHistory(ctx context.Context, chatID int64, window Histo
 	}
 	now := time.Now()
 	var newestFirst []Update
-	for _, each := range c.scenario.History {
+	for _, each := range slices.Concat(c.scenario.History, c.lostHistory) {
 		if c.scenario.info(each.Chat).ID != chatID {
 			continue
 		}

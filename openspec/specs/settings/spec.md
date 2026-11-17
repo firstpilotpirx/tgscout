@@ -7,7 +7,7 @@ What the owner writes into the config file: the requests to look for, the chats 
 
 ### Requirement: Config file fields
 
-The config file SHALL hold at the root `owner` (required), `workers` (default 2), `queue_size` (default 1000), `lm_studio` (`url`, `model` required, `timeout`), `catch_up` (`messages`, `days`) and one or more `requests`. A request SHALL hold a unique `id`, the `find` text, one or more `chats` and an optional `catch_up`. A chat SHALL be a chat reference (`@username`, a public `t.me` link or a numeric ID) or an object with `ref` and an optional `catch_up`.
+The config file SHALL hold at the root `owner` (required), `workers` (default 2), `queue_size` (default 1000), `retry_max_pause` (default 60 seconds), `stop_grace` (default 10 seconds), `lm_studio` (`url`, `model` required, `timeout`), `catch_up` (`messages`, `days`) and one or more `requests`. `retry_max_pause` and `stop_grace` SHALL be positive durations. A request SHALL hold a unique `id`, the `find` text, one or more `chats` and an optional `catch_up`. A chat SHALL be a chat reference (`@username`, a public `t.me` link or a numeric ID) or an object with `ref` and an optional `catch_up`.
 
 #### Scenario: defaults fill what the file leaves out
 
@@ -15,6 +15,7 @@ The config file SHALL hold at the root `owner` (required), `workers` (default 2)
 - **WHEN** tgscout loads the config
 - **THEN** it uses 2 workers and a queue of 1000 messages
 - **AND** it calls LM Studio at the local default address with a 60 second timeout
+- **AND** it pauses at most 60 seconds between retries and gives messages in work 10 seconds at a stop
 
 #### Scenario: every form of chat reference is accepted
 
@@ -59,7 +60,7 @@ For every pair of a request and one of its chats, tgscout SHALL resolve the catc
 
 ### Requirement: Config validation
 
-tgscout SHALL check the whole config before it opens the database, list every problem at once, one line each with its line and field, and exit with code 1. A problem is: no requests; a request without `id`, `find` or chats; a duplicate `id`; an unknown key; a wrong kind of value; a depth below 1; an `lm_studio.url` that is not http or https; no `lm_studio.model`; `workers` below 1; `queue_size` below 1; a missing or malformed owner or chat reference; a secret key (`api_id`, `api_hash`, `session`) anywhere.
+tgscout SHALL check the whole config before it opens the database, list every problem at once, one line each with its line and field, and exit with code 1. A problem is: no requests; a request without `id`, `find` or chats; a duplicate `id`; an unknown key; a wrong kind of value; a depth below 1; an `lm_studio.url` that is not http or https; no `lm_studio.model`; `workers` below 1; `queue_size` below 1; a `retry_max_pause` or `stop_grace` that is not a positive duration; a missing or malformed owner or chat reference; a secret key (`api_id`, `api_hash`, `session`) anywhere.
 
 #### Scenario Outline: an invalid config stops the start
 
@@ -77,6 +78,12 @@ Examples: no requests / `requests`; a request without chats / `chats`; two reque
 - **WHEN** the owner starts tgscout
 - **THEN** tgscout says the config has 3 errors
 - **AND** it prints one line for each of the three problems, each with its line
+
+#### Scenario: a retry cap that is not a duration is refused
+
+- **GIVEN** a config whose retry cap is not a positive duration
+- **WHEN** tgscout loads the config
+- **THEN** it names the field and the line, and does not start
 
 ### Requirement: Chat count warning
 

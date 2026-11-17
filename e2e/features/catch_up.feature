@@ -62,8 +62,11 @@ Feature: catch-up — at start tgscout reads what the watched chats posted while
       When the owner starts tgscout and it catches up
       Then the console shows the summary with chats, messages, matches and the time
 
-    Scenario: judging errors are counted
+    # Judging errors (a failed database write) run as a unit test of MatchMessage:
+    # the retries cover every LM Studio failure, so none is left to force from outside.
+
+    Scenario: the summary waits for LM Studio
       Given a watched chat with history and LM Studio that does not answer
       When the owner starts tgscout and it catches up
-      Then the summary counts the failed messages as errors
+      Then the console shows no summary while LM Studio is away
       And those messages are not marked processed

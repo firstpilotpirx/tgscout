@@ -15,6 +15,9 @@ import (
 // The made-up stranger who writes to tgscout's account.
 const stranger = "@made_up_stranger"
 
+// sendFailedLine is the start of the warning of a failed send, up to its pause.
+const sendFailedLine = "[warn] send failed: kids-bike on @made_up_market/4211 · cannot reach Telegram · retry in "
+
 func ownerSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^a request bound to a watched chat and the LLM answers yes$`, func() {
 		w.request("kids-bike", bikeFind)
@@ -25,10 +28,11 @@ func ownerSteps(sc *godog.ScenarioContext, w *world) {
 		w.request("desk-lamp", lampFind)
 		w.lmStudio().answers[bikeFind], w.lmStudio().answers[lampFind] = "yes", "yes"
 	})
-	sc.Step(`^the send of a match fails$`, func() {
+	sc.Step(`^every send of a match fails$`, func() {
 		w.request("kids-bike", bikeFind)
 		w.lmStudio().answers[bikeFind] = "yes"
 		w.tg.fake.SendFails = true
+		w.matching.until = func() bool { return strings.Count(w.run.stderr.String(), sendFailedLine) >= 2 }
 	})
 	sc.Step(`^someone other than the owner writes to tgscout's account$`, func() {
 		w.request("kids-bike", bikeFind)
@@ -57,10 +61,10 @@ func ownerThenSteps(sc *godog.ScenarioContext, w *world) {
 			"Match: kids-bike — "+bikeFind+"\nChat: "+marketTitle+"\nhttps://t.me/made_up_market/4211\n"+bikeText,
 			"Match: desk-lamp — "+lampFind+"\nChat: "+marketTitle+"\nhttps://t.me/made_up_market/4211\n"+bikeText)
 	})
-	sc.Step(`^the message stays unprocessed and the console shows an error line$`, func() error {
+	sc.Step(`^the message stays unprocessed and the console shows a warning line for each failed try$`, func() error {
 		return errors.Join(w.processed(false), w.cursorAt(0), w.ownerGot(),
-			w.allStderrHas("[fail] send failed on @made_up_market/4211: cannot reach Telegram",
-				"  the message stays unprocessed\n"))
+			w.allStderrHas(sendFailedLine+"1s · the message stays unprocessed\n",
+				sendFailedLine+"2s · the message stays unprocessed\n"))
 	})
 	sc.Step(`^tgscout does not answer and writes nothing to that person$`, func() error {
 		return errors.Join(w.ownerGot(), w.askedTimes(bikeFind, 0))

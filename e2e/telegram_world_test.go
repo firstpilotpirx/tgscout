@@ -41,6 +41,7 @@ type fakeTelegram struct {
 	History          []fakeHistory     `json:"history"`
 	HistoryFlood     int               `json:"history_flood_wait_seconds"`
 	HistoryDelayMs   int               `json:"history_delay_ms"`
+	SendHangMs       int               `json:"send_hang_ms"`
 }
 
 // fakeHistory is a made-up message posted before the start, AgeMinutes ago.
@@ -59,6 +60,11 @@ type fakeUpdate struct {
 	Edited  bool   `json:"edited"`
 	Private bool   `json:"private"`
 	AfterMs int    `json:"after_ms"`
+	// ConnectionLost and ConnectionBack play a drop of the connection and its return.
+	ConnectionLost bool `json:"connection_lost,omitempty"`
+	ConnectionBack bool `json:"connection_back,omitempty"`
+	// Lost is posted while the connection is away: only the history serves it.
+	Lost bool `json:"lost,omitempty"`
 }
 
 // telegramWorld is the Telegram side of a scenario: by default a valid

@@ -102,14 +102,14 @@ func (s *slice) play(updates ...telegram.Update) error {
 	tracker := domain.NewMessageTracker()
 	s.puts.queue = s.queue
 	collectUseCase := application.NewCollectMessage(staticSettings{s.settings}, s.repository, &s.puts, tracker)
-	matchUseCase := application.NewMatchMessage(s.repository, s.llm, nopNotifier{}, tracker)
+	matchUseCase := application.NewMatchMessage(s.repository, s.llm, nopNotifier{}, tracker, application.Delivery{})
 	collector := collect.NewTelegramCollector(map[int64]collect.Chat{watchedChatID: {Ref: s.settings.Requests[0].Chats[0].Ref,
 		Username: "made_up_market"}}, collectUseCase, func(domain.Message, error) {})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	stopped := make(chan struct{})
 	go func() {
-		match.RunWorkers(ctx, s.workers, s.queue, matchUseCase, nopReporter{})
+		match.RunWorkers(ctx, ctx, match.Pool{Workers: s.workers, Queue: s.queue, Matcher: matchUseCase, Report: nopReporter{}})
 		close(stopped)
 	}()
 	for _, update := range updates {

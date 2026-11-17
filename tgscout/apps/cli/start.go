@@ -37,12 +37,14 @@ func start(ctx context.Context, opts options, con *console, deps startDeps) int 
 		_ = db.Close() // the Telegram error is the one to report
 		return exitError
 	}
-	con.step("stopping…")
+	if !matcher.announcedStop() {
+		con.step("stopping…") // stopped before the workers ran
+	}
 	if err := db.Close(); err != nil {
 		con.fail(fmt.Sprintf("database %s: close: %v", path, err), "", path)
 		return exitError
 	}
-	con.done("stopped")
+	con.stopped(matcher.queued())
 	return exitOK
 }
 

@@ -93,7 +93,7 @@ func newTestLive(t *testing.T, con *console, messages *memoryMessages) live {
 	}}
 	settings.Owner = ownerRef(t)
 	items := queue.NewChannelMessageQueue(settings.QueueSize)
-	return live{settings: settings, queue: items, workers: settings.Workers, sleep: noSleep,
+	return live{settings: settings, queue: items, workers: settings.Workers, sleep: noSleep, stopping: &atomic.Bool{},
 		ports: matching.Ports{Settings: liveSettings{settings}, Messages: messages, Queue: items, Llm: yesLlm{}}}
 }
 

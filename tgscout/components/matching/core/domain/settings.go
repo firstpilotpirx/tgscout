@@ -35,6 +35,10 @@ type Settings struct {
 	Owner     Owner
 	Workers   int
 	QueueSize int
+	// RetryMaxPause is the longest pause between two tries of LM Studio or a send.
+	RetryMaxPause time.Duration
+	// StopGrace is how long a stop waits for the messages in work.
+	StopGrace time.Duration
 	LmStudio  LmStudio
 	Requests  []Request
 }

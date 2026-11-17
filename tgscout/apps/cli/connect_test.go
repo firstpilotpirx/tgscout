@@ -28,6 +28,7 @@ type fakeTelegram struct {
 	history    map[int64][]telegram.Update // oldest first, by bare ID
 	mu         sync.Mutex
 	sent       []string
+	watcher    func(telegram.ConnectionEvent)
 }
 
 func (f *fakeTelegram) Run(ctx context.Context, fn func(context.Context) error) error { return fn(ctx) }
@@ -254,5 +255,31 @@ func chatRef(t *testing.T, text string) domain.ChatRef {
 }
 
 func (f *fakeTelegram) ReadHistory(_ context.Context, chatID int64, _ telegram.HistoryWindow) (telegram.History, error) {
-	return telegram.History{Messages: f.history[chatID]}, nil
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return telegram.History{Messages: append([]telegram.Update(nil), f.history[chatID]...)}, nil
+}
+
+func (f *fakeTelegram) WatchConnection(watcher func(telegram.ConnectionEvent)) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.watcher = watcher
+}
+
+// connection plays a connection event to the watcher serve set.
+func (f *fakeTelegram) connection(event telegram.ConnectionEvent) {
+	f.mu.Lock()
+	watcher := f.watcher
+	f.mu.Unlock()
+	watcher(event)
+}
+
+// post adds a message to the history of its chat, as if posted while nobody listened.
+func (f *fakeTelegram) post(update telegram.Update) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.history == nil {
+		f.history = map[int64][]telegram.Update{}
+	}
+	f.history[update.ChatID] = append(f.history[update.ChatID], update)
 }

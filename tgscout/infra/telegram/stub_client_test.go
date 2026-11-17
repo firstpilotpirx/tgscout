@@ -120,3 +120,5 @@ type stubSession struct {
 
 func (s *stubSession) FirstRun() bool               { return s.firstRun }
 func (s *stubSession) Commit(context.Context) error { s.committed = true; return nil }
+
+func (c *stubClient) WatchConnection(func(ConnectionEvent)) {}

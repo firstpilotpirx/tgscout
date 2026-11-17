@@ -36,7 +36,7 @@ func TestFeatures(t *testing.T) {
 		ScenarioInitializer: initializeScenario,
 		Options: &godog.Options{
 			Format: "pretty", Paths: []string{"features"}, Tags: "~@wip",
-			Strict: true, TestingT: t, Concurrency: 4,
+			Strict: true, TestingT: t, Concurrency: 8,
 		},
 	}
 	if suite.Run() != 0 {
@@ -68,6 +68,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	ownerSteps(sc, w)
 	telegramSteps(sc, w)
 	matchingSteps(sc, w)
+	deliverySteps(sc, w)
 }
 
 func givenSteps(sc *godog.ScenarioContext, w *world) {
