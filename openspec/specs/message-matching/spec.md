@@ -93,7 +93,7 @@ For each request asked, tgscout SHALL save a decision with whether it matched an
 
 ### Requirement: Processed mark and cursor
 
-tgscout SHALL mark a message processed only after every request of its chat was decided and every «yes» was sent to the owner and confirmed by Telegram; then it SHALL move the chat's cursor. The cursor of a chat SHALL move only past messages that are all processed: with several messages judged at once and finishing out of order, it SHALL never pass a message that is not processed yet.
+tgscout SHALL mark a message processed only after every request of its chat was decided and every «yes» was sent to the owner and confirmed by Telegram; then it SHALL move the chat's cursor, except while that chat is being caught up: then the cursor SHALL wait until every history message of the chat is handed to the judge. The cursor of a chat SHALL move only past messages that are all processed: with several messages judged at once and finishing out of order, it SHALL never pass a message that is not processed yet.
 
 #### Scenario: the cursor never passes an unprocessed message
 
