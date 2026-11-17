@@ -20,9 +20,9 @@
 
 ## 4. CLI
 
-- [ ] 4.1 Red: unit tests for the console lines of design § 6 (match sent with the indented text, FLOOD_WAIT before a send, send failed, cannot write to the owner) and for `reportLookup` with `OwnerChatClosedError`; update the start tests for the wired Telegram notifier
-- [ ] 4.2 Green: `apps/cli/console_matching.go`, `console_telegram.go`, `connect.go`, `live.go` (Telegram notifier over the shared client, the owner, titles of the found chats); remove `adapters/secondary/notify/console`
-- [ ] 4.3 Commit (`kit ship`)
+- [x] 4.1 Red: unit tests for the console lines of design § 6 (match sent with the indented text, FLOOD_WAIT before a send, send failed, cannot write to the owner) and for `reportLookup` with `OwnerChatClosedError`; update the start tests for the wired Telegram notifier
+- [x] 4.2 Green: `apps/cli/console_matching.go`, `console_telegram.go`, `connect.go`, `live.go` (Telegram notifier over the shared client, the owner, titles of the found chats); remove `adapters/secondary/notify/console`
+- [x] 4.3 Commit (`kit ship`)
 
 ## 5. E2E
 

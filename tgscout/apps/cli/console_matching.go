@@ -12,21 +12,22 @@ import (
 const (
 	// textStart is how much of a message or an answer a line shows.
 	textStart = 80
-	// matchIndent puts the text start under the time of the match line.
-	matchIndent  = "         "
+	// matchIndent indents the text the owner got under the match line.
+	matchIndent  = "  "
 	unprocessed  = "the message stays unprocessed"
 	llmDownHint  = unprocessed + "; is LM Studio running?"
 	matchTimeFmt = "15:04"
 )
 
-// PrintMatch shows a match: the time, the request, the chat and the link,
-// then the start of the text on its own line.
-func (c *console) PrintMatch(match domain.Match) error {
-	message := match.Message
-	head := fmt.Sprintf("%s match  %s  %s  %s  %s", c.green.Sprint(c.marks.ok),
-		message.SentAt.Local().Format(matchTimeFmt), match.Request.ID,
-		c.cyan.Sprint(message.Chat.String()), message.Link)
-	return c.block(c.out, head, matchIndent+cut(message.Text))
+// PrintMatch shows a match Telegram confirmed: the time, the request, then
+// the text the owner got, every line indented.
+func (c *console) PrintMatch(match domain.Match, text string) error {
+	lines := []string{fmt.Sprintf("%s match sent  %s  %s", c.green.Sprint(c.marks.ok),
+		match.Message.SentAt.Local().Format(matchTimeFmt), match.Request.ID)}
+	for _, line := range strings.Split(text, "\n") {
+		lines = append(lines, matchIndent+line)
+	}
+	return c.block(c.out, lines...)
 }
 
 // Unclear shows an answer that was neither yes nor no, saved as «no».

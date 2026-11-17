@@ -26,44 +26,47 @@ func madeUpMessage(t *testing.T, chat string, id int, text string) domain.Messag
 	}
 }
 
-func TestPrintMatchShowsTimeRequestChatLinkAndText(t *testing.T) {
+func TestPrintMatchShowsTheSentLineAndTheTelegramText(t *testing.T) {
 	c, out, errOut := newTestConsole(true)
-	message := madeUpMessage(t, "@made_up_market", 4211, "Selling a 16-inch kids' bike, 80 €")
-	message.Link = "https://t.me/made_up_market/4211"
+	message := madeUpMessage(t, "@made_up_market", 4211, "Selling a 16-inch kids' bike,\n80 €")
+	match := domain.Match{Message: message, Request: domain.Request{ID: "kids-bike"}}
 
-	err := c.PrintMatch(domain.Match{Message: message, Request: domain.Request{ID: "kids-bike"}})
+	err := c.PrintMatch(match, "Match: kids-bike — a kids' bike\nChat: Made-up market\nhttps://t.me/made_up_market/4211\n"+
+		"Selling a 16-inch kids' bike,\n80 €")
 
 	require.NoError(t, err)
 	assert.Equal(t,
-		"[ok] match  14:02  kids-bike  @made_up_market  https://t.me/made_up_market/4211\n"+
-			"         Selling a 16-inch kids' bike, 80 €\n",
+		"[ok] match sent  14:02  kids-bike\n"+
+			"  Match: kids-bike — a kids' bike\n"+
+			"  Chat: Made-up market\n"+
+			"  https://t.me/made_up_market/4211\n"+
+			"  Selling a 16-inch kids' bike,\n"+
+			"  80 €\n",
 		out.String())
 	assert.Empty(t, errOut.String())
-}
-
-func TestPrintMatchCutsTheTextAt80CharactersAndJoinsLines(t *testing.T) {
-	c, out, _ := newTestConsole(true)
-	text := "Selling a 16-inch kids' bike,\n80 €, pick-up in the old town, " + strings.Repeat("ä", 60)
-	message := madeUpMessage(t, "@made_up_market", 4211, text)
-
-	require.NoError(t, c.PrintMatch(domain.Match{Message: message, Request: domain.Request{ID: "kids-bike"}}))
-
-	second := strings.Split(strings.TrimSuffix(out.String(), "\n"), "\n")[1]
-	start := strings.TrimPrefix(second, "         ")
-	assert.Equal(t, 81, len([]rune(start)), "80 characters and the cut mark")
-	assert.True(t, strings.HasSuffix(start, "…"))
-	assert.True(t, strings.HasPrefix(start, "Selling a 16-inch kids' bike, 80 €"), "a line break becomes a space")
 }
 
 func TestPrintMatchWithSymbols(t *testing.T) {
 	c, out, _ := newTestConsole(false)
 	message := madeUpMessage(t, "@made_up_market", 4211, "Desk lamp, clamp mount, 10 €")
 
-	require.NoError(t, c.PrintMatch(domain.Match{Message: message, Request: domain.Request{ID: "desk-lamp"}}))
+	require.NoError(t, c.PrintMatch(domain.Match{Message: message, Request: domain.Request{ID: "desk-lamp"}}, "Match: desk-lamp"))
 
 	assert.Contains(t, out.String(), "✓")
-	assert.Contains(t, out.String(), " match  14:02  ")
-	assert.Contains(t, out.String(), "\n         Desk lamp, clamp mount, 10 €\n")
+	assert.Contains(t, out.String(), " match sent  14:02  desk-lamp\n  Match: desk-lamp\n")
+}
+
+func TestFailedSendLineNamesChatAndMessage(t *testing.T) {
+	c, _, errOut := newTestConsole(true)
+	item := domain.QueueItem{Message: madeUpMessage(t, "@made_up_market", 4529, "secret")}
+
+	c.Failed(item, &application.MatchError{Key: item.Message.Key, Stage: application.StageNotify,
+		Err: errors.New("cannot reach Telegram")})
+
+	assert.Equal(t,
+		"[fail] send failed on @made_up_market/4529: cannot reach Telegram\n"+
+			"  the message stays unprocessed\n",
+		errOut.String())
 }
 
 func TestUnclearLineShowsTheRawAnswerCut(t *testing.T) {

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/firstpilotpirx/tgscout/components/matching"
-	notify "github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/notify/console"
 	queue "github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/queue/channel"
 	"github.com/firstpilotpirx/tgscout/components/matching/core/domain"
 	"github.com/firstpilotpirx/tgscout/infra/telegram"
@@ -85,17 +84,25 @@ func newTestLive(t *testing.T, con *console, messages *memoryMessages) live {
 	settings := domain.Settings{Workers: 2, QueueSize: 10, Requests: []domain.Request{
 		{ID: "kids-bike", Find: "a kids' bike", Chats: []domain.RequestChat{{Ref: chatRef(t, "@made_up_market")}}},
 	}}
+	settings.Owner = ownerRef(t)
 	items := queue.NewChannelMessageQueue(settings.QueueSize)
-	config := matching.NewMatchingConfig(matching.Ports{
-		Settings: liveSettings{settings}, Messages: messages, Queue: items,
-		Llm: yesLlm{}, Notifier: notify.NewConsoleNotifier(notify.PrintFunc(con.PrintMatch)),
-	})
-	return live{settings: settings, config: config, queue: items, workers: settings.Workers}
+	return live{settings: settings, queue: items, workers: settings.Workers, sleep: noSleep,
+		ports: matching.Ports{Settings: liveSettings{settings}, Messages: messages, Queue: items, Llm: yesLlm{}}}
 }
 
-var marketFound = map[string]telegram.ChatInfo{"@made_up_market": {State: telegram.ChatJoined, ID: 7001, Username: "made_up_market"}}
+var marketFound = map[string]telegram.ChatInfo{"@made_up_market": {State: telegram.ChatJoined, ID: 7001,
+	Username: "made_up_market", Title: "Made-up market"}}
 
-func TestServeSaysRunningThenPrintsTheMatchesOfTheWatchedChats(t *testing.T) {
+func noSleep(context.Context, time.Duration) error { return nil }
+
+func ownerRef(t *testing.T) domain.Owner {
+	t.Helper()
+	owner, err := domain.NewOwner("@made_up_owner")
+	require.NoError(t, err)
+	return owner
+}
+
+func TestServeSaysRunningThenSendsAndPrintsTheMatchesOfTheWatchedChats(t *testing.T) {
 	c, out, errOut := newTestConsole(true)
 	messages := &memoryMessages{}
 	client := &fakeTelegram{updates: []telegram.Update{
@@ -110,10 +117,16 @@ func TestServeSaysRunningThenPrintsTheMatchesOfTheWatchedChats(t *testing.T) {
 	stop()
 
 	require.NoError(t, <-done)
+	text := "Match: kids-bike — a kids' bike\nChat: Made-up market\nhttps://t.me/made_up_market/4211\n" +
+		"Selling a 16-inch kids' bike, 80 €"
+	assert.Equal(t, []string{"@made_up_owner: " + text}, client.sends())
 	assert.Equal(t,
 		"[run] running — press Ctrl+C to stop\n"+
-			"[ok] match  14:02  kids-bike  @made_up_market  https://t.me/made_up_market/4211\n"+
-			"         Selling a 16-inch kids' bike, 80 €\n",
+			"[ok] match sent  14:02  kids-bike\n"+
+			"  Match: kids-bike — a kids' bike\n"+
+			"  Chat: Made-up market\n"+
+			"  https://t.me/made_up_market/4211\n"+
+			"  Selling a 16-inch kids' bike, 80 €\n",
 		out.String())
 	assert.Empty(t, errOut.String())
 }
@@ -122,10 +135,7 @@ func TestServeReturnsOnlyAfterTheWorkersStopped(t *testing.T) {
 	c, _, _ := newTestConsole(true)
 	llm := &blockingLlm{entered: make(chan struct{})}
 	matcher := newTestLive(t, c, &memoryMessages{})
-	matcher.config = matching.NewMatchingConfig(matching.Ports{
-		Settings: liveSettings{matcher.settings}, Messages: &memoryMessages{}, Queue: matcher.queue.(*queue.ChannelMessageQueue),
-		Llm: llm, Notifier: notify.NewConsoleNotifier(notify.PrintFunc(c.PrintMatch)),
-	})
+	matcher.ports.Llm = llm
 	client := &fakeTelegram{updates: []telegram.Update{{ChatID: 7001, MessageID: 4211, Date: time.Now(), Text: "a kids' bike"}}}
 	ctx, stop := context.WithCancel(context.Background())
 	done := make(chan error)
@@ -162,12 +172,13 @@ func TestServeGivesTheListenerError(t *testing.T) {
 
 func TestWatchedByIDKeysTheFoundChatsByPeerID(t *testing.T) {
 	chats := watchedByID(map[string]telegram.ChatInfo{
-		"@made_up_market": {ID: 7001, Username: "made_up_market"},
+		"@made_up_market": {ID: 7001, Username: "made_up_market", Title: "Made-up market"},
 		"-1001234567890":  {ID: 1234567890},
 	})
 
 	assert.Equal(t, "@made_up_market", chats[7001].Ref.String())
 	assert.Equal(t, "made_up_market", chats[7001].Username)
+	assert.Equal(t, "Made-up market", chats[7001].Title)
 	assert.Equal(t, "-1001234567890", chats[1234567890].Ref.String())
 	assert.Empty(t, chats[1234567890].Username)
 }

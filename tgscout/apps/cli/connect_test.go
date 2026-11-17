@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -21,8 +22,11 @@ type fakeTelegram struct {
 	password   string
 	chats      map[string]telegram.ChatState
 	owners     []string
+	closed     bool // the owner never wrote to the account
 	everyChat  bool // every chat counts as joined
 	updates    []telegram.Update
+	mu         sync.Mutex
+	sent       []string
 }
 
 func (f *fakeTelegram) Run(ctx context.Context, fn func(context.Context) error) error { return fn(ctx) }
@@ -64,13 +68,29 @@ func (f *fakeTelegram) Listen(ctx context.Context, fn func(context.Context, tele
 	return ctx.Err()
 }
 
-func (f *fakeTelegram) FindOwner(_ context.Context, owner string) (bool, error) {
+func (f *fakeTelegram) FindOwner(_ context.Context, owner string) (telegram.OwnerState, error) {
 	for _, each := range f.owners {
+		if each == owner && f.closed {
+			return telegram.OwnerNoChat, nil
+		}
 		if each == owner {
-			return true, nil
+			return telegram.OwnerReady, nil
 		}
 	}
-	return false, nil
+	return telegram.OwnerMissing, nil
+}
+
+func (f *fakeTelegram) SendToOwner(_ context.Context, owner, text string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.sent = append(f.sent, owner+": "+text)
+	return nil
+}
+
+func (f *fakeTelegram) sends() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]string(nil), f.sent...)
 }
 
 // heldSession records whether the sign-in saved it.
@@ -180,6 +200,20 @@ func TestConnectLookupFailureListsEveryProblem(t *testing.T) {
 		"  join them with tgscout's account, or remove them from tgscout.yaml\n"+
 		"[fail] owner not found: @made_up_owner\n"+
 		"  add the owner to the contacts of tgscout's account (README → Setup)\n", r.errOut.String())
+	assert.NotContains(t, r.out.String(), "watching")
+}
+
+func TestConnectStopsWhenTheOwnerNeverWrote(t *testing.T) {
+	client := everythingFound()
+	client.authorized = true
+	client.closed = true
+
+	r := runConnect(t, client, false, "", "@made_up_market")
+
+	require.Error(t, r.err)
+	assert.Equal(t, "[fail] cannot write to the owner\n"+
+		"  write «hi» to tgscout's account once and add it to contacts (README → Setup → First contact)\n",
+		r.errOut.String())
 	assert.NotContains(t, r.out.String(), "watching")
 }
 

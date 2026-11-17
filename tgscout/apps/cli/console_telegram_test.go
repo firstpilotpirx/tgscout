@@ -23,6 +23,7 @@ func TestConsoleSignInLines(t *testing.T) {
 	c.wrongCode()
 	c.wrongPassword()
 	c.floodWait(12 * time.Second)
+	c.sendFloodWait(5 * time.Second)
 
 	assert.Equal(t, "[run] no session yet — first sign-in\n"+
 		"Telegram sent a login code to the account's app.\n"+
@@ -34,7 +35,8 @@ func TestConsoleSignInLines(t *testing.T) {
 		"[ok] watching 1 chat\n", out.String())
 	assert.Equal(t, "[fail] the code is wrong — try again\n"+
 		"[fail] the password is wrong — try again\n"+
-		"[warn] Telegram asks to wait 12s (FLOOD_WAIT), then goes on\n", errOut.String())
+		"[warn] Telegram asks to wait 12s (FLOOD_WAIT), then goes on\n"+
+		"[warn] Telegram asks to wait 5s (FLOOD_WAIT), then sends again\n", errOut.String())
 }
 
 func TestConsoleChatsNotFoundListsEveryChat(t *testing.T) {
