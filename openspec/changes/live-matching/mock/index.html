@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live matching mock</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#6b6a66;--card:#fff;--line:#e4e1da}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--card:#1f1f1d;--line:#34332f}}
+:root[data-theme="dark"]{--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--card:#1f1f1d;--line:#34332f}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1500px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:28px 0 8px}
+p,li{color:var(--mut);font-size:14px}
+.tpair{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:900px){.tpair{grid-template-columns:1fr}}
+figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto}
+figcaption{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.term{font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px;border-radius:8px;white-space:pre;overflow-x:auto}
+.term.dark{background:#1e1e1e;color:#d4d4d4}.term.light{background:#fafafa;color:#1e1e1e;border:1px solid #ddd}
+.term .dim{color:#808080}.dark .cy{color:#4ec9b0}.light .cy{color:#0f7b8a}
+.dark .rd{color:#f14c4c;font-weight:bold}.light .rd{color:#c4262e;font-weight:bold}
+.dark .gr{color:#6ad26a}.light .gr{color:#1a7f37}.dark .yl{color:#e5c07b}.light .yl{color:#9a6700}
+code{font:14px ui-monospace,Menlo,monospace}
+</style></head>
+<body><main>
+<h1>Live matching mock</h1>
+<p>Invented examples. The lines after «running» are new; the start lines above them stay as they are today. Errors and warnings go to stderr, matches to stdout.</p>
+
+<h2>Matches, a warning and an LLM error</h2>
+<div class="tpair">
+<figure><figcaption>Dark terminal</figcaption><div class="term dark"><span class="gr">✓</span> owner found: @made_up_owner
+<span class="gr">✓</span> watching 2 chats
+<span class="cy">●</span> running — press Ctrl+C to stop
+<span class="gr">✓ match</span>  <span class="dim">14:02</span>  <b>kids-bike</b>  @made_up_market  <span class="cy">https://t.me/made_up_market/4211</span>
+         Selling a 16-inch kids' bike, 80 €, pick-up in the old town…
+<span class="gr">✓ match</span>  <span class="dim">14:07</span>  <b>desk-lamp</b>  -1001234567890  <span class="cy">https://t.me/c/1234567890/98</span>
+         Desk lamp, clamp mount, 10 €
+<span class="yl">⚠</span> unclear LLM answer for <b>kids-bike</b> on @made_up_market/4215, saved as no
+  <span class="dim">answer: "It might be, the size is not stated"</span>
+<span class="rd">✗</span> LLM failed on <b>@made_up_market/4216</b>: cannot reach http://localhost:1234/v1
+  <span class="dim">the message stays unprocessed; is LM Studio running?</span>
+</div></figure>
+<figure><figcaption>Light terminal</figcaption><div class="term light"><span class="gr">✓</span> owner found: @made_up_owner
+<span class="gr">✓</span> watching 2 chats
+<span class="cy">●</span> running — press Ctrl+C to stop
+<span class="gr">✓ match</span>  <span class="dim">14:02</span>  <b>kids-bike</b>  @made_up_market  <span class="cy">https://t.me/made_up_market/4211</span>
+         Selling a 16-inch kids' bike, 80 €, pick-up in the old town…
+<span class="gr">✓ match</span>  <span class="dim">14:07</span>  <b>desk-lamp</b>  -1001234567890  <span class="cy">https://t.me/c/1234567890/98</span>
+         Desk lamp, clamp mount, 10 €
+<span class="yl">⚠</span> unclear LLM answer for <b>kids-bike</b> on @made_up_market/4215, saved as no
+  <span class="dim">answer: "It might be, the size is not stated"</span>
+<span class="rd">✗</span> LLM failed on <b>@made_up_market/4216</b>: cannot reach http://localhost:1234/v1
+  <span class="dim">the message stays unprocessed; is LM Studio running?</span>
+</div></figure>
+</div>
+
+<h2>Without color (pipe, NO_COLOR)</h2>
+<div class="tpair">
+<figure><figcaption>Plain output</figcaption><div class="term light">[ok] watching 2 chats
+[run] running — press Ctrl+C to stop
+[ok] match  14:02  kids-bike  @made_up_market  https://t.me/made_up_market/4211
+         Selling a 16-inch kids' bike, 80 €, pick-up in the old town…
+[warn] unclear LLM answer for kids-bike on @made_up_market/4215, saved as no
+  answer: "It might be, the size is not stated"
+[fail] LLM failed on @made_up_market/4216: cannot reach http://localhost:1234/v1
+  the message stays unprocessed; is LM Studio running?
+</div></figure>
+<figure><figcaption>Rules of the lines</figcaption><div style="padding:6px 10px">
+<ul>
+<li>Match line: the message time (local, <code>HH:MM</code>), the request id, the chat as written in <code>tgscout.yaml</code>, the link.</li>
+<li>Second line: the start of the text, at most 80 characters, line breaks as spaces, <code>…</code> when cut.</li>
+<li>Link: <code>https://t.me/&lt;username&gt;/&lt;id&gt;</code> for a public chat, <code>https://t.me/c/&lt;id&gt;/&lt;message&gt;</code> for a private one.</li>
+<li>Warning: the raw answer, at most 80 characters.</li>
+<li>Error: the chat and message, the cause; never the request text or the message text.</li>
+</ul></div></figure>
+</div>
+</main></body></html>
