@@ -1,5 +1,13 @@
 package application
 
+import (
+	"context"
+
+	"github.com/firstpilotpirx/tgscout/components/matching/core/domain"
+)
+
 // Llm is the driven port that asks the LLM whether a message matches a request.
-// It has no methods yet: the live-matching slice adds the ones it calls.
-type Llm interface{}
+type Llm interface {
+	// Judge asks once about one request (find) and one message text.
+	Judge(ctx context.Context, find, text string) (domain.Judgment, error)
+}

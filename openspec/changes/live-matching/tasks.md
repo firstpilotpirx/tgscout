@@ -4,14 +4,14 @@
 - [x] 1.2 Green: `core/domain` `MessageKey`, `Message`, `QueueItem`, `Decision`, `Judgment`, `Match`, `Cursor`, `MessageTracker`
 - [x] 1.3 Red: unit tests for `Settings.RequestsOf` (link and @username of one chat give the same requests, config order) and the parser — `queue_size` default 1000, a given value, below 1 is an error on its line
 - [x] 1.4 Green: `Settings.QueueSize`, `RequestsOf`, `queue_size` in `settings_parser.go`; `tgscout.yaml.example`
-- [ ] 1.5 Commit (`kit ship`)
+- [x] 1.5 Commit (`kit ship`)
 
 ## 2. Use cases
 
-- [ ] 2.1 Red: unit tests for `CollectMessage` with fake ports — empty text dropped; a chat no request watches dropped; an in-flight duplicate dropped; a processed message dropped; a new message queued with every request of its chat; an edit queued with only the requests without a sent «yes»; an edit whose requests all have a sent «yes» dropped
-- [ ] 2.2 Green: ports `MessageRepository`, `MessageQueue`, `Llm`, `Notifier`; `CollectMessage.Collect`
-- [ ] 2.3 Red: unit tests for `MatchMessage` — one judgment and one decision per request; a «yes» notified then marked sent; a saved but unsent «yes» judged and sent again; a `Notify` error leaves the message unprocessed and unsent; processed and cursor only after the last request; an LLM error leaves the message unprocessed, the cursor in place and returns the key; an unclear judgment saved as «no» and listed in the outcome; an edit skips a request with a sent «yes» and never moves the cursor; out-of-order finishes move the cursor as the tracker says
-- [ ] 2.4 Green: `MatchMessage.Match` with the per-key lock; `NewMatchingConfig` wires the tracker
+- [x] 2.1 Red: unit tests for `CollectMessage` with fake ports — empty text dropped; a chat no request watches dropped; an in-flight duplicate dropped; a processed message dropped; a new message queued with every request of its chat; an edit queued with only the requests without a sent «yes»; an edit whose requests all have a sent «yes» dropped
+- [x] 2.2 Green: ports `MessageRepository`, `MessageQueue`, `Llm`, `Notifier`; `CollectMessage.Collect`
+- [x] 2.3 Red: unit tests for `MatchMessage` — one judgment and one decision per request; a «yes» notified then marked sent; a saved but unsent «yes» judged and sent again; a `Notify` error leaves the message unprocessed and unsent; processed and cursor only after the last request; an LLM error leaves the message unprocessed, the cursor in place and returns the key; an unclear judgment saved as «no» and listed in the outcome; an edit skips a request with a sent «yes» and never moves the cursor; out-of-order finishes move the cursor as the tracker says
+- [x] 2.4 Green: `MatchMessage.Match` with the per-key lock; `NewMatchingConfig` wires the tracker
 - [ ] 2.5 Commit (`kit ship`)
 
 ## 3. Secondary adapters
