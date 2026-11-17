@@ -61,16 +61,26 @@ Interface: CLI — status and error lines on the console.
 
 - `delivery`: the at-least-once promise under failures — retries, back-pressure, reconnect, graceful stop and crash recovery.
 
+### Modified Capabilities
+
+- `message-matching`: an LLM failure is retried instead of reported once.
+- `owner-notification`: a failed send is retried until it is sent.
+- `catch-up`: a failed history read keeps its chat's cursor; the summary waits for messages in retry.
+- `cli-lifecycle`: the clean stop finishes the messages in work.
+- `settings`: two new fields, `retry_max_pause` and `stop_grace`.
+
 ## Impact
 
 - Changed: `OpenAiLlmClient`, `TelegramNotifierClient`, `ChannelMessageQueue`, the collector (reconnect and gap read), `apps/cli/main.go` (signals and grace time).
 - New: crash tests in `e2e/`.
 
-## Open points
+## Decisions
 
-- Retry cap and grace time: proposed — backoff up to 60 s, grace time 10 s; both as settings in `tgscout.yaml` with these defaults.
-- A message that fails with the LLM forever (for example too long for the model): proposed — after 10 failed tries save «no» with a warning, so one bad message cannot stall its chat's cursor.
-- Gap read after reconnect: the MTProto library's own update-gap recovery, or our cursor read. Proposed: our cursor read, the same code as catch-up, so there is one way to recover.
+- Retry cap and grace time: backoff up to 60 s, grace time 10 s; both settings in `tgscout.yaml` (`retry_max_pause`, `stop_grace`) with these defaults.
+- A message that fails with the LLM forever (for example too long for the model): after 10 failed tries save «no» with a warning, so one bad message cannot stall its chat's cursor. Only an error answer about the message counts; no answer at all (LM Studio down, the timeout, a server error) is retried without end, so a long LM Studio outage never turns matches into «no».
+- Gap read after reconnect: our cursor read, the same code as catch-up; not the MTProto library's gap recovery.
+- A send to the owner that keeps failing: retried without end with growing pauses; the message stays unprocessed until sent.
+- A second Ctrl+C ends tgscout at once with exit code 130.
 
 ## Release
 
