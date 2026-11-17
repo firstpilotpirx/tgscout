@@ -144,3 +144,43 @@ func TestFakeListenDropsAPrivateMessage(t *testing.T) {
 
 	assert.Equal(t, []int{2}, got)
 }
+
+func TestFakeReadHistoryGivesTheChatsMessagesInTheWindow(t *testing.T) {
+	fake, _ := newTestFake(t, `{"chats": {"*": "joined"}, "history": [
+		{"chat": "@made_up_market", "id": 1, "text": "old", "age_minutes": 5000},
+		{"chat": "@made_up_market", "id": 2, "text": "Selling a bike", "age_minutes": 60},
+		{"chat": "@made_up_street", "id": 3, "text": "other chat", "age_minutes": 30},
+		{"chat": "@made_up_market", "id": 4, "text": "Selling a lamp", "age_minutes": 10}]}`)
+	id := fake.scenario.info("@made_up_market").ID
+
+	history, err := fake.ReadHistory(context.Background(), id,
+		HistoryWindow{Limit: 500, Since: time.Now().Add(-72 * time.Hour)})
+
+	require.NoError(t, err)
+	require.Len(t, history.Messages, 2)
+	assert.Equal(t, 2, history.Messages[0].MessageID)
+	assert.Equal(t, "Selling a lamp", history.Messages[1].Text)
+	assert.Equal(t, id, history.Messages[1].ChatID)
+	assert.True(t, history.Gap)
+}
+
+func TestFakeReadHistoryAsksToWaitOnce(t *testing.T) {
+	fake, _ := newTestFake(t, `{"history_flood_wait_seconds": 1}`)
+
+	var flood *FloodWait
+	_, err := fake.ReadHistory(context.Background(), 7, HistoryWindow{Limit: 5})
+	require.ErrorAs(t, err, &flood)
+	assert.Equal(t, time.Second, flood.Wait)
+	_, err = fake.ReadHistory(context.Background(), 7, HistoryWindow{Limit: 5})
+	require.NoError(t, err)
+}
+
+func TestFakeReadHistoryPausesFirst(t *testing.T) {
+	fake, _ := newTestFake(t, `{"history_delay_ms": 100}`)
+	began := time.Now()
+
+	_, err := fake.ReadHistory(context.Background(), 7, HistoryWindow{Limit: 5})
+
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, time.Since(began), 100*time.Millisecond)
+}

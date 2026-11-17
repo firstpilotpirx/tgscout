@@ -3,6 +3,8 @@
 package matching
 
 import (
+	"time"
+
 	"github.com/firstpilotpirx/tgscout/components/matching/core/application"
 	"github.com/firstpilotpirx/tgscout/components/matching/core/domain"
 )
@@ -20,15 +22,18 @@ type Ports struct {
 type MatchingConfig struct {
 	CollectMessage *application.CollectMessage
 	MatchMessage   *application.MatchMessage
+	CatchUp        *application.CatchUp
 }
 
 // NewMatchingConfig wires the use cases from the given ports.
-// Both use cases share one message tracker: the in-flight messages and the
-// cursor of each chat.
+// The use cases share one message tracker: the in-flight messages, the
+// cursor of each chat and the catch-up tally.
 func NewMatchingConfig(ports Ports) *MatchingConfig {
 	tracker := domain.NewMessageTracker()
+	collect := application.NewCollectMessage(ports.Settings, ports.Messages, ports.Queue, tracker)
 	return &MatchingConfig{
-		CollectMessage: application.NewCollectMessage(ports.Settings, ports.Messages, ports.Queue, tracker),
+		CollectMessage: collect,
 		MatchMessage:   application.NewMatchMessage(ports.Messages, ports.Llm, ports.Notifier, tracker),
+		CatchUp:        application.NewCatchUp(ports.Settings, ports.Messages, collect, tracker, time.Now),
 	}
 }

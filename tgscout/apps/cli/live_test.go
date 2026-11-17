@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -59,6 +61,10 @@ func (m *memoryMessages) MarkProcessed(_ context.Context, key domain.MessageKey,
 }
 func (m *memoryMessages) MoveCursor(context.Context, int64, int, time.Time) error { return nil }
 
+func (m *memoryMessages) Cursor(context.Context, int64) (domain.StoredCursor, bool, error) {
+	return domain.StoredCursor{}, false, nil
+}
+
 func (m *memoryMessages) processedCount() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -82,7 +88,8 @@ func (failingListener) Listen(context.Context, func(context.Context, telegram.Up
 func newTestLive(t *testing.T, con *console, messages *memoryMessages) live {
 	t.Helper()
 	settings := domain.Settings{Workers: 2, QueueSize: 10, Requests: []domain.Request{
-		{ID: "kids-bike", Find: "a kids' bike", Chats: []domain.RequestChat{{Ref: chatRef(t, "@made_up_market")}}},
+		{ID: "kids-bike", Find: "a kids' bike", Chats: []domain.RequestChat{{Ref: chatRef(t, "@made_up_market"),
+			CatchUp: domain.CatchUp{Messages: 500, Days: 3}}}},
 	}}
 	settings.Owner = ownerRef(t)
 	items := queue.NewChannelMessageQueue(settings.QueueSize)
@@ -92,6 +99,13 @@ func newTestLive(t *testing.T, con *console, messages *memoryMessages) live {
 
 var marketFound = map[string]telegram.ChatInfo{"@made_up_market": {State: telegram.ChatJoined, ID: 7001,
 	Username: "made_up_market", Title: "Made-up market"}}
+
+// written reads what the console wrote so far, under its lock.
+func (c *console) written(out *bytes.Buffer) string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return out.String()
+}
 
 func noSleep(context.Context, time.Duration) error { return nil }
 
@@ -120,15 +134,36 @@ func TestServeSaysRunningThenSendsAndPrintsTheMatchesOfTheWatchedChats(t *testin
 	text := "Match: kids-bike — a kids' bike\nChat: Made-up market\nhttps://t.me/made_up_market/4211\n" +
 		"Selling a 16-inch kids' bike, 80 €"
 	assert.Equal(t, []string{"@made_up_owner: " + text}, client.sends())
-	assert.Equal(t,
-		"[run] running — press Ctrl+C to stop\n"+
-			"[ok] match sent  14:02  kids-bike\n"+
+	assert.True(t, strings.HasPrefix(out.String(), "[run] running — press Ctrl+C to stop\n"), out.String())
+	assert.Contains(t, out.String(),
+		"[ok] match sent  14:02  kids-bike\n"+
 			"  Match: kids-bike — a kids' bike\n"+
 			"  Chat: Made-up market\n"+
 			"  https://t.me/made_up_market/4211\n"+
-			"  Selling a 16-inch kids' bike, 80 €\n",
-		out.String())
+			"  Selling a 16-inch kids' bike, 80 €\n")
 	assert.Empty(t, errOut.String())
+}
+
+func TestServeCatchesUpTheWatchedChatsBesideListening(t *testing.T) {
+	c, out, _ := newTestConsole(true)
+	messages := &memoryMessages{}
+	now := time.Now()
+	client := &fakeTelegram{
+		updates: []telegram.Update{{ChatID: 7001, MessageID: 4300, Date: now, Text: "A live kids' bike"}},
+		history: map[int64][]telegram.Update{7001: {{ChatID: 7001, MessageID: 4211, Date: now.Add(-time.Hour), Text: "An older kids' bike"}}},
+	}
+	ctx, stop := context.WithCancel(context.Background())
+	done := make(chan error)
+
+	go func() { done <- newTestLive(t, c, messages).serve(ctx, c, client, marketFound) }()
+	require.Eventually(t, func() bool { return strings.Contains(c.written(out), "catch-up done") }, 5*time.Second, 10*time.Millisecond)
+	stop()
+
+	require.NoError(t, <-done)
+	assert.Len(t, client.sends(), 2, "the live match and the history match")
+	assert.Contains(t, out.String(), "-> catch-up started · 1 chat · live listening is on\n")
+	assert.Contains(t, out.String(), "[ok] catch-up: Made-up market · 1 message · first start, last 3 days\n")
+	assert.Contains(t, out.String(), "  [run] matches    1  (sent to you in Telegram)\n")
 }
 
 func TestServeReturnsOnlyAfterTheWorkersStopped(t *testing.T) {

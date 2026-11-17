@@ -33,6 +33,7 @@ type gotdClient struct {
 	updates *updateSink
 	mu      sync.Mutex
 	owners  map[string]*tg.InputPeerUser // the found owner's peer, by config text
+	peers   map[int64]tg.InputPeerClass  // the found chats' peers, by bare ID
 }
 
 func newGotdClient(cfg Config) *gotdClient {
@@ -45,6 +46,7 @@ func newGotdClient(cfg Config) *gotdClient {
 		gaps:    gaps,
 		updates: sink,
 		owners:  map[string]*tg.InputPeerUser{},
+		peers:   map[int64]tg.InputPeerClass{},
 	}
 }
 
@@ -114,27 +116,42 @@ func (c *gotdClient) Self(ctx context.Context) (Account, error) {
 
 func (c *gotdClient) ResolveChat(ctx context.Context, ref string) (ChatInfo, error) {
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
-		state, title, err := c.dialogState(ctx, ref)
+		state, title, peer, err := c.dialogState(ctx, ref)
+		c.keepPeer(bareChatID(ref), peer)
 		return ChatInfo{State: state, ID: bareChatID(ref), Title: title}, err
 	}
 	resolved, err := c.resolve(ctx, ref)
 	if err != nil || resolved == nil {
 		return ChatInfo{}, err
 	}
-	return chatInfo(resolved), nil
+	info, peer := chatInfo(resolved)
+	c.keepPeer(info.ID, peer)
+	return info, nil
 }
 
-// chatInfo reads the first chat of a resolved username.
-func chatInfo(resolved *tg.ContactsResolvedPeer) ChatInfo {
+// keepPeer keeps a found chat's input peer for ReadHistory.
+func (c *gotdClient) keepPeer(id int64, peer tg.InputPeerClass) {
+	if peer == nil {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.peers[id] = peer
+}
+
+// chatInfo reads the first chat of a resolved username and its input peer.
+func chatInfo(resolved *tg.ContactsResolvedPeer) (ChatInfo, tg.InputPeerClass) {
 	for _, chat := range resolved.Chats {
 		switch chat := chat.(type) {
 		case *tg.Channel:
-			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Username: chat.Username, Title: chat.Title}
+			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Username: chat.Username, Title: chat.Title},
+				&tg.InputPeerChannel{ChannelID: chat.ID, AccessHash: chat.AccessHash}
 		case *tg.Chat:
-			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Title: chat.Title}
+			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Title: chat.Title},
+				&tg.InputPeerChat{ChatID: chat.ID}
 		}
 	}
-	return ChatInfo{}
+	return ChatInfo{}, nil
 }
 
 // bareChatID is the peer ID of a numeric reference: "-100…" and "-…" dropped.
@@ -259,22 +276,23 @@ func (c *gotdClient) resolve(ctx context.Context, ref string) (*tg.ContactsResol
 
 // dialogState looks a numeric chat ID up among the account's dialogs: a chat
 // the account is in is one of them; its title comes from the dialog's entities.
-func (c *gotdClient) dialogState(ctx context.Context, ref string) (ChatState, string, error) {
+func (c *gotdClient) dialogState(ctx context.Context, ref string) (ChatState, string, tg.InputPeerClass, error) {
 	want := strings.TrimPrefix(strings.TrimPrefix(ref, "-100"), "-")
 	errFound := errors.New("found")
 	title := ""
+	var peer tg.InputPeerClass
 	err := dialogs.NewQueryBuilder(c.client.API()).GetDialogs().BatchSize(100).ForEach(ctx,
 		func(_ context.Context, elem dialogs.Elem) error {
 			if peerID(elem.Peer) == want {
-				title = dialogTitle(elem)
+				title, peer = dialogTitle(elem), elem.Peer
 				return errFound
 			}
 			return nil
 		})
 	if errors.Is(err, errFound) {
-		return ChatJoined, title, nil
+		return ChatJoined, title, peer, nil
 	}
-	return ChatMissing, "", mapError(err)
+	return ChatMissing, "", nil, mapError(err)
 }
 
 func dialogTitle(elem dialogs.Elem) string {

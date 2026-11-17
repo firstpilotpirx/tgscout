@@ -26,9 +26,9 @@ Design pages this slice implements:
 - While a chat is being caught up, its cursor does not move past the caught-up range because of live messages; it moves once that chat's catch-up is done, so a crash in the middle loses nothing (this modifies message-matching «Processed mark and cursor»).
 - The summary also counts judging errors; such messages stay unprocessed and are judged again at the next start.
 
-Current stage: MVP. Target stage: MVP.
+Current stage: PoC. Target stage: PoC.
 Scope: history read at start from the cursor within the effective depth, the depth rules, running beside live listening, the summary line.
-Acceptance bar: the scenarios below pass as slice tests with a fake Telegram history; a manual run after tgscout was off for a while finds a made-up matching message posted meanwhile and prints the summary.
+Acceptance bar: the scenarios below pass at the test levels design § Test levels names (E2E, slice or unit, with a fake Telegram history); a manual run after tgscout was off for a while finds a made-up matching message posted meanwhile and prints the summary.
 Out of scope: deep history search with a summary (version 2); measuring the 15-minute target on 100 chats (`quality-targets`); reconnect gaps while running (`delivery-resilience`).
 Interface: CLI — the summary line; matches go to the owner as in live matching.
 

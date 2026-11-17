@@ -39,8 +39,8 @@ Domain:
 
 Application:
 
-- `CollectMessage.CollectHistory(ctx, message, requests) (bool, error)` — the same path as `Collect` (text check, `Begin`, `IsProcessed`, `Put`) over the given covering requests; it calls `tally.Expect` before `Put`; false means skipped. `Collect` and `CollectHistory` share one private `admit`.
-- `CatchUp` use case: `Open(ctx, chatID, ref) (domain.CatchUpChat, error)` holds the chat's cursor, reads the stored cursor (new `MessageRepository.Cursor(ctx, chatID) (id int, at time.Time, found bool, err error)`) and returns the window; `Close(ctx, chatID) error` releases the hold and stores the cursor when it moved; `Wait(ctx) (domain.CatchUpCounts, error)` waits for the tally.
+- `CollectMessage.CollectHistory(ctx, message, requests) error` — the same path as `Collect` (text check, `Begin`, `IsProcessed`, `Put`) over the given covering requests; it calls `tally.Expect` before `Put`; a skip is counted in the tally. `Collect` and `CollectHistory` share one private `admit`.
+- `CatchUp` use case: `Open(ctx, chatID, ref) (domain.CatchUpChat, error)` holds the chat's cursor, reads the stored cursor (new `MessageRepository.Cursor(ctx, chatID) (domain.StoredCursor, bool, error)`) and returns the window; `Collect(ctx, chat, message, rank) error` hands one history message to `CollectHistory` with the requests that cover it; `Close(ctx, chat domain.CatchUpChat) error` releases the hold and stores the cursor when it moved; `Wait(ctx) (domain.CatchUpCounts, error)` waits for the tally.
 - `MatchMessage` settles the tally at the end of every judgment of a new (not edited) message: the number of matches sent and whether it failed. A message not expected is not counted.
 
 The start time of the depth is taken once, when catch-up begins.
@@ -75,6 +75,8 @@ The errors line gets the fail mark and «(not marked processed; judged again at 
 
 Decided by the prepared run, beside the approved mock: the mock's clock and INFO/WARN words are left out (as owner-notification did), and «skipped» drops the mock's «(already processed)», since it also counts service messages, messages with no text and messages no request covers; the gap line keeps the count of messages read («500 messages ·») before the mock's «off for 12 days, read only the last 3 days», as the spec's chat line asks for the count.
 
+Decided by the prepared run: a chat whose history cannot be read prints «✗ catch-up: <chat> · cannot read the history: <cause>» with the hint «next start reads it again» on the error stream, and catch-up goes on with the next chat; the chats line of the summary drops «(N with a gap)» when no chat had a gap.
+
 The cursor hold (D2) modifies the main requirement message-matching «Processed mark and cursor» (delta in `specs/message-matching/spec.md`): a live message of a chat being caught up no longer moves the cursor at once. This follows the prepared decision «It waits until that chat's catch-up is done, then moves».
 
 ### D6. Docs
@@ -86,7 +88,7 @@ The cursor hold (D2) modifies the main requirement message-matching «Processed 
 | Scenario | Level | Where |
 |---|---|---|
 | a match in the history reaches the owner | E2E | `e2e/features/catch_up.feature` (`@catch_up @e2e`): fake history, the sent file |
-| first start reads the default depth | E2E | feature: history over 4 days; the LLM calls hold only the last 3 days, oldest first |
+| first start reads the default depth | E2E | feature: history over 4 days; the LLM calls hold only the last 3 days (two workers judge in any order; «oldest first» is proven by the `cutWindow` unit test and the collector integration test) |
 | a restart reads only what it missed | E2E | feature: a first start over 10 messages sets the cursor; the second start over 30 judges 20 |
 | the message limit comes first | slice | `components/matching/tests/features/slice/catch_up.feature` (`@catch_up @slice`): the history collector over a stub client with 700 messages, real use cases, memory repository |
 | a cursor older than the depth | slice | slice feature: a stored cursor of 12 days ago |
@@ -117,3 +119,7 @@ Unit tests: `cutWindow`, the domain depth functions, `CatchUpTally`, `Cursor` ho
 ## Release
 
 MINOR, 0.5.0 → 0.6.0, bumped in the last task group.
+
+## Time budget
+
+Decided by the prepared run (replaces `time-budget.md` «accept only on the user's words»): the before-merge check grew from 13 s to 22 s with warm caches. The growth is the new catch-up tests — 9 E2E scenarios with real waits (a 1 s FLOOD_WAIT, a history delay, two starts in a row), the slice feature and the collector integration tests; none can be dropped or moved down without losing a check, so the new time is accepted as the baseline.

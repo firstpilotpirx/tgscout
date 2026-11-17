@@ -85,4 +85,7 @@ type Client interface {
 	// Listen calls f for every new and edited message until ctx ends; it runs
 	// inside Run.
 	Listen(ctx context.Context, f func(context.Context, Update)) error
+	// ReadHistory reads the window of a found chat's history, by its bare
+	// peer ID; it runs inside Run and calls Telegram, never writes.
+	ReadHistory(ctx context.Context, chatID int64, window HistoryWindow) (History, error)
 }

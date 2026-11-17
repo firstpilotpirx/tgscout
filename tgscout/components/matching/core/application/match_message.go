@@ -36,6 +36,7 @@ type Unclear struct {
 // Outcome is what a judged message leaves for the console besides matches.
 type Outcome struct {
 	Unclear []Unclear
+	Matches int
 }
 
 // MatchMessage is the use case that asks the LLM once per request, saves each
@@ -61,6 +62,15 @@ func (m *MatchMessage) Match(ctx context.Context, item domain.QueueItem) (Outcom
 	key := item.Message.Key
 	unlock := m.locks.lock(key)
 	defer unlock()
+	outcome, err := m.match(ctx, item)
+	if !item.Message.Edited {
+		m.tracker.Tally().Settle(key, outcome.Matches, err != nil)
+	}
+	return outcome, err
+}
+
+func (m *MatchMessage) match(ctx context.Context, item domain.QueueItem) (Outcome, error) {
+	key := item.Message.Key
 	outcome, err := m.judge(ctx, item)
 	if err != nil {
 		return outcome, m.fail(item, err)
@@ -116,6 +126,7 @@ func (m *MatchMessage) judge(ctx context.Context, item domain.QueueItem) (Outcom
 		if err := m.messages.MarkSent(ctx, key, request.ID, time.Now()); err != nil {
 			return outcome, &MatchError{Key: key, Stage: StageStore, Err: err}
 		}
+		outcome.Matches++
 	}
 	return outcome, nil
 }

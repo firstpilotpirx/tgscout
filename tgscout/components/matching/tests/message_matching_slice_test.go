@@ -23,6 +23,7 @@ func TestMessageMatchingSlice(t *testing.T) {
 			s := newSlice()
 			s.steps(sc)
 			s.ownerSteps(sc)
+			newCatchUpSlice().steps(sc)
 		},
 		Options: &godog.Options{
 			Format: "pretty", Paths: []string{"features/slice"}, Tags: "~@wip", Strict: true, TestingT: t,
@@ -162,11 +163,13 @@ type slowLlm struct {
 	mu    sync.Mutex
 	delay time.Duration
 	calls []string
+	finds []string
 }
 
-func (l *slowLlm) Judge(ctx context.Context, _, text string) (domain.Judgment, error) {
+func (l *slowLlm) Judge(ctx context.Context, find, text string) (domain.Judgment, error) {
 	l.mu.Lock()
 	l.calls = append(l.calls, text)
+	l.finds = append(l.finds, find)
 	delay := l.delay
 	l.mu.Unlock()
 	select {
@@ -197,12 +200,13 @@ type memoryRepository struct {
 	processed map[domain.MessageKey]bool
 	sent      map[domain.MessageKey]int
 	cursor    map[int64]int
+	cursorAt  map[int64]time.Time
 	decisions int
 }
 
 func newMemoryRepository() *memoryRepository {
 	return &memoryRepository{processed: map[domain.MessageKey]bool{}, sent: map[domain.MessageKey]int{},
-		cursor: map[int64]int{}}
+		cursor: map[int64]int{}, cursorAt: map[int64]time.Time{}}
 }
 
 func (r *memoryRepository) IsProcessed(_ context.Context, key domain.MessageKey) (bool, error) {
@@ -241,6 +245,13 @@ func (r *memoryRepository) MoveCursor(_ context.Context, chatID int64, messageID
 	defer r.mu.Unlock()
 	r.cursor[chatID] = max(r.cursor[chatID], messageID)
 	return nil
+}
+
+func (r *memoryRepository) Cursor(_ context.Context, chatID int64) (domain.StoredCursor, bool, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	id, found := r.cursor[chatID]
+	return domain.StoredCursor{MessageID: id, At: r.cursorAt[chatID]}, found, nil
 }
 
 // untouched tells whether the message has no send, no processed mark and

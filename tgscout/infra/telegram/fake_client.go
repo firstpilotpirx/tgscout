@@ -33,6 +33,19 @@ type fakeScenario struct {
 	SendFails        bool              `json:"send_fails"`
 	SendFloodSeconds int               `json:"send_flood_wait_seconds"`
 	SentFile         string            `json:"sent_file"`
+	History          []fakeHistory     `json:"history"`
+	HistoryFlood     int               `json:"history_flood_wait_seconds"`
+	HistoryDelayMs   int               `json:"history_delay_ms"`
+}
+
+// fakeHistory is a made-up message posted before the start; Chat is the
+// config text of a watched chat.
+type fakeHistory struct {
+	Chat       string `json:"chat"`
+	ID         int    `json:"id"`
+	Text       string `json:"text"`
+	Service    bool   `json:"service"`
+	AgeMinutes int    `json:"age_minutes"`
 }
 
 // fakeSend is one line of the sent file: whom the fake sent which text.
@@ -100,6 +113,8 @@ type fakeClient struct {
 	flooded     bool
 	sendFlooded bool
 	sendMu      sync.Mutex
+	historyMu   sync.Mutex
+	histFlooded bool
 }
 
 // NewClient builds the made-up Telegram of the E2E build.
@@ -206,4 +221,29 @@ func (c *fakeClient) SendToOwner(_ context.Context, owner, text string) error {
 	}
 	_, err = file.Write(append(line, '\n'))
 	return errors.Join(err, file.Close())
+}
+
+// ReadHistory pauses history_delay_ms, asks to wait once when the scenario
+// says so, then gives the window of the chat's made-up history.
+func (c *fakeClient) ReadHistory(ctx context.Context, chatID int64, window HistoryWindow) (History, error) {
+	if err := SleepContext(ctx, time.Duration(c.scenario.HistoryDelayMs)*time.Millisecond); err != nil {
+		return History{}, err
+	}
+	c.historyMu.Lock()
+	defer c.historyMu.Unlock()
+	if wait := time.Duration(c.scenario.HistoryFlood) * time.Second; wait > 0 && !c.histFlooded {
+		c.histFlooded = true
+		return History{}, &FloodWait{Wait: wait}
+	}
+	now := time.Now()
+	var newestFirst []Update
+	for _, each := range c.scenario.History {
+		if c.scenario.info(each.Chat).ID != chatID {
+			continue
+		}
+		newestFirst = append(newestFirst, Update{ChatID: chatID, MessageID: each.ID, Text: each.Text,
+			Service: each.Service, Date: now.Add(-time.Duration(each.AgeMinutes) * time.Minute)})
+	}
+	slices.SortFunc(newestFirst, func(a, b Update) int { return b.MessageID - a.MessageID })
+	return cutWindow(newestFirst, window), nil
 }
