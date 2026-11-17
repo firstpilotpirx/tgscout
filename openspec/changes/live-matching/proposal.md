@@ -30,7 +30,7 @@ Design pages this slice implements:
 Current stage: PoC. Target stage: PoC.
 Scope: collector for new messages, the pre-filter, the processed check, the queue, matcher workers, the llm part over the OpenAI-compatible API, decisions, processed marks, the cursor, the console notifier, re-judging edited messages, the `queue_size` setting.
 Acceptance bar: the scenarios below pass as slice tests with a fake Telegram update stream and a fake OpenAI-compatible server; a manual run with LM Studio prints a match on the console for a made-up message posted in a test chat.
-Test override: the E2E scenarios talk to a made-up OpenAI-compatible server (`httptest`) instead of LM Studio, overriding `testing-e2e-go.md` «External deps: Real or production-equivalent. No httptest» for the LLM only; the owner approves it with the interface mock.
+Test override: the E2E scenarios talk to a made-up OpenAI-compatible server (`httptest`) instead of LM Studio, overriding `testing-e2e-go.md` «External deps: Real or production-equivalent. No httptest» for the LLM only; decided by the prepared run on the owner's order of 2026-11-17 (decide and finish).
 Out of scope: the private Telegram message to the owner (`owner-notification`); history at start (`catch-up`); retries, backoff, graceful drain and reconnects (`delivery-resilience`); latency and load measurement (`quality-targets`); images, video, audio; owner feedback and commands (later, not now).
 Interface: CLI — match lines and error lines on the console.
 
