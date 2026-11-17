@@ -64,8 +64,8 @@ func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 	wait.Add(1)
 	go func() {
 		defer wait.Done()
-		match.RunWorkers(ctx, l.workers, l.queue, config.MatchMessage,
-			match.ReportFuncs{OnUnclear: con.Unclear, OnFailed: con.Failed})
+		match.RunWorkers(ctx, ctx, match.Pool{Workers: l.workers, Queue: l.queue, Matcher: config.MatchMessage,
+			Report: match.ReportFuncs{OnUnclear: con.Unclear, OnFailed: con.Failed}})
 	}()
 	con.running()
 	wait.Add(1)

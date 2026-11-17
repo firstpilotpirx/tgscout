@@ -16,9 +16,9 @@
 
 ## 3. Queue and workers
 
-- [ ] 3.1 Red: unit tests for `ChannelMessageQueue` (`OnFull` once per full episode, again after the queue was empty, `Len`) and `RunWorkers` (`Receive` ends at the stop context, a `Match` in work runs on the work context and ends at it, the busy count)
-- [ ] 3.2 Green: `adapters/secondary/queue/channel`, `adapters/primary/match/channel/match_workers.go`
-- [ ] 3.3 Commit (`kit ship`)
+- [x] 3.1 Red: unit tests for `ChannelMessageQueue` (`OnFull` once per full episode, again after the queue was empty, `Len`) and `RunWorkers` (`Receive` ends at the stop context, a `Match` in work runs on the work context and ends at it, the busy count)
+- [x] 3.2 Green: `adapters/secondary/queue/channel`, `adapters/primary/match/channel/match_workers.go`
+- [x] 3.3 Commit (`kit ship`)
 
 ## 4. Telegram connection events
 

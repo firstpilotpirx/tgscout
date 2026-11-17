@@ -65,3 +65,55 @@ func TestPutAndReceiveEndWithTheContext(t *testing.T) {
 	_, err := channel.NewChannelMessageQueue(1).Receive(ctx)
 	assert.ErrorIs(t, err, context.Canceled)
 }
+
+// blockedPut tries a Put on the full queue until the timeout and says whether the full queue was reported.
+func blockedPut(queue *channel.ChannelMessageQueue, full <-chan int, id int) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	_ = queue.Put(ctx, item(id))
+	select {
+	case <-full:
+		return true
+	default:
+		return false
+	}
+}
+
+func TestAFullQueueIsReportedOncePerEpisode(t *testing.T) {
+	queue := channel.NewChannelMessageQueue(1)
+	full := make(chan int, 10)
+	queue.OnFull = func(size int) { full <- size }
+	ctx := context.Background()
+	require.NoError(t, queue.Put(ctx, item(1)))
+	assert.Equal(t, 1, queue.Len())
+
+	assert.True(t, blockedPut(queue, full, 2), "the first wait on the full queue is reported")
+	assert.False(t, blockedPut(queue, full, 3), "no second report while the queue was never empty")
+
+	_, err := queue.Receive(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, queue.Len())
+	require.NoError(t, queue.Put(ctx, item(4)))
+	assert.True(t, blockedPut(queue, full, 5), "reported again after the queue was empty")
+}
+
+func TestTheFullReportNamesTheSize(t *testing.T) {
+	queue := channel.NewChannelMessageQueue(2)
+	full := make(chan int, 1)
+	queue.OnFull = func(size int) { full <- size }
+	ctx, cancel := context.WithCancel(context.Background())
+	require.NoError(t, queue.Put(ctx, item(1)))
+	require.NoError(t, queue.Put(ctx, item(2)))
+
+	done := make(chan error, 1)
+	go func() { done <- queue.Put(ctx, item(3)) }()
+
+	select {
+	case size := <-full:
+		assert.Equal(t, 2, size)
+	case <-time.After(time.Second):
+		t.Fatal("the full queue was not reported")
+	}
+	cancel()
+	require.ErrorIs(t, <-done, context.Canceled)
+}

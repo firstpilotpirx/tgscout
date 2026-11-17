@@ -156,7 +156,7 @@ func (c *catchUpSlice) run() error {
 	defer cancel()
 	stopped := make(chan struct{})
 	go func() {
-		match.RunWorkers(ctx, 2, messages, matchUseCase, nopReporter{})
+		match.RunWorkers(ctx, ctx, match.Pool{Workers: 2, Queue: messages, Matcher: matchUseCase, Report: nopReporter{}})
 		close(stopped)
 	}()
 	collector := collect.NewHistoryCollector(catchUp, collect.HistoryReports{

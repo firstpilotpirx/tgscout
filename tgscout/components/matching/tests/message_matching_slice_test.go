@@ -109,7 +109,7 @@ func (s *slice) play(updates ...telegram.Update) error {
 	defer cancel()
 	stopped := make(chan struct{})
 	go func() {
-		match.RunWorkers(ctx, s.workers, s.queue, matchUseCase, nopReporter{})
+		match.RunWorkers(ctx, ctx, match.Pool{Workers: s.workers, Queue: s.queue, Matcher: matchUseCase, Report: nopReporter{}})
 		close(stopped)
 	}()
 	for _, update := range updates {
