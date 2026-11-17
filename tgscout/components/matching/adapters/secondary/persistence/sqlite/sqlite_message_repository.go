@@ -98,3 +98,18 @@ func (r *SqliteMessageRepository) MoveCursor(ctx context.Context, chatID int64, 
 	}
 	return nil
 }
+
+// Cursor reads the chat's stored cursor and when it last moved; false when
+// the chat has none yet.
+func (r *SqliteMessageRepository) Cursor(ctx context.Context, chatID int64) (domain.StoredCursor, bool, error) {
+	var stored domain.StoredCursor
+	err := r.db.QueryRowContext(ctx, "SELECT last_message_id, updated_at FROM chat_cursor WHERE chat_id = ?",
+		chatID).Scan(&stored.MessageID, &stored.At)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.StoredCursor{}, false, nil
+	}
+	if err != nil {
+		return domain.StoredCursor{}, false, fmt.Errorf("read cursor: %w", err)
+	}
+	return stored, true, nil
+}

@@ -44,3 +44,25 @@ func (d CatchUp) Covers(rank int, sentAt, start time.Time) bool {
 func (d CatchUp) Since(start time.Time) time.Time {
 	return start.Add(-time.Duration(d.Days) * 24 * time.Hour)
 }
+
+// StoredCursor is the cursor of a chat as the database keeps it: the last
+// processed message and when the cursor last moved.
+type StoredCursor struct {
+	MessageID int
+	At        time.Time
+}
+
+// CatchUpChat is one chat being caught up: where its read starts, how deep
+// it goes and when catch-up began.
+type CatchUpChat struct {
+	ChatID    int64
+	Ref       ChatRef
+	After     int
+	HasCursor bool
+	CursorAt  time.Time
+	Depth     CatchUp
+	Start     time.Time
+}
+
+// Since is the oldest time the chat's read reaches.
+func (c CatchUpChat) Since() time.Time { return c.Depth.Since(c.Start) }

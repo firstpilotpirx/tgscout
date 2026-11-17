@@ -17,6 +17,7 @@ type fakeMessageRepository struct {
 	sent      map[domain.MessageKey][]string
 	decisions []domain.Decision
 	cursor    map[int64]int
+	cursorAt  map[int64]time.Time
 	err       error
 }
 
@@ -25,6 +26,7 @@ func newRepository() *fakeMessageRepository {
 		processed: map[domain.MessageKey]bool{},
 		sent:      map[domain.MessageKey][]string{},
 		cursor:    map[int64]int{},
+		cursorAt:  map[int64]time.Time{},
 	}
 }
 
@@ -68,6 +70,13 @@ func (r *fakeMessageRepository) MoveCursor(_ context.Context, chatID int64, mess
 		r.cursor[chatID] = messageID
 	}
 	return nil
+}
+
+func (r *fakeMessageRepository) Cursor(_ context.Context, chatID int64) (domain.StoredCursor, bool, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	id, found := r.cursor[chatID]
+	return domain.StoredCursor{MessageID: id, At: r.cursorAt[chatID]}, found, r.err
 }
 
 type fakeMessageQueue struct{ items []domain.QueueItem }

@@ -80,3 +80,26 @@ func TestRepositoryCursorNeverMovesBack(t *testing.T) {
 
 	assert.Equal(t, 12, count("SELECT last_message_id FROM chat_cursor WHERE chat_id = 7"))
 }
+
+func TestRepositoryReadsTheStoredCursor(t *testing.T) {
+	repository, _ := newRepository(t)
+	ctx := context.Background()
+	moved := time.Date(2026, 11, 5, 8, 30, 0, 0, time.UTC)
+	require.NoError(t, repository.MoveCursor(ctx, 7, 12, moved))
+
+	stored, found, err := repository.Cursor(ctx, 7)
+
+	require.NoError(t, err)
+	assert.True(t, found)
+	assert.Equal(t, 12, stored.MessageID)
+	assert.True(t, moved.Equal(stored.At), "cursor time %s, want %s", stored.At, moved)
+}
+
+func TestRepositoryHasNoCursorForANewChat(t *testing.T) {
+	repository, _ := newRepository(t)
+
+	_, found, err := repository.Cursor(context.Background(), 8)
+
+	require.NoError(t, err)
+	assert.False(t, found)
+}

@@ -59,6 +59,10 @@ func (m *memoryMessages) MarkProcessed(_ context.Context, key domain.MessageKey,
 }
 func (m *memoryMessages) MoveCursor(context.Context, int64, int, time.Time) error { return nil }
 
+func (m *memoryMessages) Cursor(context.Context, int64) (domain.StoredCursor, bool, error) {
+	return domain.StoredCursor{}, false, nil
+}
+
 func (m *memoryMessages) processedCount() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()

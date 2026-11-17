@@ -33,19 +33,50 @@ func (c *CollectMessage) Collect(ctx context.Context, message domain.Message) er
 	if message.Edited {
 		return c.collectEdit(ctx, message, requests)
 	}
-	if !c.tracker.Begin(message.Key) {
+	_, err := c.admit(ctx, domain.QueueItem{Message: message, Requests: requests}, func() {})
+	return err
+}
+
+// CollectHistory takes a history message with the requests whose depth
+// covers it through the same checks, and counts it in the catch-up tally.
+func (c *CollectMessage) CollectHistory(ctx context.Context, message domain.Message, requests []domain.Request) error {
+	tally := c.tracker.Tally()
+	tally.Read(1)
+	if len(requests) == 0 || strings.TrimSpace(message.Text) == "" {
+		tally.Skip()
 		return nil
 	}
-	processed, err := c.messages.IsProcessed(ctx, message.Key)
+	queued, err := c.admit(ctx, domain.QueueItem{Message: message, Requests: requests},
+		func() { tally.Expect(message.Key) })
+	switch {
+	case err != nil && queued:
+		tally.Settle(message.Key, 0, true)
+	case err != nil:
+		tally.Fail()
+	case !queued:
+		tally.Skip()
+	}
+	return err
+}
+
+// admit begins a new message, drops one in flight or processed already, and
+// queues the rest; expect runs before the put. True means it was handed on.
+func (c *CollectMessage) admit(ctx context.Context, item domain.QueueItem, expect func()) (bool, error) {
+	key := item.Message.Key
+	if !c.tracker.Begin(key) {
+		return false, nil
+	}
+	processed, err := c.messages.IsProcessed(ctx, key)
 	if err != nil {
-		c.tracker.Fail(message.Key)
-		return err
+		c.tracker.Fail(key)
+		return false, err
 	}
 	if processed {
-		c.tracker.Finish(message.Key)
-		return nil
+		c.tracker.Finish(key)
+		return false, nil
 	}
-	return c.queue.Put(ctx, domain.QueueItem{Message: message, Requests: requests})
+	expect()
+	return true, c.queue.Put(ctx, item)
 }
 
 func (c *CollectMessage) collectEdit(ctx context.Context, message domain.Message, requests []domain.Request) error {

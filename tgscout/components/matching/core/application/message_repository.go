@@ -19,4 +19,6 @@ type MessageRepository interface {
 	MarkProcessed(ctx context.Context, key domain.MessageKey, at time.Time) error
 	// MoveCursor moves the chat's cursor forward; it never moves it back.
 	MoveCursor(ctx context.Context, chatID int64, messageID int, at time.Time) error
+	// Cursor reads the chat's stored cursor; false when it has none yet.
+	Cursor(ctx context.Context, chatID int64) (domain.StoredCursor, bool, error)
 }

@@ -6,9 +6,9 @@
 
 ## 2. Use cases and repository
 
-- [ ] 2.1 Red: unit tests for `CollectMessage.CollectHistory` (queued with the given requests and expected in the tally; processed, in flight, no text skipped), the `CatchUp` use case (`Open` holds and gives the window with and without a stored cursor, `Close` releases and stores a moved cursor, `Wait` gives the counts), `MatchMessage` settling the tally (a match counted, a failure counted, an edit not settled); integration test for `SqliteMessageRepository.Cursor` (found with its time, not found)
-- [ ] 2.2 Green: `core/application/collect_message.go` (shared `admit`), `catch_up.go`, `match_message.go`, `message_repository.go` (`Cursor`), the SQLite repository, `matching_config.go` (shared tally, the `CatchUp` use case)
-- [ ] 2.3 Commit (`kit ship`)
+- [x] 2.1 Red: unit tests for `CollectMessage.CollectHistory` (queued with the given requests and expected in the tally; processed, in flight, no text skipped), the `CatchUp` use case (`Open` holds and gives the window with and without a stored cursor, `Close` releases and stores a moved cursor, `Wait` gives the counts), `MatchMessage` settling the tally (a match counted, a failure counted, an edit not settled); integration test for `SqliteMessageRepository.Cursor` (found with its time, not found)
+- [x] 2.2 Green: `core/application/collect_message.go` (shared `admit`), `catch_up.go`, `match_message.go`, `message_repository.go` (`Cursor`), the SQLite repository, `matching_config.go` (shared tally, the `CatchUp` use case)
+- [x] 2.3 Commit (`kit ship`)
 
 ## 3. Telegram client
 
