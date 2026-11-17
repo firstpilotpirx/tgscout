@@ -102,8 +102,9 @@ func (h *HistoryCollector) CatchUp(ctx context.Context, client telegram.Client, 
 
 // catchUpChat opens the chat, reads its window, hands each message on with
 // its rank from the newest, and closes it whatever happened.
-func (h *HistoryCollector) catchUpChat(ctx context.Context, client telegram.Client, chat Chat) ChatReport {
-	report := ChatReport{Chat: chat}
+// The report is a named result, so the deferred Close can still set its error.
+func (h *HistoryCollector) catchUpChat(ctx context.Context, client telegram.Client, chat Chat) (report ChatReport) {
+	report = ChatReport{Chat: chat}
 	window, err := h.useCase.Open(ctx, chat.ID, chat.Ref)
 	report.Window = window
 	if err != nil {

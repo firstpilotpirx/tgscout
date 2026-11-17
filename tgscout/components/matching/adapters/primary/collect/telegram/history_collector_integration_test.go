@@ -51,6 +51,7 @@ type recordingCatchUp struct {
 	collected []domain.Message
 	ranks     []int
 	cursor    map[int64]int
+	closeErr  error
 }
 
 func (r *recordingCatchUp) Open(_ context.Context, chatID int64, ref domain.ChatRef) (domain.CatchUpChat, error) {
@@ -68,7 +69,7 @@ func (r *recordingCatchUp) Collect(_ context.Context, _ domain.CatchUpChat, mess
 
 func (r *recordingCatchUp) Close(_ context.Context, chat domain.CatchUpChat) error {
 	r.closed = append(r.closed, chat.ChatID)
-	return nil
+	return r.closeErr
 }
 
 func (r *recordingCatchUp) Wait(context.Context) (domain.CatchUpCounts, error) {
@@ -180,4 +181,15 @@ func TestHistoryCollectorPrintsNoSummaryAfterAStop(t *testing.T) {
 
 	require.ErrorIs(t, err, context.Canceled)
 	assert.Nil(t, reports.summary)
+}
+
+func TestHistoryCollectorReportsAFailedClose(t *testing.T) {
+	useCase := &recordingCatchUp{closeErr: errRead}
+	reports := &recordedReports{}
+	collector := collect.NewHistoryCollector(useCase, reports.funcs(), noSleep)
+
+	require.NoError(t, collector.CatchUp(context.Background(), &historyClient{}, historyChats(t)[:1]))
+
+	require.Len(t, reports.chats, 1)
+	require.ErrorIs(t, reports.chats[0].Err, errRead, "the stored cursor was not saved")
 }
