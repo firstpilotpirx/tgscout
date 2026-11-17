@@ -34,26 +34,37 @@ func (b *syncBuffer) String() string {
 
 // process is one run of the built tgscout binary.
 type process struct {
-	cmd    *exec.Cmd
-	stdout syncBuffer
-	stderr syncBuffer
-	done   chan struct{}
-	code   int
+	cmd      *exec.Cmd
+	stdout   syncBuffer
+	stderr   syncBuffer
+	done     chan struct{}
+	code     int
+	terminal *os.File // the pseudo-terminal of a run on one, else nil
+	tty      *os.File // its terminal side, kept to read the echo state
 }
 
-// startProcess runs the binary named by SUT_BIN in dir, without color.
-func startProcess(dir string, args ...string) (*process, error) {
+// newProcess prepares the binary named by SUT_BIN in dir, without color.
+func newProcess(dir string, env []string, args ...string) (*process, error) {
 	bin := os.Getenv("SUT_BIN")
 	if bin == "" {
 		return nil, errors.New("SUT_BIN must name the built tgscout binary")
 	}
 	p := &process{cmd: exec.Command(bin, args...), done: make(chan struct{})} //nolint:gosec // G204: the binary under test, named by SUT_BIN
 	p.cmd.Dir = dir
-	p.cmd.Env = append(os.Environ(), "NO_COLOR=1")
+	p.cmd.Env = append(append(cleanEnviron(), "NO_COLOR=1"), env...)
+	return p, nil
+}
+
+// startProcess runs the binary with its input from /dev/null, not a terminal.
+func startProcess(dir string, env []string, args ...string) (*process, error) {
+	p, err := newProcess(dir, env, args...)
+	if err != nil {
+		return nil, err
+	}
 	p.cmd.Stdout = &p.stdout
 	p.cmd.Stderr = &p.stderr
 	if err := p.cmd.Start(); err != nil {
-		return nil, fmt.Errorf("start %s: %w", bin, err)
+		return nil, fmt.Errorf("start %s: %w", p.cmd.Path, err)
 	}
 	go p.wait()
 	return p, nil
@@ -109,6 +120,19 @@ func (p *process) stop() {
 		_ = p.cmd.Process.Kill() // cleanup after a scenario; the exit is not checked
 		<-p.done
 	}
+	p.closeTerminal()
 }
 
 func (p *process) output() string { return p.stdout.String() + p.stderr.String() }
+
+// cleanEnviron is the runner's environment without tgscout's own variables,
+// so a developer's or CI's Telegram settings never reach a scenario.
+func cleanEnviron() []string {
+	var env []string
+	for _, each := range os.Environ() {
+		if !strings.HasPrefix(each, "TG_") && !strings.HasPrefix(each, "TGSCOUT_") {
+			env = append(env, each)
+		}
+	}
+	return env
+}

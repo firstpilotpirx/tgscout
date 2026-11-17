@@ -22,6 +22,8 @@ type world struct {
 	config string
 	run    *process
 	schema string
+	tg     telegramWorld
+	echo   bool // a run on a terminal shows what the owner types
 }
 
 // validConfig is a made-up config with every required field.
@@ -33,7 +35,7 @@ func TestFeatures(t *testing.T) {
 		ScenarioInitializer: initializeScenario,
 		Options: &godog.Options{
 			Format: "pretty", Paths: []string{"features"}, Tags: "~@wip",
-			Strict: true, TestingT: t,
+			Strict: true, TestingT: t, Concurrency: 4,
 		},
 	}
 	if suite.Run() != 0 {
@@ -45,7 +47,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	w := &world{}
 	sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 		dir, err := os.MkdirTemp("", "tgscout-e2e-")
-		w.dir, w.config = dir, "tgscout.yaml"
+		w.dir, w.config, w.tg, w.echo = dir, "tgscout.yaml", defaultTelegram(), false
 		return ctx, err
 	})
 	sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
@@ -58,6 +60,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	whenSteps(sc, w)
 	thenSteps(sc, w)
 	settingsSteps(sc, w)
+	telegramSteps(sc, w)
 }
 
 func givenSteps(sc *godog.ScenarioContext, w *world) {
@@ -99,7 +102,11 @@ func (w *world) start(extra ...string) error {
 	if w.config != "" {
 		args = append([]string{"--config", "./" + w.config}, extra...)
 	}
-	run, err := startProcess(w.dir, args...)
+	env, err := w.tg.write(w.dir)
+	if err != nil {
+		return err
+	}
+	run, err := startProcess(w.dir, env, args...)
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,8 @@ vendors:
   migrate: { in: [github.com/golang-migrate/migrate/v4, github.com/golang-migrate/migrate/v4/**] }
   sqlite3: { in: github.com/mattn/go-sqlite3 }
   color:   { in: github.com/fatih/color }
+  gotd:    { in: [github.com/gotd/td, github.com/gotd/td/**] }
+  xterm:   { in: golang.org/x/term }
 
 components:
   app:         { in: apps/** }
@@ -26,9 +28,9 @@ components:
 deps:
   app:
     anyProjectDeps: true
-    canUse: [cobra, color]
+    canUse: [cobra, color, xterm]
   infra:
-    canUse: [sqlite3]
+    canUse: [sqlite3, gotd]
   config:
     mayDependOn: [application, domain]
   application:

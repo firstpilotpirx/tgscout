@@ -87,3 +87,8 @@ func (c *console) fail(text, hint string, paths ...string) {
 func (c *console) println(w io.Writer, line string) {
 	_, _ = fmt.Fprintln(w, line) // a lost console line cannot be reported anywhere
 }
+
+// print writes a prompt to out without a line end.
+func (c *console) print(text string) {
+	_, _ = fmt.Fprint(c.out, text) // a lost prompt cannot be reported anywhere
+}

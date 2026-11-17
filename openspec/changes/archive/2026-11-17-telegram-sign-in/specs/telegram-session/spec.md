@@ -21,6 +21,7 @@ When no session file exists, tgscout SHALL ask in the console for the phone numb
 - **WHEN** the owner starts tgscout and types the phone number, the login code and the password
 - **THEN** tgscout says it signed in as the account's name
 - **AND** the session file exists and only its owner can read or write it
+- **AND** the password is not shown while typed
 
 #### Scenario: a wrong login code
 
