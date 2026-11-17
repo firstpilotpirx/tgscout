@@ -38,6 +38,17 @@ type fakeTelegram struct {
 	OwnerChatClosed  bool              `json:"owner_chat_closed"`
 	SendFails        bool              `json:"send_fails"`
 	SentFile         string            `json:"sent_file"`
+	History          []fakeHistory     `json:"history"`
+	HistoryFlood     int               `json:"history_flood_wait_seconds"`
+	HistoryDelayMs   int               `json:"history_delay_ms"`
+}
+
+// fakeHistory is a made-up message posted before the start, AgeMinutes ago.
+type fakeHistory struct {
+	Chat       string `json:"chat"`
+	ID         int    `json:"id"`
+	Text       string `json:"text"`
+	AgeMinutes int    `json:"age_minutes"`
 }
 
 // fakeUpdate is a made-up message the fake Telegram plays after the start.

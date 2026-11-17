@@ -30,9 +30,9 @@
 
 ## 6. E2E
 
-- [ ] 6.1 Red: `e2e/features/catch_up.feature` (`@catch_up @e2e`), one `Rule:` per requirement, every E2E scenario of design § Test levels; the world's fake Telegram gets `history`, `history_flood_wait_seconds` and `history_delay_ms`
-- [ ] 6.2 Green: fix what the scenarios find
-- [ ] 6.3 Commit (`kit ship`)
+- [x] 6.1 Red: `e2e/features/catch_up.feature` (`@catch_up @e2e`), one `Rule:` per requirement, every E2E scenario of design § Test levels; the world's fake Telegram gets `history`, `history_flood_wait_seconds` and `history_delay_ms`
+- [x] 6.2 Green: fix what the scenarios find
+- [x] 6.3 Commit (`kit ship`)
 
 ## 7. Docs and version
 

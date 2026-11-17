@@ -32,6 +32,7 @@ type matchingWorld struct {
 	requests []matchRequest
 	lm       *fakeLmStudio
 	runs     []*process // every start of the scenario, in order
+	chats    []string   // the watched chats of every request; the market when empty
 }
 
 func matchingSteps(sc *godog.ScenarioContext, w *world) {
@@ -40,6 +41,7 @@ func matchingSteps(sc *godog.ScenarioContext, w *world) {
 	matchingThenSteps(sc, w)
 	consoleThenSteps(sc, w)
 	decisionThenSteps(sc, w)
+	catchUpSteps(sc, w)
 }
 
 func matchingGivenSteps(sc *godog.ScenarioContext, w *world) {
@@ -193,8 +195,12 @@ func (w *world) matchingConfig() string {
 	var text strings.Builder
 	fmt.Fprintf(&text, "owner: '@made_up_owner'\nworkers: 2\nlm_studio:\n  url: %s\n  model: example-model\n  timeout: 5s\nrequests:\n",
 		w.lmStudio().url())
+	chats := w.matching.chats
+	if len(chats) == 0 {
+		chats = []string{market}
+	}
 	for _, each := range w.matching.requests {
-		fmt.Fprintf(&text, "  - id: %s\n    find: %q\n    chats: ['%s']\n", each.id, each.find, market)
+		fmt.Fprintf(&text, "  - id: %s\n    find: %q\n    chats: ['%s']\n", each.id, each.find, strings.Join(chats, "', '"))
 	}
 	return text.String()
 }
@@ -209,10 +215,12 @@ func (w *world) runToIdle() error {
 		return err
 	}
 	w.matching.runs = append(w.matching.runs, w.run)
-	last := 0
+	last := w.tg.fake.HistoryDelayMs + w.tg.fake.HistoryFlood*1000 // the history read before it settles
+	updates := 0
 	for _, each := range w.tg.fake.Updates {
-		last += each.AfterMs
+		updates += each.AfterMs // each update waits its after_ms after the one before
 	}
+	last = max(last, updates)
 	time.Sleep(time.Duration(last) * time.Millisecond)
 	if err := w.waitIdle(); err != nil {
 		return err
