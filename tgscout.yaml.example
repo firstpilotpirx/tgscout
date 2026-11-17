@@ -20,6 +20,11 @@ retry_max_pause: 60s
 # (default 10s). A second Ctrl+C stops at once.
 stop_grace: 10s
 
+# How often tgscout prints its status line: messages in, judged, matches,
+# queue length and the p95 times (default 5m, at least 10s). It prints the
+# status since start once more at the stop.
+status_interval: 5m
+
 # LM Studio, through its OpenAI-compatible API.
 lm_studio:
   url: http://localhost:1234/v1   # default

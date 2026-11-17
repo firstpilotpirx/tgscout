@@ -2,9 +2,9 @@
 
 ## 1. Domain and settings
 
-- [ ] 1.1 Red: unit tests for `domain.P95` (empty gives no value, one sample, nearest rank over 20 samples); `domain.RunStats` (`Cut` gives the last interval's counts and p95 values and starts a new interval, `Total` covers the whole run, a nil `*RunStats` does nothing, latency counted only when given); `domain.LmStudio.Local` (`localhost`, `LOCALHOST`, `127.0.0.1`, `[::1]` local; another host not); the settings parser (`status_interval` read, default 5 minutes, `5s` refused with field and line)
-- [ ] 1.2 Green: `core/domain/run_stats.go`, `percentile.go`, `LmStudio.Local`, `Message.Live`, `Settings.StatusInterval`, the YAML parser; `tgscout.yaml.example` names `status_interval`
-- [ ] 1.3 Commit (`kit ship`)
+- [x] 1.1 Red: unit tests for `domain.P95` (empty gives no value, one sample, nearest rank over 20 samples); `domain.RunStats` (`Cut` gives the last interval's counts and p95 values and starts a new interval, `Total` covers the whole run, a nil `*RunStats` does nothing, latency counted only when given); `domain.LmStudio.Local` (`localhost`, `LOCALHOST`, `127.0.0.1`, `[::1]` local; another host not); the settings parser (`status_interval` read, default 5 minutes, `5s` refused with field and line)
+- [x] 1.2 Green: `core/domain/run_stats.go`, `percentile.go`, `LmStudio.Local`, `Message.Live`, `Settings.StatusInterval`, the YAML parser; `tgscout.yaml.example` names `status_interval`
+- [x] 1.3 Commit (`kit ship`)
 
 ## 2. Counting in the use cases
 

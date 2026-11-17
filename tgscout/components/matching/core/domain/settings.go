@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"net/url"
+	"strings"
+	"time"
+)
 
 // CatchUp is the resolved catch-up depth of one chat of one request.
 type CatchUp struct {
@@ -29,6 +33,17 @@ type LmStudio struct {
 	Timeout time.Duration
 }
 
+// Local tells whether the URL's host is this machine (localhost, 127.0.0.1
+// or ::1), so chat texts stay on it.
+func (l LmStudio) Local() bool {
+	parsed, err := url.Parse(l.URL)
+	if err != nil {
+		return false
+	}
+	host := strings.ToLower(parsed.Hostname())
+	return host == "localhost" || host == "127.0.0.1" || host == "::1"
+}
+
 // Settings is the resolved view of the config file: every default applied and
 // every override resolved.
 type Settings struct {
@@ -39,8 +54,10 @@ type Settings struct {
 	RetryMaxPause time.Duration
 	// StopGrace is how long a stop waits for the messages in work.
 	StopGrace time.Duration
-	LmStudio  LmStudio
-	Requests  []Request
+	// StatusInterval is how often the status line is printed.
+	StatusInterval time.Duration
+	LmStudio       LmStudio
+	Requests       []Request
 }
 
 // RequestsOf gives every request that watches the chat, in config order.

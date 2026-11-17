@@ -24,6 +24,10 @@ const (
 	DefaultRetryMaxPause = 60 * time.Second
 	// DefaultStopGrace is how long a stop waits for the messages in work.
 	DefaultStopGrace = 10 * time.Second
+	// DefaultStatusInterval is how often the status line is printed.
+	DefaultStatusInterval = 5 * time.Minute
+	// MinStatusInterval is the shortest status interval.
+	MinStatusInterval = 10 * time.Second
 	// MaxChats is the design maximum of distinct chats; more gives a warning.
 	MaxChats = 100
 )
@@ -65,17 +69,21 @@ func (w *walker) root(body ast.Node) domain.Settings {
 	if isNull(body) {
 		body = &ast.MappingNode{BaseNode: &ast.BaseNode{}}
 	}
-	found, ok := w.fields(body, "", "owner", "workers", "queue_size", "retry_max_pause", "stop_grace", "lm_studio", "catch_up", "requests")
+	found, ok := w.fields(body, "", "owner", "workers", "queue_size", "retry_max_pause", "stop_grace", "status_interval", "lm_studio", "catch_up", "requests")
 	if !ok {
 		return domain.Settings{}
 	}
 	settings := domain.Settings{
-		Owner:         w.owner(found["owner"], lineOf(body)),
-		Workers:       DefaultWorkers,
-		QueueSize:     DefaultQueueSize,
-		RetryMaxPause: DefaultRetryMaxPause,
-		StopGrace:     DefaultStopGrace,
-		LmStudio:      w.lmStudio(found["lm_studio"], lineOf(body)),
+		Owner:          w.owner(found["owner"], lineOf(body)),
+		Workers:        DefaultWorkers,
+		QueueSize:      DefaultQueueSize,
+		RetryMaxPause:  DefaultRetryMaxPause,
+		StopGrace:      DefaultStopGrace,
+		StatusInterval: DefaultStatusInterval,
+		LmStudio:       w.lmStudio(found["lm_studio"], lineOf(body)),
+	}
+	if interval := found["status_interval"]; interval != nil {
+		settings.StatusInterval = w.statusInterval(interval.Value)
 	}
 	if queueSize := found["queue_size"]; queueSize != nil {
 		settings.QueueSize, _ = w.number(queueSize.Value, "queue_size", 1)
@@ -95,6 +103,18 @@ func (w *walker) root(body ast.Node) domain.Settings {
 	}
 	settings.Requests = w.requests(found["requests"], lineOf(body), rootDepth)
 	return settings
+}
+
+// statusInterval reads a duration of at least MinStatusInterval.
+func (w *walker) statusInterval(node ast.Node) time.Duration {
+	if value, ok := node.(*ast.StringNode); ok {
+		parsed, err := time.ParseDuration(value.Value)
+		if err == nil && parsed >= MinStatusInterval {
+			return parsed
+		}
+	}
+	w.fail(lineOf(node), "status_interval", "must be a duration of at least 10s such as 5m")
+	return DefaultStatusInterval
 }
 
 func (w *walker) owner(entry *ast.MappingValueNode, parentLine int) domain.Owner {
