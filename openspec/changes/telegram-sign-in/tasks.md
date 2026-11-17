@@ -43,6 +43,6 @@
 
 - [x] 6.1 `README.md` § Setup: get `api_id` / `api_hash` at my.telegram.org, prepare the second account, join the chats with it, add the owner to its contacts, first start from a terminal; `.env.example` comments for the three variables
 - [x] 6.2 Bump `VERSION` to 0.3.0
-- [ ] 6.3 Commit (`kit ship`)
+- [x] 6.3 Commit (`kit ship`)
 
 Manual checks by the user: none for this run (`manual_run` lists no area); the owner's real-account sign-in of the acceptance bar stays for the owner.
