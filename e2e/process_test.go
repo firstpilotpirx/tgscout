@@ -104,6 +104,21 @@ func (p *process) signal(sig syscall.Signal) error {
 	return p.exited()
 }
 
+// send sends sig and does not wait.
+func (p *process) send(sig syscall.Signal) error {
+	if err := p.cmd.Process.Signal(sig); err != nil {
+		return fmt.Errorf("send %s: %w", sig, err)
+	}
+	return nil
+}
+
+// exitedWithin waits for the exit and says how long it took.
+func (p *process) exitedWithin() (time.Duration, error) {
+	started := time.Now()
+	err := p.exited()
+	return time.Since(started), err
+}
+
 func (p *process) exited() error {
 	select {
 	case <-p.done:

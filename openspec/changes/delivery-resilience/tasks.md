@@ -40,9 +40,9 @@
 
 ## 7. E2E
 
-- [ ] 7.1 Red: `e2e/features/delivery.feature` (`@delivery @e2e`), one `Rule:` per requirement, every E2E scenario of design § Test levels; the world's fakes get LM Studio down/up and an answer delay, Telegram `connection_lost` / `connection_back` / `lost` / `send_hang_ms`, a SIGKILL and a restart over the same database; the changed steps of `message_matching.feature`, `owner_notification.feature` and `catch_up.feature`
-- [ ] 7.2 Green: fix what the scenarios find
-- [ ] 7.3 Commit (`kit ship`)
+- [x] 7.1 Red: `e2e/features/delivery.feature` (`@delivery @e2e`), one `Rule:` per requirement, every E2E scenario of design § Test levels; the world's fakes get LM Studio down/up and an answer delay, Telegram `connection_lost` / `connection_back` / `lost` / `send_hang_ms`, a SIGKILL and a restart over the same database; the changed steps of `message_matching.feature`, `owner_notification.feature` and `catch_up.feature`
+- [x] 7.2 Green: fix what the scenarios find
+- [x] 7.3 Commit (`kit ship`)
 
 ## 8. Docs and version
 

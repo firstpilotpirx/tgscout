@@ -32,9 +32,9 @@ Feature: owner-notification — each match goes to the owner as a private Telegr
   Rule: A failed send
 
     Scenario: a send fails
-      Given the send of a match fails
+      Given every send of a match fails
       When the matcher handles the message
-      Then the message stays unprocessed and the console shows an error line
+      Then the message stays unprocessed and the console shows a warning line for each failed try
 
   Rule: Writing only to the owner
 

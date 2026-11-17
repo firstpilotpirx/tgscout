@@ -63,7 +63,7 @@ Feature: message-matching — how a new message of a watched chat becomes a deci
     Scenario: LM Studio is down
       Given LM Studio does not answer
       When a new message appears in a watched chat
-      Then the console shows an error line
+      Then the console shows a line that LM Studio is not answering
       And the message is not marked processed and the cursor does not move past it
 
   Rule: Edited messages

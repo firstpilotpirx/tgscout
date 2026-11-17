@@ -68,6 +68,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	ownerSteps(sc, w)
 	telegramSteps(sc, w)
 	matchingSteps(sc, w)
+	deliverySteps(sc, w)
 }
 
 func givenSteps(sc *godog.ScenarioContext, w *world) {
