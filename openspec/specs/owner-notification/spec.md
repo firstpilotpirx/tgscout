@@ -1,7 +1,7 @@
 # owner-notification Specification
 
 ## Purpose
-TBD - created by archiving change owner-notification. Update Purpose after archive.
+Each match goes to the owner as a private Telegram message from tgscout's own account, and a message counts as processed only after Telegram confirms every send of it.
 
 ## Requirements
 
