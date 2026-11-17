@@ -1,7 +1,7 @@
 # quality-targets Specification
 
 ## Purpose
-TBD - created by archiving change quality-targets. Update Purpose after archive.
+The version 1 targets (p95 ≤ 10 s from a message to its match, catch-up ≤ 15 minutes, a store under 10 GB a year, chat texts kept on this machine): how the console shows them while tgscout runs, and the tests that prove them.
 
 ## Requirements
 
