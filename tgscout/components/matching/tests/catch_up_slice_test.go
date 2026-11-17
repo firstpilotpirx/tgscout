@@ -39,12 +39,19 @@ func newCatchUpSlice() *catchUpSlice {
 }
 
 func (c *catchUpSlice) steps(sc *godog.ScenarioContext) {
-	sc.Step(`^a watched chat with no cursor and (\d+) messages posted in the last day$`, func(count int) {
-		c.post(count, 0, time.Minute)
-	})
 	sc.Step(`^the owner starts tgscout$`, c.run)
 	sc.Step(`^catch-up reads (?:a|that) chat(?: of that request)? for the first time$`, c.run)
 	sc.Step(`^catch-up reaches it$`, c.run)
+	c.depthSteps(sc)
+	c.depthPerRequestSteps(sc)
+	c.processedSteps(sc)
+}
+
+// depthSteps: where catch-up starts and stops, and the gap.
+func (c *catchUpSlice) depthSteps(sc *godog.ScenarioContext) {
+	sc.Step(`^a watched chat with no cursor and (\d+) messages posted in the last day$`, func(count int) {
+		c.post(count, 0, time.Minute)
+	})
 	sc.Step(`^tgscout judges only the newest (\d+) of them$`, func(count int) error {
 		return c.judgedFrom(len(c.history)-count+1, len(c.history))
 	})
@@ -69,6 +76,9 @@ func (c *catchUpSlice) steps(sc *godog.ScenarioContext) {
 		}
 		return nil
 	})
+}
+
+func (c *catchUpSlice) depthPerRequestSteps(sc *godog.ScenarioContext) {
 	sc.Step(`^a request with a catch-up depth of 7 days$`, func() {
 		c.requests[0].Chats[0].CatchUp = domain.CatchUp{Messages: 500, Days: 7}
 		c.postAt(1, 8*24*time.Hour, "eight days old")
@@ -95,6 +105,9 @@ func (c *catchUpSlice) steps(sc *godog.ScenarioContext) {
 		}
 		return nil
 	})
+}
+
+func (c *catchUpSlice) processedSteps(sc *godog.ScenarioContext) {
 	sc.Step(`^a message after the cursor that is already marked processed$`, func() {
 		c.repository.cursor[watchedChatID] = 1
 		c.repository.cursorAt[watchedChatID] = catchUpNow.Add(-time.Hour)

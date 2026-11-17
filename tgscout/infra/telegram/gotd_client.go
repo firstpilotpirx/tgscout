@@ -154,34 +154,6 @@ func chatInfo(resolved *tg.ContactsResolvedPeer) (ChatInfo, tg.InputPeerClass) {
 	return ChatInfo{}, nil
 }
 
-// ReadHistory pages messages.getHistory of a chat ResolveChat found.
-func (c *gotdClient) ReadHistory(ctx context.Context, chatID int64, window HistoryWindow) (History, error) {
-	c.mu.Lock()
-	peer := c.peers[chatID]
-	c.mu.Unlock()
-	if peer == nil {
-		return History{}, fmt.Errorf("chat %d was not found at start", chatID)
-	}
-	return pageHistory(ctx, func(ctx context.Context, offsetID int) ([]Update, error) {
-		answer, err := c.client.API().MessagesGetHistory(ctx, &tg.MessagesGetHistoryRequest{
-			Peer: peer, OffsetID: offsetID, Limit: historyPage, MinID: window.After})
-		if err != nil {
-			return nil, mapError(err)
-		}
-		modified, ok := answer.AsModified()
-		if !ok {
-			return nil, nil
-		}
-		var page []Update
-		for _, message := range modified.GetMessages() {
-			if update, ok := mapMessage(message, false); ok {
-				page = append(page, update)
-			}
-		}
-		return page, nil
-	}, window)
-}
-
 // bareChatID is the peer ID of a numeric reference: "-100…" and "-…" dropped.
 func bareChatID(ref string) int64 {
 	id, _ := strconv.ParseInt(strings.TrimPrefix(strings.TrimPrefix(ref, "-100"), "-"), 10, 64)
