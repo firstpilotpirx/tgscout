@@ -59,3 +59,6 @@ func (s *FileStorage) Commit(ctx context.Context) error {
 	s.pending = nil
 	return s.file.StoreSession(ctx, data)
 }
+
+// FirstRun tells whether no session file existed when the storage opened.
+func (s *FileStorage) FirstRun() bool { return s.held }

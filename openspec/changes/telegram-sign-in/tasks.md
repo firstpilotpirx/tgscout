@@ -8,11 +8,11 @@
 
 ## 2. Sign-in and lookup walks
 
-- [ ] 2.1 Red: unit tests for `SignIn` with a fake `Client` and prompter — authorized session asks nothing; first run asks phone, code, password; wrong code and wrong password ask again; `Commit` only after success; revoked session error
-- [ ] 2.2 Green: `infra/telegram/client.go` (port, errors), `infra/telegram/sign_in.go`
-- [ ] 2.3 Red: unit tests for `Lookup` — every chat found; not joined and missing chats listed together with reasons; owner not found; FLOOD_WAIT reported, slept (fake sleep) and retried
-- [ ] 2.4 Green: `infra/telegram/lookup.go`
-- [ ] 2.5 Commit (`kit ship`)
+- [x] 2.1 Red: unit tests for `SignIn` with a fake `Client` and prompter — authorized session asks nothing; first run asks phone, code, password; wrong code and wrong password ask again; `Commit` only after success; revoked session error
+- [x] 2.2 Green: `infra/telegram/client.go` (port, errors), `infra/telegram/sign_in.go`
+- [x] 2.3 Red: unit tests for `Lookup` — every chat found; not joined and missing chats listed together with reasons; owner not found; FLOOD_WAIT reported, slept (fake sleep) and retried
+- [x] 2.4 Green: `infra/telegram/lookup.go`
+- [x] 2.5 Commit (`kit ship`)
 
 ## 3. Real and fake clients
 
