@@ -30,6 +30,7 @@ Design pages this slice implements:
 Current stage: PoC. Target stage: PoC.
 Scope: collector for new messages, the pre-filter, the processed check, the queue, matcher workers, the llm part over the OpenAI-compatible API, decisions, processed marks, the cursor, the console notifier, re-judging edited messages, the `queue_size` setting.
 Acceptance bar: the scenarios below pass as slice tests with a fake Telegram update stream and a fake OpenAI-compatible server; a manual run with LM Studio prints a match on the console for a made-up message posted in a test chat.
+Test override: the E2E scenarios talk to a made-up OpenAI-compatible server (`httptest`) instead of LM Studio, overriding `testing-e2e-go.md` «External deps: Real or production-equivalent. No httptest» for the LLM only; the owner approves it with the interface mock.
 Out of scope: the private Telegram message to the owner (`owner-notification`); history at start (`catch-up`); retries, backoff, graceful drain and reconnects (`delivery-resilience`); latency and load measurement (`quality-targets`); images, video, audio; owner feedback and commands (later, not now).
 Interface: CLI — match lines and error lines on the console.
 
@@ -83,9 +84,13 @@ Interface: CLI — match lines and error lines on the console.
 
 - `message-matching`: from a new message in a watched chat to a saved decision per request and a shown match, with the processed mark and the cursor.
 
+### Modified Capabilities
+
+- `settings`: the new root setting `queue_size` (default 1000, at least 1).
+
 ## Impact
 
-- New: `adapters/primary/collect/telegram`, `adapters/primary/match/channel`, `adapters/secondary/queue/channel`, `adapters/secondary/llm/openai`, `adapters/secondary/persistence/sqlite` (repository methods), the console notifier, domain `Message`, `Decision`, `Cursor`, use cases `CollectMessage`, `MatchMessage`.
+- New: `adapters/secondary/notify/console`, `adapters/primary/collect/telegram`, `adapters/primary/match/channel`, `adapters/secondary/queue/channel`, `adapters/secondary/llm/openai`, `adapters/secondary/persistence/sqlite` (repository methods), the console notifier, domain `Message`, `Decision`, `Cursor`, `MessageTracker`, use cases `CollectMessage`, `MatchMessage`.
 - Changed: `apps/cli/main.go` (start the workers and the listener, as the start flow says).
 
 ## Open points
