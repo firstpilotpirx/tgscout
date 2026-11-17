@@ -249,34 +249,6 @@ func (w *world) runToIdle() error {
 	return w.run.signal(syscall.SIGINT)
 }
 
-// eventually waits until done holds, at most waitLimit.
-func (w *world) eventually(what string, done func() bool) error {
-	deadline := time.Now().Add(waitLimit)
-	for !done() {
-		if time.Now().After(deadline) {
-			return fmt.Errorf("%s never held in %s; output: %s", what, waitLimit, w.run.output())
-		}
-		time.Sleep(20 * time.Millisecond)
-	}
-	return nil
-}
-
-// waitIdle waits until the LLM calls and the console stay the same for idleFor.
-func (w *world) waitIdle() error {
-	deadline := time.Now().Add(waitLimit)
-	seen, since := "", time.Now()
-	for time.Now().Before(deadline) {
-		now := fmt.Sprintf("%d|%s", len(w.lmStudio().allCalls()), w.run.output())
-		if now != seen {
-			seen, since = now, time.Now()
-		} else if time.Since(since) >= idleFor {
-			return nil
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
-	return fmt.Errorf("tgscout never settled in %s; output: %s", waitLimit, w.run.output())
-}
-
 func (w *world) askedTimes(find string, want int) error {
 	if got := len(w.lmStudio().callsAbout(find)); got != want {
 		return fmt.Errorf("the LLM was asked %d times about %q, want %d", got, find, want)
@@ -292,35 +264,6 @@ func (w *world) textsApart() error {
 		if each.Request != lampFind || each.Message != "Desk lamp, clamp mount, 10 €" {
 			return fmt.Errorf("the call holds %q", each.Original)
 		}
-	}
-	return nil
-}
-
-func (w *world) allOut(stderr bool) string {
-	var text strings.Builder
-	for _, run := range w.matching.runs {
-		if stderr {
-			text.WriteString(run.stderr.String())
-		} else {
-			text.WriteString(run.stdout.String())
-		}
-	}
-	return text.String()
-}
-
-func (w *world) allStdoutHas(want ...string) error { return has("stdout", w.allOut(false), want) }
-func (w *world) allStderrHas(want ...string) error { return has("stderr", w.allOut(true), want) }
-
-// matchLines checks how many match lines of a request (any, when empty) every run printed.
-func (w *world) matchLines(request string, want int) error {
-	got := 0
-	for _, line := range strings.Split(w.allOut(false), "\n") {
-		if strings.HasPrefix(line, "[ok] match sent  ") && strings.Contains(line, "  "+request) {
-			got++
-		}
-	}
-	if got != want {
-		return fmt.Errorf("%d match lines of %q, want %d; stdout:\n%s", got, request, want, w.allOut(false))
 	}
 	return nil
 }
