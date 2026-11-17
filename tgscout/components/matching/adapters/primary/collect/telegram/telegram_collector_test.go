@@ -28,7 +28,7 @@ func chats(t *testing.T) map[int64]collect.Chat {
 	private, err := domain.NewChatRef("-1001234567890")
 	require.NoError(t, err)
 	return map[int64]collect.Chat{
-		42:         {Ref: market, Username: "made_up_market"},
+		42:         {Ref: market, Username: "made_up_market", Title: "Made-up market"},
 		1234567890: {Ref: private},
 	}
 }
@@ -84,4 +84,13 @@ func TestACollectErrorIsReported(t *testing.T) {
 	collector.Handle(context.Background(), telegram.Update{ChatID: 42, MessageID: 1, Text: "Selling a bike"})
 
 	assert.Equal(t, []error{assert.AnError}, reported)
+}
+
+func TestTheChatTitleGoesIntoTheMessage(t *testing.T) {
+	useCase, _ := handle(t, telegram.Update{ChatID: 42, MessageID: 4211, Text: "Selling a bike"},
+		telegram.Update{ChatID: 1234567890, MessageID: 98, Text: "Desk lamp"})
+
+	require.Len(t, useCase.messages, 2)
+	assert.Equal(t, "Made-up market", useCase.messages[0].ChatTitle)
+	assert.Empty(t, useCase.messages[1].ChatTitle)
 }

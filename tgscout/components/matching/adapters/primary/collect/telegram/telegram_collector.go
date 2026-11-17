@@ -10,11 +10,12 @@ import (
 	"github.com/firstpilotpirx/tgscout/infra/telegram"
 )
 
-// Chat is a watched chat as the start found it: the config reference and
-// its username, empty for a private chat.
+// Chat is a watched chat as the start found it: the config reference, its
+// username, empty for a private chat, and its title, empty when none.
 type Chat struct {
 	Ref      domain.ChatRef
 	Username string
+	Title    string
 }
 
 // MessageCollector is the collect use case.
@@ -48,12 +49,13 @@ func (c *TelegramCollector) Handle(ctx context.Context, update telegram.Update) 
 		return
 	}
 	message := domain.Message{
-		Key:    domain.MessageKey{ChatID: update.ChatID, MessageID: update.MessageID},
-		Chat:   chat.Ref,
-		SentAt: update.Date,
-		Text:   update.Text,
-		Link:   link(chat, update),
-		Edited: update.Edited,
+		Key:       domain.MessageKey{ChatID: update.ChatID, MessageID: update.MessageID},
+		Chat:      chat.Ref,
+		ChatTitle: chat.Title,
+		SentAt:    update.Date,
+		Text:      update.Text,
+		Link:      link(chat, update),
+		Edited:    update.Edited,
 	}
 	if err := c.useCase.Collect(ctx, message); err != nil && ctx.Err() == nil {
 		c.report(message, err)

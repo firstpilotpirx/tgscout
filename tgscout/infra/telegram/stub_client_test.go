@@ -15,7 +15,8 @@ type stubClient struct {
 	password   string
 	signedIn   bool
 	chats      map[string]ChatState
-	contacts   map[string]bool
+	owners     map[string]OwnerState
+	sent       []string
 	floods     map[string]time.Duration
 	calls      []string
 	updates    []Update
@@ -63,7 +64,7 @@ func (c *stubClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error
 		return ChatInfo{}, nil
 	}
 	if strings.HasPrefix(ref, "@") {
-		return ChatInfo{State: state, ID: 7, Username: ref[1:]}, nil
+		return ChatInfo{State: state, ID: 7, Username: ref[1:], Title: "Made-up title of " + ref[1:]}, nil
 	}
 	return ChatInfo{State: state, ID: bareChatID(ref)}, nil
 }
@@ -76,8 +77,13 @@ func (c *stubClient) Listen(ctx context.Context, f func(context.Context, Update)
 	return ctx.Err()
 }
 
-func (c *stubClient) FindOwner(_ context.Context, owner string) (bool, error) {
-	return c.contacts[owner], nil
+func (c *stubClient) FindOwner(_ context.Context, owner string) (OwnerState, error) {
+	return c.owners[owner], nil
+}
+
+func (c *stubClient) SendToOwner(_ context.Context, owner, text string) error {
+	c.sent = append(c.sent, owner+": "+text)
+	return nil
 }
 
 // scriptedPrompter answers from fixed lists and records what it was told.

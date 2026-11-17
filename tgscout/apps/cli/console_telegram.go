@@ -41,6 +41,12 @@ func (c *console) floodWait(wait time.Duration) {
 		c.yellow.Sprint(c.marks.warn), wait))
 }
 
+// sendFloodWait is the warning of a FLOOD_WAIT before a match is sent again.
+func (c *console) sendFloodWait(wait time.Duration) {
+	c.println(c.errOut, fmt.Sprintf("%s Telegram asks to wait %s (FLOOD_WAIT), then sends again",
+		c.yellow.Sprint(c.marks.warn), wait))
+}
+
 func (c *console) ownerFound(owner string) { c.done("owner found: " + owner) }
 
 func (c *console) watching(chats int) { c.done("watching " + count(chats, "chat")) }

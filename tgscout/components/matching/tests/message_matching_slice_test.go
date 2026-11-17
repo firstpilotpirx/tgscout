@@ -19,7 +19,11 @@ import (
 
 func TestMessageMatchingSlice(t *testing.T) {
 	suite := godog.TestSuite{
-		ScenarioInitializer: func(sc *godog.ScenarioContext) { newSlice().steps(sc) },
+		ScenarioInitializer: func(sc *godog.ScenarioContext) {
+			s := newSlice()
+			s.steps(sc)
+			s.ownerSteps(sc)
+		},
 		Options: &godog.Options{
 			Format: "pretty", Paths: []string{"features/slice"}, Tags: "~@wip", Strict: true, TestingT: t,
 		},
@@ -191,11 +195,14 @@ func (nopReporter) Failed(domain.QueueItem, error)                {}
 type memoryRepository struct {
 	mu        sync.Mutex
 	processed map[domain.MessageKey]bool
+	sent      map[domain.MessageKey]int
+	cursor    map[int64]int
 	decisions int
 }
 
 func newMemoryRepository() *memoryRepository {
-	return &memoryRepository{processed: map[domain.MessageKey]bool{}}
+	return &memoryRepository{processed: map[domain.MessageKey]bool{}, sent: map[domain.MessageKey]int{},
+		cursor: map[int64]int{}}
 }
 
 func (r *memoryRepository) IsProcessed(_ context.Context, key domain.MessageKey) (bool, error) {
@@ -215,7 +222,10 @@ func (r *memoryRepository) SaveDecision(context.Context, domain.Decision) error 
 	return nil
 }
 
-func (r *memoryRepository) MarkSent(context.Context, domain.MessageKey, string, time.Time) error {
+func (r *memoryRepository) MarkSent(_ context.Context, key domain.MessageKey, _ string, _ time.Time) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.sent[key]++
 	return nil
 }
 
@@ -226,7 +236,23 @@ func (r *memoryRepository) MarkProcessed(_ context.Context, key domain.MessageKe
 	return nil
 }
 
-func (r *memoryRepository) MoveCursor(context.Context, int64, int, time.Time) error { return nil }
+func (r *memoryRepository) MoveCursor(_ context.Context, chatID int64, messageID int, _ time.Time) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.cursor[chatID] = max(r.cursor[chatID], messageID)
+	return nil
+}
+
+// untouched tells whether the message has no send, no processed mark and
+// the cursor of its chat has not reached it.
+func (r *memoryRepository) untouched(key domain.MessageKey) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.sent[key] > 0 || r.processed[key] || r.cursor[key.ChatID] >= key.MessageID {
+		return fmt.Errorf("sent %d, processed %t, cursor %d", r.sent[key], r.processed[key], r.cursor[key.ChatID])
+	}
+	return nil
+}
 
 func (r *memoryRepository) processedCount() int {
 	r.mu.Lock()

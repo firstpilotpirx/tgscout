@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"sync"
+	"time"
 
 	"github.com/firstpilotpirx/tgscout/components/matching"
 	collect "github.com/firstpilotpirx/tgscout/components/matching/adapters/primary/collect/telegram"
 	match "github.com/firstpilotpirx/tgscout/components/matching/adapters/primary/match/channel"
 	"github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/llm/openai"
-	notify "github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/notify/console"
+	notify "github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/notify/telegram"
 	"github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/persistence/sqlite"
 	queue "github.com/firstpilotpirx/tgscout/components/matching/adapters/secondary/queue/channel"
 	"github.com/firstpilotpirx/tgscout/components/matching/core/application"
@@ -18,26 +19,37 @@ import (
 )
 
 // live is the matching part of a running start: the resolved settings, the
-// wired use cases, the queue between them and how many workers judge at once.
+// driven adapters but the notifier, which needs the connected client, the
+// queue between the use cases and how many workers judge at once.
 type live struct {
 	settings domain.Settings
-	config   *matching.MatchingConfig
+	ports    matching.Ports
 	queue    match.Receiver
 	workers  int
+	sleep    func(context.Context, time.Duration) error
 }
 
-// newLive wires the matching component over the database and LM Studio.
-func newLive(settings application.SettingsRepository, db *sql.DB, con *console) live {
+// newLive wires the matching adapters over the database and LM Studio.
+func newLive(settings application.SettingsRepository, db *sql.DB,
+	sleep func(context.Context, time.Duration) error) live {
 	resolved := settings.Settings()
 	messages := queue.NewChannelMessageQueue(resolved.QueueSize)
-	config := matching.NewMatchingConfig(matching.Ports{
-		Settings: settings,
-		Messages: sqlite.NewSqliteMessageRepository(db),
-		Queue:    messages,
-		Llm:      openai.NewOpenAiLlmClient(resolved.LmStudio),
-		Notifier: notify.NewConsoleNotifier(notify.PrintFunc(con.PrintMatch)),
-	})
-	return live{settings: resolved, config: config, queue: messages, workers: resolved.Workers}
+	return live{settings: resolved, queue: messages, workers: resolved.Workers, sleep: sleep,
+		ports: matching.Ports{
+			Settings: settings,
+			Messages: sqlite.NewSqliteMessageRepository(db),
+			Queue:    messages,
+			Llm:      openai.NewOpenAiLlmClient(resolved.LmStudio),
+		}}
+}
+
+// wire adds the Telegram notifier over the connected client and builds the
+// use cases.
+func (l live) wire(con *console, client telegram.Client) *matching.MatchingConfig {
+	ports := l.ports
+	ports.Notifier = notify.NewTelegramNotifierClient(client, l.settings.Owner.String(),
+		notify.PrintFunc(con.PrintMatch), con.sendFloodWait, l.sleep)
+	return matching.NewMatchingConfig(ports)
 }
 
 // serve starts the workers, says it is running, then listens to the found
@@ -45,17 +57,18 @@ func newLive(settings application.SettingsRepository, db *sql.DB, con *console) 
 // stopped. A listener that fails stops the workers and gives its error.
 func (l live) serve(ctx context.Context, con *console, client telegram.Client,
 	found map[string]telegram.ChatInfo) error {
+	config := l.wire(con, client)
 	ctx, stop := context.WithCancel(ctx)
 	defer stop()
 	var wait sync.WaitGroup
 	wait.Add(1)
 	go func() {
 		defer wait.Done()
-		match.RunWorkers(ctx, l.workers, l.queue, l.config.MatchMessage,
+		match.RunWorkers(ctx, l.workers, l.queue, config.MatchMessage,
 			match.ReportFuncs{OnUnclear: con.Unclear, OnFailed: con.Failed})
 	}()
 	con.running()
-	collector := collect.NewTelegramCollector(watchedByID(found), l.config.CollectMessage, con.collectFailed)
+	collector := collect.NewTelegramCollector(watchedByID(found), config.CollectMessage, con.collectFailed)
 	err := collector.Listen(ctx, client)
 	stop()
 	wait.Wait()
@@ -73,7 +86,7 @@ func watchedByID(found map[string]telegram.ChatInfo) map[int64]collect.Chat {
 		if err != nil {
 			continue // the config check let only valid references through
 		}
-		chats[info.ID] = collect.Chat{Ref: ref, Username: info.Username}
+		chats[info.ID] = collect.Chat{Ref: ref, Username: info.Username, Title: info.Title}
 	}
 	return chats
 }

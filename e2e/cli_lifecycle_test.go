@@ -65,6 +65,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	whenSteps(sc, w)
 	thenSteps(sc, w)
 	settingsSteps(sc, w)
+	ownerSteps(sc, w)
 	telegramSteps(sc, w)
 	matchingSteps(sc, w)
 }

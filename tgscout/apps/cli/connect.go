@@ -63,13 +63,18 @@ func reportLookup(con *console, err error) error {
 	}
 	var chatsErr *telegram.ChatsNotFoundError
 	var ownerErr *telegram.OwnerNotFoundError
+	var closedErr *telegram.OwnerChatClosedError
 	if errors.As(err, &chatsErr) {
 		con.chatsNotFound(chatsErr.Chats)
 	}
 	if errors.As(err, &ownerErr) {
 		con.fail("owner not found: "+ownerErr.Owner, "add the owner to the contacts of tgscout's account (README → Setup)")
 	}
-	if chatsErr == nil && ownerErr == nil {
+	if errors.As(err, &closedErr) {
+		con.fail("cannot write to the owner",
+			"write «hi» to tgscout's account once and add it to contacts (README → Setup → First contact)")
+	}
+	if chatsErr == nil && ownerErr == nil && closedErr == nil {
 		con.fail(err.Error(), "")
 	}
 	return errReported

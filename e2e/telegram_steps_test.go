@@ -44,6 +44,10 @@ func telegramGivenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^a config whose owner is a numeric ID that is not among the account's contacts$`, func() error {
 		return w.writeConfig(numericOwner)
 	})
+	sc.Step(`^a config whose owner Telegram knows but who never wrote to tgscout's account$`, func() error {
+		w.tg.fake.OwnerChatClosed = true
+		return w.writeConfig(validConfig)
+	})
 }
 
 func telegramWhenSteps(sc *godog.ScenarioContext, w *world) {

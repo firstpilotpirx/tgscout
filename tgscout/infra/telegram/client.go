@@ -34,12 +34,25 @@ const (
 )
 
 // ChatInfo is what the account knows about one chat of the config: its
-// state, its bare peer ID and its username, empty for a private chat.
+// state, its bare peer ID, its username, empty for a private chat, and its
+// title, empty when Telegram gives none.
 type ChatInfo struct {
 	State    ChatState
 	ID       int64
 	Username string
+	Title    string
 }
+
+// OwnerState is what the account knows about the owner.
+type OwnerState int
+
+// The states of the owner: unknown to the account, known but with no private
+// chat with the account yet, or ready to be written to.
+const (
+	OwnerMissing OwnerState = iota
+	OwnerNoChat
+	OwnerReady
+)
 
 // Update is a new or edited message of a chat, a group or a channel.
 // ChatID is the bare peer ID; Text is the text or the caption.
@@ -65,7 +78,10 @@ type Client interface {
 	CheckPassword(ctx context.Context, password string) error
 	Self(ctx context.Context) (Account, error)
 	ResolveChat(ctx context.Context, ref string) (ChatInfo, error)
-	FindOwner(ctx context.Context, owner string) (bool, error)
+	FindOwner(ctx context.Context, owner string) (OwnerState, error)
+	// SendToOwner sends one plain text message to the owner; it returns once
+	// Telegram confirmed the send. It is the only call that writes.
+	SendToOwner(ctx context.Context, owner, text string) error
 	// Listen calls f for every new and edited message until ctx ends; it runs
 	// inside Run.
 	Listen(ctx context.Context, f func(context.Context, Update)) error

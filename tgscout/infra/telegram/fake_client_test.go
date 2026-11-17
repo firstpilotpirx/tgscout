@@ -3,6 +3,10 @@
 package telegram
 
 import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -66,4 +70,77 @@ func TestFakeChatInfoGivesEachChatItsOwnMadeUpID(t *testing.T) {
 	assert.Empty(t, numeric.Username)
 	assert.NotEqual(t, market.ID, scenario.info("@made_up_street").ID)
 	assert.Equal(t, market.ID, scenario.info("@made_up_market").ID)
+}
+
+func newTestFake(t *testing.T, scenario string) (*fakeClient, string) {
+	t.Helper()
+	sent := filepath.Join(t.TempDir(), "sent.jsonl")
+	parsed, err := parseFakeScenario([]byte(strings.Replace(scenario, "{", `{"sent_file": "`+sent+`", `, 1)))
+	require.NoError(t, err)
+	return &fakeClient{scenario: parsed}, sent
+}
+
+func TestFakeSendToOwnerWritesEachSendToTheSentFile(t *testing.T) {
+	fake, sent := newTestFake(t, `{"contacts": ["@made_up_owner"]}`)
+
+	require.NoError(t, fake.SendToOwner(context.Background(), "@made_up_owner", "Match: one\nline two"))
+	require.NoError(t, fake.SendToOwner(context.Background(), "@made_up_owner", "Match: two"))
+
+	data, err := os.ReadFile(sent)
+	require.NoError(t, err)
+	assert.Equal(t, `{"to":"@made_up_owner","text":"Match: one\nline two"}`+"\n"+
+		`{"to":"@made_up_owner","text":"Match: two"}`+"\n", string(data))
+}
+
+func TestFakeSendToOwnerFailsWhenTheScenarioSaysSo(t *testing.T) {
+	fake, sent := newTestFake(t, `{"send_fails": true}`)
+
+	err := fake.SendToOwner(context.Background(), "@made_up_owner", "Match: one")
+
+	require.Error(t, err)
+	assert.NoFileExists(t, sent)
+}
+
+func TestFakeSendToOwnerAsksToWaitOnce(t *testing.T) {
+	fake, _ := newTestFake(t, `{"send_flood_wait_seconds": 2}`)
+
+	var flood *FloodWait
+	require.ErrorAs(t, fake.SendToOwner(context.Background(), "@made_up_owner", "Match: one"), &flood)
+	assert.Equal(t, 2*time.Second, flood.Wait)
+	require.NoError(t, fake.SendToOwner(context.Background(), "@made_up_owner", "Match: one"))
+}
+
+func TestFakeFindOwnerTellsTheOwnerState(t *testing.T) {
+	open, _ := newTestFake(t, `{"contacts": ["@made_up_owner"]}`)
+	closed, _ := newTestFake(t, `{"contacts": ["@made_up_owner"], "owner_chat_closed": true}`)
+
+	ready, err := open.FindOwner(context.Background(), "@made_up_owner")
+	require.NoError(t, err)
+	missing, err := open.FindOwner(context.Background(), "@someone_else")
+	require.NoError(t, err)
+	noChat, err := closed.FindOwner(context.Background(), "@made_up_owner")
+	require.NoError(t, err)
+
+	assert.Equal(t, []OwnerState{OwnerReady, OwnerMissing, OwnerNoChat}, []OwnerState{ready, missing, noChat})
+}
+
+func TestFakeChatInfoGivesTheScenarioTitle(t *testing.T) {
+	scenario, err := parseFakeScenario([]byte(`{"chats": {"*": "joined"}, "titles": {"@made_up_market": "Made-up market"}}`))
+	require.NoError(t, err)
+
+	assert.Equal(t, "Made-up market", scenario.info("@made_up_market").Title)
+	assert.Empty(t, scenario.info("@made_up_street").Title)
+}
+
+func TestFakeListenDropsAPrivateMessage(t *testing.T) {
+	fake, _ := newTestFake(t, `{"chats": {"*": "joined"}, "updates": [
+		{"chat": "@made_up_stranger", "id": 1, "text": "hello", "private": true},
+		{"chat": "@made_up_market", "id": 2, "text": "Selling a bike"}]}`)
+	ctx, stop := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer stop()
+	var got []int
+
+	_ = fake.Listen(ctx, func(_ context.Context, update Update) { got = append(got, update.MessageID) })
+
+	assert.Equal(t, []int{2}, got)
 }
