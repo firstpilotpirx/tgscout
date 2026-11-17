@@ -51,3 +51,28 @@ Feature: quality-targets — the version 1 targets shown on the console and prov
       Given a config whose LM Studio address is on this machine
       When the owner starts tgscout
       Then tgscout prints no warning about chat texts leaving the machine
+
+  # The target tests run alone, in the TestTargets suite (design D8).
+  Rule: Load target proven
+
+    @targets
+    Scenario: peak load meets the speed target
+      Given 100 watched chats and a peak of 10 messages per second inside a day's flow, with a made-up LLM that answers in half a second
+      When the load test runs
+      Then p95 from message to send is at most 10 seconds
+
+  Rule: Catch-up target proven
+
+    @targets
+    Scenario: catch-up meets its time target
+      Given 100 chats with 500 missed messages each and a made-up LLM
+      When tgscout starts
+      Then the catch-up summary comes within 15 minutes, scaled
+
+  Rule: Store size target proven
+
+    @targets
+    Scenario: a year of data fits
+      Given a store filled with a year of decisions at 5,000 messages a day
+      When its size is measured
+      Then it is under 10 GB

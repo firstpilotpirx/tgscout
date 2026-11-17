@@ -108,6 +108,7 @@ The test starts tgscout once with no messages to create and migrate the store, s
 
 - [The catch-up test may be slow on a busy machine: 50,000 messages each make a read and three writes in SQLite.] → It runs alone in its suite; the measured time on this machine is noted in tasks; if it is over budget, the fix is in tgscout's own write path, not in the target.
 - [Load test timing on CI] → expected p95 ≈ 3 s against a 10 s target; the margin covers a slow runner.
+- Measured on this machine (with `-race`, 2026-11-17): the load test runs 30 s with p95 2.7 s over 122 messages; the catch-up test gives its summary after 11.3 s (limit 15 s) with 50,000 judged; the size test runs 2 s and measures 153 bytes per judged message, 2.6 GB a year.
 - [Telegram dates have whole seconds] → latency reads up to 1 s high, never low.
 
 ## Interface mock

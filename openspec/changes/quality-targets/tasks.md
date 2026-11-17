@@ -26,8 +26,8 @@
 
 ## 5. Target tests
 
-- [ ] 5.1 Red: `@targets` scenarios in `quality_targets.feature` and the `TestTargets` suite (concurrency 1; `TestFeatures` skips `@targets`): the load test (design D9), the catch-up test (design D10), the size test (design D11); the fake Telegram writes the play time of each update and the time of each send, and indexes the history by chat; the fake LM Studio's delay is set per scenario
-- [ ] 5.2 Green: fix what the tests find; note the time of each target test on this machine in design § Risks
+- [x] 5.1 Red: `@targets` scenarios in `quality_targets.feature` and the `TestTargets` suite (concurrency 1; `TestFeatures` skips `@targets`): the load test (design D9), the catch-up test (design D10), the size test (design D11); the fake Telegram writes the play time of each update and the time of each send, and indexes the history by chat; the fake LM Studio's delay is set per scenario
+- [x] 5.2 Green: fix what the tests find; note the time of each target test on this machine in design § Risks
 - [ ] 5.3 Commit (`kit ship`)
 
 ## 6. Docs and version

@@ -80,6 +80,7 @@ func ownerThenSteps(sc *godog.ScenarioContext, w *world) {
 type fakeSend struct {
 	To   string `json:"to"`
 	Text string `json:"text"`
+	At   int64  `json:"at"` // Unix nanoseconds
 }
 
 // ownerGot checks the fake Telegram sent exactly these texts, in any order,

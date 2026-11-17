@@ -33,6 +33,7 @@ type fakeScenario struct {
 	SendFails        bool              `json:"send_fails"`
 	SendFloodSeconds int               `json:"send_flood_wait_seconds"`
 	SentFile         string            `json:"sent_file"`
+	PlayedFile       string            `json:"played_file"`
 	History          []fakeHistory     `json:"history"`
 	HistoryFlood     int               `json:"history_flood_wait_seconds"`
 	HistoryDelayMs   int               `json:"history_delay_ms"`
@@ -49,10 +50,20 @@ type fakeHistory struct {
 	AgeMinutes int    `json:"age_minutes"`
 }
 
-// fakeSend is one line of the sent file: whom the fake sent which text.
+// fakeSend is one line of the sent file: whom the fake sent which text, and
+// when (Unix nanoseconds).
 type fakeSend struct {
 	To   string `json:"to"`
 	Text string `json:"text"`
+	At   int64  `json:"at"`
+}
+
+// fakePlay is one line of the played file: which update the fake delivered
+// live, and when (Unix nanoseconds).
+type fakePlay struct {
+	Chat string `json:"chat"`
+	ID   int    `json:"id"`
+	At   int64  `json:"at"`
 }
 
 // fakeUpdate is a made-up message the fake plays after Listen starts; Chat
@@ -123,6 +134,7 @@ type fakeClient struct {
 	historyMu   sync.Mutex
 	histFlooded bool
 	lostHistory []fakeHistory
+	byChat      map[int64][]fakeHistory // the scenario's history by chat, built at the first read
 	watchMu     sync.Mutex
 	watcher     func(ConnectionEvent)
 }
@@ -221,11 +233,37 @@ func (c *fakeClient) Listen(ctx context.Context, f func(context.Context, Update)
 		case update.Private:
 			continue // as gotd's mapping: a private chat with a user is never an update
 		}
-		f(ctx, Update{ChatID: c.scenario.info(update.Chat).ID, MessageID: update.ID, Date: time.Now(),
+		now := time.Now()
+		if err := c.played(fakePlay{Chat: update.Chat, ID: update.ID, At: now.UnixNano()}); err != nil {
+			return err
+		}
+		f(ctx, Update{ChatID: c.scenario.info(update.Chat).ID, MessageID: update.ID, Date: now,
 			Text: update.Text, Service: update.Service, Edited: update.Edited})
 	}
 	<-ctx.Done()
 	return ctx.Err()
+}
+
+// played appends the play to the scenario's played file, when it names one.
+func (c *fakeClient) played(play fakePlay) error {
+	if c.scenario.PlayedFile == "" {
+		return nil
+	}
+	return appendLine(c.scenario.PlayedFile, play)
+}
+
+// appendLine writes value as one JSON line at the end of the file.
+func appendLine(path string, value any) error {
+	line, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("fake Telegram: %w", err)
+	}
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec // G703: the E2E build writes the file its test names
+	if err != nil {
+		return fmt.Errorf("fake Telegram: %w", err)
+	}
+	_, err = file.Write(append(line, '\n'))
+	return errors.Join(err, file.Close())
 }
 
 func (c *fakeClient) FindOwner(_ context.Context, owner string) (OwnerState, error) {
@@ -258,16 +296,7 @@ func (c *fakeClient) send(owner, text string) error {
 	if c.scenario.SendFails {
 		return errTelegram
 	}
-	line, err := json.Marshal(fakeSend{To: owner, Text: text})
-	if err != nil {
-		return fmt.Errorf("fake Telegram send: %w", err)
-	}
-	file, err := os.OpenFile(c.scenario.SentFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600) //nolint:gosec // G703: the E2E build writes the file its test names
-	if err != nil {
-		return fmt.Errorf("fake Telegram send: %w", err)
-	}
-	_, err = file.Write(append(line, '\n'))
-	return errors.Join(err, file.Close())
+	return appendLine(c.scenario.SentFile, fakeSend{To: owner, Text: text, At: time.Now().UnixNano()})
 }
 
 // ReadHistory pauses history_delay_ms, asks to wait once when the scenario
@@ -282,9 +311,16 @@ func (c *fakeClient) ReadHistory(ctx context.Context, chatID int64, window Histo
 		c.histFlooded = true
 		return History{}, &FloodWait{Wait: wait}
 	}
+	if c.byChat == nil {
+		c.byChat = map[int64][]fakeHistory{}
+		for _, each := range c.scenario.History {
+			id := c.scenario.info(each.Chat).ID
+			c.byChat[id] = append(c.byChat[id], each)
+		}
+	}
 	now := time.Now()
 	var newestFirst []Update
-	for _, each := range slices.Concat(c.scenario.History, c.lostHistory) {
+	for _, each := range slices.Concat(c.byChat[chatID], c.lostHistory) {
 		if c.scenario.info(each.Chat).ID != chatID {
 			continue
 		}

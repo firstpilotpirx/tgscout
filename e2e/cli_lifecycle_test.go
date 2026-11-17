@@ -35,12 +35,27 @@ func TestFeatures(t *testing.T) {
 	suite := godog.TestSuite{
 		ScenarioInitializer: initializeScenario,
 		Options: &godog.Options{
-			Format: "pretty", Paths: []string{"features"}, Tags: "~@wip",
+			Format: "pretty", Paths: []string{"features"}, Tags: "~@wip && ~@targets",
 			Strict: true, TestingT: t, Concurrency: 8,
 		},
 	}
 	if suite.Run() != 0 {
 		t.Fatal("scenarios failed")
+	}
+}
+
+// TestTargets runs the target tests one at a time, so no other scenario
+// shares the machine while they measure (design D8).
+func TestTargets(t *testing.T) {
+	suite := godog.TestSuite{
+		ScenarioInitializer: initializeScenario,
+		Options: &godog.Options{
+			Format: "pretty", Paths: []string{"features"}, Tags: "@targets && ~@wip",
+			Strict: true, TestingT: t, Concurrency: 1,
+		},
+	}
+	if suite.Run() != 0 {
+		t.Fatal("target scenarios failed")
 	}
 }
 
@@ -70,6 +85,7 @@ func initializeScenario(sc *godog.ScenarioContext) {
 	matchingSteps(sc, w)
 	deliverySteps(sc, w)
 	qualitySteps(sc, w)
+	targetSteps(sc, w)
 }
 
 func givenSteps(sc *godog.ScenarioContext, w *world) {
