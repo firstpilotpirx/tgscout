@@ -35,7 +35,7 @@ func TestFeatures(t *testing.T) {
 		ScenarioInitializer: initializeScenario,
 		Options: &godog.Options{
 			Format: "pretty", Paths: []string{"features"}, Tags: "~@wip",
-			Strict: true, TestingT: t,
+			Strict: true, TestingT: t, Concurrency: 4,
 		},
 	}
 	if suite.Run() != 0 {
