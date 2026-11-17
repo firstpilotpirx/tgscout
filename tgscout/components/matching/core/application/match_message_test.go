@@ -182,3 +182,26 @@ func TestMatchJudgesAnEditAndItsOriginalOneAtATime(t *testing.T) {
 
 	assert.Len(t, f.notifier.matches, 1, "a sent yes is never sent twice")
 }
+
+// stoppedNotifier stands for a send Telegram never confirmed: it waits for the stop.
+type stoppedNotifier struct{}
+
+func (stoppedNotifier) Notify(ctx context.Context, _ domain.Match) error {
+	<-ctx.Done()
+	return ctx.Err()
+}
+
+func TestMatchStoppedDuringTheSendLeavesTheMessageUnprocessed(t *testing.T) {
+	f := newMatch()
+	useCase := application.NewMatchMessage(f.repository, f.llm, stoppedNotifier{}, f.tracker)
+	queued := f.begin(t, item(t, 5))
+	ctx, stop := context.WithCancel(context.Background())
+	stop()
+
+	_, err := useCase.Match(ctx, queued)
+
+	require.ErrorIs(t, err, context.Canceled)
+	assert.Empty(t, f.repository.sent[queued.Message.Key])
+	assert.False(t, f.repository.processed[queued.Message.Key])
+	assert.Zero(t, f.repository.cursor[7])
+}

@@ -12,7 +12,7 @@ import (
 // Stages a judgment can fail in.
 const (
 	StageLlm    = "LLM"
-	StageNotify = "notify"
+	StageNotify = "send"
 	StageStore  = "database"
 )
 

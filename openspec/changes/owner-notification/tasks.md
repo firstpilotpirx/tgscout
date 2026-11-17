@@ -12,16 +12,16 @@
 
 ## 3. Notifier adapter and collector
 
-- [ ] 3.1 Red: integration tests for `TelegramNotifierClient` — the text sent to the owner, the printer called after the send with the same text, a FLOOD_WAIT retried after the reported wait, a send error returned with no print, a printer error dropped after the send; unit test for the collector putting the chat title into the message
-- [ ] 3.2 Green: `adapters/secondary/notify/telegram/telegram_notifier_client.go`; the collector's `Chat.Title`; remove `adapters/secondary/notify/console`
-- [ ] 3.3 Red: `components/matching/tests/features/slice/owner_notification.feature` (`@owner_notification @slice`): the message is marked processed only after the send; Telegram asks to wait — through the real `MatchMessage` and `TelegramNotifierClient` with a stub client and the memory repository; a `MatchMessage` unit test that a `Notify` stopped by the context leaves the message unprocessed and the cursor in place
-- [ ] 3.4 Green: what the slice scenarios find; `StageNotify` prints as `send`
-- [ ] 3.5 Commit (`kit ship`)
+- [x] 3.1 Red: integration tests for `TelegramNotifierClient` — the text sent to the owner, the printer called after the send with the same text, a FLOOD_WAIT retried after the reported wait, a send error returned with no print, a printer error dropped after the send; unit test for the collector putting the chat title into the message
+- [x] 3.2 Green: `adapters/secondary/notify/telegram/telegram_notifier_client.go`; the collector's `Chat.Title`
+- [x] 3.3 Red: `components/matching/tests/features/slice/owner_notification.feature` (`@owner_notification @slice`): the message is marked processed only after the send; Telegram asks to wait — through the real `MatchMessage` and `TelegramNotifierClient` with a stub client and the memory repository; a `MatchMessage` unit test that a `Notify` stopped by the context leaves the message unprocessed and the cursor in place
+- [x] 3.4 Green: what the slice scenarios find; `StageNotify` prints as `send`
+- [x] 3.5 Commit (`kit ship`)
 
 ## 4. CLI
 
 - [ ] 4.1 Red: unit tests for the console lines of design § 6 (match sent with the indented text, FLOOD_WAIT before a send, send failed, cannot write to the owner) and for `reportLookup` with `OwnerChatClosedError`; update the start tests for the wired Telegram notifier
-- [ ] 4.2 Green: `apps/cli/console_matching.go`, `console_telegram.go`, `connect.go`, `live.go` (Telegram notifier over the shared client, the owner, titles of the found chats)
+- [ ] 4.2 Green: `apps/cli/console_matching.go`, `console_telegram.go`, `connect.go`, `live.go` (Telegram notifier over the shared client, the owner, titles of the found chats); remove `adapters/secondary/notify/console`
 - [ ] 4.3 Commit (`kit ship`)
 
 ## 5. E2E
