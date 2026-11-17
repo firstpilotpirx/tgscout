@@ -35,34 +35,40 @@ type Lookup struct {
 	Sleep   func(context.Context, time.Duration) error
 }
 
-// Find looks up every chat and the owner; it returns every problem at once.
-func (l *Lookup) Find(ctx context.Context, chats []string, owner string) error {
+// Find looks up every chat and the owner and returns the found chats by
+// their config text; it returns every problem at once.
+func (l *Lookup) Find(ctx context.Context, chats []string, owner string) (map[string]ChatInfo, error) {
 	var missing []MissingChat
+	found := map[string]ChatInfo{}
 	for _, chat := range chats {
-		state, err := retry(ctx, l, func() (ChatState, error) { return l.Client.ResolveChat(ctx, chat) })
+		info, err := retry(ctx, l, func() (ChatInfo, error) { return l.Client.ResolveChat(ctx, chat) })
 		if err != nil {
-			return err
+			return nil, err
 		}
-		switch state {
+		switch info.State {
 		case ChatMissing:
 			missing = append(missing, MissingChat{Chat: chat, Reason: "no such chat"})
 		case ChatNotJoined:
 			missing = append(missing, MissingChat{Chat: chat, Reason: "the account has not joined it"})
 		case ChatJoined:
+			found[chat] = info
 		}
 	}
 	var chatsErr, ownerErr error
 	if len(missing) > 0 {
 		chatsErr = &ChatsNotFoundError{Chats: missing}
 	}
-	found, err := retry(ctx, l, func() (bool, error) { return l.Client.FindOwner(ctx, owner) })
+	ownerFound, err := retry(ctx, l, func() (bool, error) { return l.Client.FindOwner(ctx, owner) })
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if !found {
+	if !ownerFound {
 		ownerErr = &OwnerNotFoundError{Owner: owner}
 	}
-	return errors.Join(chatsErr, ownerErr)
+	if err := errors.Join(chatsErr, ownerErr); err != nil {
+		return nil, err
+	}
+	return found, nil
 }
 
 // retry repeats call after every FLOOD_WAIT, reporting and sleeping the wait.

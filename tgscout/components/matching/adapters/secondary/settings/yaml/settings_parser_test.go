@@ -100,6 +100,7 @@ func TestParseDefaultsFillWhatTheFileLeavesOut(t *testing.T) {
 
 	assert.Equal(t, "@made_up_owner", settings.Owner.String())
 	assert.Equal(t, 2, settings.Workers)
+	assert.Equal(t, 1000, settings.QueueSize)
 	assert.Equal(t, domain.LmStudio{URL: "http://localhost:1234/v1", Model: "example-model", Timeout: 60 * time.Second},
 		settings.LmStudio)
 	assert.Equal(t, "bike", settings.Requests[0].ID)
@@ -109,6 +110,7 @@ func TestParseDefaultsFillWhatTheFileLeavesOut(t *testing.T) {
 func TestParseTakesEverySetValue(t *testing.T) {
 	settings := parse(t, `owner: 1234567
 workers: 4
+queue_size: 50
 lm_studio: {url: 'http://127.0.0.1:9000/v1', model: other-model, timeout: 90s}
 requests:
   - id: bike
@@ -118,6 +120,7 @@ requests:
 
 	assert.Equal(t, "1234567", settings.Owner.String())
 	assert.Equal(t, 4, settings.Workers)
+	assert.Equal(t, 50, settings.QueueSize)
 	assert.Equal(t, domain.LmStudio{URL: "http://127.0.0.1:9000/v1", Model: "other-model", Timeout: 90 * time.Second},
 		settings.LmStudio)
 }

@@ -42,19 +42,20 @@ func defaultDeps() startDeps {
 	}
 }
 
-// watch signs in, finds the chats and the owner, then runs until ctx ends.
-func watch(ctx context.Context, con *console, deps startDeps, config string, settings domain.Settings) int {
+// watch signs in, finds the chats and the owner, then matches their new
+// messages until ctx ends; the workers and the listener stop before it returns.
+func watch(ctx context.Context, con *console, deps startDeps, config string, matcher live) int {
+	settings := matcher.settings
 	link, ok := openTelegram(con, deps, config)
 	if !ok {
 		return exitError
 	}
 	err := link.client.Run(ctx, func(ctx context.Context) error {
-		if err := connect(ctx, link, con, watchedChats(settings), settings.Owner.String()); err != nil {
+		found, err := connect(ctx, link, con, watchedChats(settings), settings.Owner.String())
+		if err != nil {
 			return err
 		}
-		con.running()
-		<-ctx.Done()
-		return nil
+		return matcher.serve(ctx, con, link.client, found)
 	})
 	switch {
 	case errors.Is(err, errReported):

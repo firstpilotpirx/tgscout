@@ -29,3 +29,22 @@ func TestDistinctChatsCountsEachChatOnce(t *testing.T) {
 func TestDistinctChatsOfNoRequestsIsZero(t *testing.T) {
 	assert.Equal(t, 0, domain.Settings{}.DistinctChats())
 }
+
+func TestRequestsOfGivesEveryRequestOfTheChatInConfigOrder(t *testing.T) {
+	settings := domain.Settings{Requests: []domain.Request{
+		{ID: "bike", Chats: []domain.RequestChat{chat(t, "@made_up_market")}},
+		{ID: "lamp", Chats: []domain.RequestChat{chat(t, "@made_up_street")}},
+		{ID: "desk", Chats: []domain.RequestChat{chat(t, "https://t.me/Made_Up_Market")}},
+	}}
+	ref, _ := domain.NewChatRef("@made_up_market")
+
+	requests := settings.RequestsOf(ref)
+
+	assert.Equal(t, []string{"bike", "desk"}, []string{requests[0].ID, requests[1].ID})
+	assert.Len(t, requests, 2)
+}
+
+func TestRequestsOfAnUnwatchedChatIsEmpty(t *testing.T) {
+	ref, _ := domain.NewChatRef("@made_up_other")
+	assert.Empty(t, domain.Settings{}.RequestsOf(ref))
+}

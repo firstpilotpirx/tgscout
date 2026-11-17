@@ -54,6 +54,7 @@ var problemCases = []struct {
 	{"bad timeout", "owner: '@made_up_owner'\nlm_studio: {model: m, timeout: soon}\n" + oneRequest, wantError{2, "lm_studio.timeout", "duration"}},
 	{"no model", "owner: '@made_up_owner'\nlm_studio: {url: 'http://localhost:1234/v1'}\n" + oneRequest, wantError{2, "lm_studio.model", "is required"}},
 	{"no lm_studio", "owner: '@made_up_owner'\n" + oneRequest, wantError{1, "lm_studio.model", "is required"}},
+	{"zero queue size", header + "queue_size: 0\n" + oneRequest, wantError{4, "queue_size", "at least 1"}},
 	{"zero workers", header + "workers: 0\n" + oneRequest, wantError{4, "workers", "at least 1"}},
 	{"no owner", "lm_studio: {model: m}\n" + oneRequest, wantError{1, "owner", "is required"}},
 	{"bad owner", "owner: 'https://t.me/made_up_owner'\nlm_studio: {model: m}\n" + oneRequest, wantError{1, "owner", "not an owner"}},

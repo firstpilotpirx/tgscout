@@ -9,6 +9,7 @@ import (
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
 	"github.com/gotd/td/telegram/query/dialogs"
+	"github.com/gotd/td/telegram/updates"
 	"github.com/gotd/td/tg"
 	"github.com/gotd/td/tgerr"
 )
@@ -21,11 +22,37 @@ type Config struct {
 }
 
 // gotdClient is the Client over gotd; its logger stays gotd's no-op default.
-type gotdClient struct{ client *telegram.Client }
+// Updates go through gotd's updates manager (in-memory state) to a dispatcher.
+type gotdClient struct {
+	client  *telegram.Client
+	gaps    *updates.Manager
+	updates *updateSink
+}
 
 func newGotdClient(cfg Config) *gotdClient {
-	return &gotdClient{client: telegram.NewClient(cfg.APIID, cfg.APIHash,
-		telegram.Options{SessionStorage: cfg.Storage, NoUpdates: true})}
+	sink := &updateSink{}
+	dispatcher := tg.NewUpdateDispatcher()
+	sink.register(dispatcher)
+	gaps := updates.New(updates.Config{Handler: dispatcher})
+	return &gotdClient{
+		client:  telegram.NewClient(cfg.APIID, cfg.APIHash, telegram.Options{SessionStorage: cfg.Storage, UpdateHandler: gaps}),
+		gaps:    gaps,
+		updates: sink,
+	}
+}
+
+func (c *gotdClient) Listen(ctx context.Context, f func(context.Context, Update)) error {
+	self, err := c.client.Self(ctx)
+	if err != nil {
+		return mapError(err)
+	}
+	c.updates.set(f)
+	defer c.updates.set(nil)
+	err = c.gaps.Run(ctx, c.client.API(), self.ID, updates.AuthOptions{})
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	return mapError(err)
 }
 
 func (c *gotdClient) Run(ctx context.Context, f func(context.Context) error) error {
@@ -78,23 +105,35 @@ func (c *gotdClient) Self(ctx context.Context) (Account, error) {
 	return Account{Name: strings.TrimSpace(user.FirstName + " " + user.LastName)}, nil
 }
 
-func (c *gotdClient) ResolveChat(ctx context.Context, ref string) (ChatState, error) {
+func (c *gotdClient) ResolveChat(ctx context.Context, ref string) (ChatInfo, error) {
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
-		return c.dialogState(ctx, ref)
+		state, err := c.dialogState(ctx, ref)
+		return ChatInfo{State: state, ID: bareChatID(ref)}, err
 	}
 	resolved, err := c.resolve(ctx, ref)
 	if err != nil || resolved == nil {
-		return ChatMissing, err
+		return ChatInfo{}, err
 	}
+	return chatInfo(resolved), nil
+}
+
+// chatInfo reads the first chat of a resolved username.
+func chatInfo(resolved *tg.ContactsResolvedPeer) ChatInfo {
 	for _, chat := range resolved.Chats {
 		switch chat := chat.(type) {
 		case *tg.Channel:
-			return joinedState(chat.Left), nil
+			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Username: chat.Username}
 		case *tg.Chat:
-			return joinedState(chat.Left), nil
+			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID}
 		}
 	}
-	return ChatMissing, nil
+	return ChatInfo{}
+}
+
+// bareChatID is the peer ID of a numeric reference: "-100…" and "-…" dropped.
+func bareChatID(ref string) int64 {
+	id, _ := strconv.ParseInt(strings.TrimPrefix(strings.TrimPrefix(ref, "-100"), "-"), 10, 64)
+	return id
 }
 
 func (c *gotdClient) FindOwner(ctx context.Context, owner string) (bool, error) {

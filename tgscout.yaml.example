@@ -8,6 +8,10 @@ owner: "@your_username"
 # Matcher workers that ask the LLM at the same time (default 2).
 workers: 2
 
+# Messages that may wait for the LLM (default 1000). When the queue is full,
+# tgscout waits before it takes more messages from Telegram; none is dropped.
+queue_size: 1000
+
 # LM Studio, through its OpenAI-compatible API.
 lm_studio:
   url: http://localhost:1234/v1   # default

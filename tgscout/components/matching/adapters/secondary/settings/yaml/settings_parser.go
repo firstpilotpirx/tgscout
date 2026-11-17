@@ -16,8 +16,10 @@ import (
 // Defaults of tgscout.yaml.
 const (
 	DefaultWorkers = 2
-	DefaultURL     = "http://localhost:1234/v1"
-	DefaultTimeout = 60 * time.Second
+	// DefaultQueueSize is how many messages may wait for the LLM.
+	DefaultQueueSize = 1000
+	DefaultURL       = "http://localhost:1234/v1"
+	DefaultTimeout   = 60 * time.Second
 	// MaxChats is the design maximum of distinct chats; more gives a warning.
 	MaxChats = 100
 )
@@ -59,14 +61,18 @@ func (w *walker) root(body ast.Node) domain.Settings {
 	if isNull(body) {
 		body = &ast.MappingNode{BaseNode: &ast.BaseNode{}}
 	}
-	found, ok := w.fields(body, "", "owner", "workers", "lm_studio", "catch_up", "requests")
+	found, ok := w.fields(body, "", "owner", "workers", "queue_size", "lm_studio", "catch_up", "requests")
 	if !ok {
 		return domain.Settings{}
 	}
 	settings := domain.Settings{
-		Owner:    w.owner(found["owner"], lineOf(body)),
-		Workers:  DefaultWorkers,
-		LmStudio: w.lmStudio(found["lm_studio"], lineOf(body)),
+		Owner:     w.owner(found["owner"], lineOf(body)),
+		Workers:   DefaultWorkers,
+		QueueSize: DefaultQueueSize,
+		LmStudio:  w.lmStudio(found["lm_studio"], lineOf(body)),
+	}
+	if queueSize := found["queue_size"]; queueSize != nil {
+		settings.QueueSize, _ = w.number(queueSize.Value, "queue_size", 1)
 	}
 	if workers := found["workers"]; workers != nil {
 		settings.Workers, _ = w.number(workers.Value, "workers", 1)

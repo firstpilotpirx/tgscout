@@ -32,10 +32,25 @@ type LmStudio struct {
 // Settings is the resolved view of the config file: every default applied and
 // every override resolved.
 type Settings struct {
-	Owner    Owner
-	Workers  int
-	LmStudio LmStudio
-	Requests []Request
+	Owner     Owner
+	Workers   int
+	QueueSize int
+	LmStudio  LmStudio
+	Requests  []Request
+}
+
+// RequestsOf gives every request that watches the chat, in config order.
+func (s Settings) RequestsOf(ref ChatRef) []Request {
+	var requests []Request
+	for _, request := range s.Requests {
+		for _, chat := range request.Chats {
+			if chat.Ref.Key() == ref.Key() {
+				requests = append(requests, request)
+				break
+			}
+		}
+	}
+	return requests
 }
 
 // DistinctChats counts the chats of all requests, each chat once.

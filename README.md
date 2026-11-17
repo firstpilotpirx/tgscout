@@ -33,12 +33,31 @@ cp tgscout.yaml.example tgscout.yaml
 
 `tgscout --help` lists the options. The database `tgscout.db` is created next to the config; `--db <path>` puts it elsewhere. Press Ctrl+C to stop.
 
+### While it runs
+
+After `running`, tgscout judges every new or edited message of the watched chats with the LLM, once per request of that chat. Matches go to stdout, warnings and errors to stderr (made-up examples):
+
+```text
+✓ match  14:02  kids-bike  @made_up_market  https://t.me/made_up_market/4211
+         Selling a 16-inch kids' bike, 80 €, pick-up in the old town…
+⚠ unclear LLM answer for kids-bike on @made_up_market/4215, saved as no
+  answer: "It might be, the size is not stated"
+✗ LLM failed on @made_up_market/4216: cannot reach http://localhost:1234/v1
+  the message stays unprocessed; is LM Studio running?
+```
+
+- A match line shows the message time, the request id, the chat as the config writes it, the link and the start of the text (80 characters).
+- An answer that is neither yes nor no is asked once more, then saved as «no» with a warning.
+- When the LLM call fails, the message stays unprocessed and the chat's cursor does not pass it.
+- An edited message is judged again only for the requests that had no match on it.
+
 ## Config
 
 `tgscout.yaml` holds what tgscout looks for; [tgscout.yaml.example](tgscout.yaml.example) shows every field. It is read once, at start, and is never committed (`.gitignore`).
 
 - `owner` (required): the Telegram user tgscout writes to, `@username` or a numeric ID.
-- `workers` (default 2), `lm_studio.url` (default `http://localhost:1234/v1`), `lm_studio.model` (required), `lm_studio.timeout` (default `60s`).
+- `workers` (default 2): how many messages the LLM judges at once; `queue_size` (default 1000): how many messages wait for the LLM; when the queue is full, tgscout waits before it takes more from Telegram and drops none.
+- `lm_studio.url` (default `http://localhost:1234/v1`), `lm_studio.model` (required), `lm_studio.timeout` (default `60s`).
 - `catch_up.messages` and `catch_up.days` (defaults 500 and 3): how far back each chat is read at start.
 - `requests`: each with a unique `id`, the `find` text and one or more `chats` (`@username`, a public `t.me` link or a numeric ID).
 - Only `catch_up` can be set again on a request or on one chat of a request; the nearest level wins (chat, then request, then root), field by field.

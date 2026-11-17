@@ -33,8 +33,28 @@ const (
 	ChatJoined
 )
 
-// Client is the port over the MTProto client: the sign-in calls and the
-// lookups of the start. Chats and the owner are the config's own text.
+// ChatInfo is what the account knows about one chat of the config: its
+// state, its bare peer ID and its username, empty for a private chat.
+type ChatInfo struct {
+	State    ChatState
+	ID       int64
+	Username string
+}
+
+// Update is a new or edited message of a chat, a group or a channel.
+// ChatID is the bare peer ID; Text is the text or the caption.
+type Update struct {
+	ChatID    int64
+	MessageID int
+	Date      time.Time
+	Text      string
+	Service   bool
+	Edited    bool
+}
+
+// Client is the port over the MTProto client: the sign-in calls, the
+// lookups of the start and the updates. Chats and the owner are the config's
+// own text.
 type Client interface {
 	// Run connects and calls f while the connection lasts.
 	Run(ctx context.Context, f func(context.Context) error) error
@@ -44,6 +64,9 @@ type Client interface {
 	SignIn(ctx context.Context, phone, code, hash string) error
 	CheckPassword(ctx context.Context, password string) error
 	Self(ctx context.Context) (Account, error)
-	ResolveChat(ctx context.Context, ref string) (ChatState, error)
+	ResolveChat(ctx context.Context, ref string) (ChatInfo, error)
 	FindOwner(ctx context.Context, owner string) (bool, error)
+	// Listen calls f for every new and edited message until ctx ends; it runs
+	// inside Run.
+	Listen(ctx context.Context, f func(context.Context, Update)) error
 }
