@@ -2,6 +2,29 @@
 
 tgscout watches chosen Telegram chats and writes to you when a message matches a request.
 
+## Quick start
+
+Telegram:
+
+1. Register a second Telegram account for tgscout (it needs its own phone number).
+2. Get `api_id` and `api_hash` at [my.telegram.org](https://my.telegram.org) as that account.
+3. Put them into `.env` (copy [.env.example](.env.example)).
+4. With that account: join the chats, add yourself to its contacts.
+5. From your own account: write «hi» to it once.
+
+LM Studio:
+
+1. Install [LM Studio](https://lmstudio.ai).
+2. Download a model, for example `qwen2.5-7b-instruct`.
+3. Start the local server (Developer tab, port 1234).
+
+Run:
+
+1. Copy [tgscout.yaml.example](tgscout.yaml.example) to `tgscout.yaml`: set `owner`, `lm_studio.model`, `requests`.
+2. Start tgscout from a terminal; enter the phone, the code and the password once.
+
+Details: [Setup](#setup), [Config](#config).
+
 ## Install
 
 - Go 1.25.11 or later; the go command then downloads the pinned toolchain (`toolchain go1.27.4`).
