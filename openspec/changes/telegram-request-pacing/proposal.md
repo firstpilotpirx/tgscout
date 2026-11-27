@@ -29,6 +29,7 @@ Interface: CLI (console lines at start and during catch-up).
 ## Impact
 
 - `tgscout/infra/telegram/` (chat and owner resolution, history paging, the fake Telegram of the E2E build), the SQLite schema (a new migration for stored chats), the catch-up flow.
+- `docs/design-progress.md` (a new decision line) and `docs/architecture/store.html` (the new table).
 - Specs, unit, integration and E2E tests of the capabilities above; `README.md`.
 
 ## Open points
@@ -36,7 +37,8 @@ Interface: CLI (console lines at start and during catch-up).
 - The pause between history calls: a fixed value or a setting. Decided: a root setting `history_pause`, default `1s`, `0s` turns it off.
 - Whether the pause makes the 15-minute catch-up target miss at 100 chats × 500 messages (500 calls × 1 s ≈ 8 min). Decided: the default 1 s fits; the catch-up target test runs with the pause on.
 - When a stored chat is resolved again: on a Telegram error about that chat, or also after some age. Decided: only on an error.
-- Whether the owner is stored too. Decided by the owner at explore: yes; each start still checks that the owner's private chat is open.
+- Whether the owner is stored too. Decided by the owner at explore (2026-11-27, «Chats and owner»): yes; each start still checks that the owner's private chat is open.
+- The 2026-11-15 decision «SQLite keeps only processed IDs and decisions» (`docs/design-progress.md`). Decided: replaced; the owner approved the design that keeps found chats and the owner in SQLite (2026-11-28, «Approve»). A new dated line in `docs/design-progress.md` records it.
 
 ## Release
 

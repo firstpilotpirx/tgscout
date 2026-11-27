@@ -12,6 +12,8 @@ See proposal.md § Why. Today `telegram.Lookup.Find` (`infra/telegram/lookup.go`
 
 ### D1. One table `known_peer` in a new migration
 
+This replaces the 2026-11-15 decision «SQLite keeps only processed IDs and decisions» (`docs/design-progress.md`): the owner chose to store the owner at explore (2026-11-27) and approved this design (2026-11-28). The change adds a dated decision line to `docs/design-progress.md` and the table to `docs/architecture/store.html`.
+
 `000002_known_peer` adds:
 
 ```sql
@@ -30,19 +32,22 @@ CREATE TABLE known_peer (
 
 The key is the config text: a changed spelling is a new entry and is looked up once. The table holds no message text; the access hash is a per-account value Telegram gives for the peer, it stays in the local database, never in the repository (it is like the session file). Alternative: one table per role. Rejected: same columns, twice the code.
 
-### D2. The store is a port of `infra/telegram`, kept by the SQLite adapter
+### D2. A `PeerRepository` port in the matching core, a narrow interface at the lookup
 
-`infra/telegram` defines `Peer{Kind, ID, AccessHash}`, `StoredPeer{Peer, Username, Title}` and
+- `components/matching/core/domain.KnownPeer` (role, ref, kind, peer ID, access hash, username, title) and the port `components/matching/core/application.PeerRepository`:
 
 ```go
-type PeerStore interface {
-    Load(ctx context.Context, role Role, ref string) (StoredPeer, bool, error)
-    Save(ctx context.Context, role Role, ref string, peer StoredPeer) error
-    Forget(ctx context.Context, role Role, ref string) error
+type PeerRepository interface {
+    FindByRef(ctx context.Context, role domain.PeerRole, ref string) (domain.KnownPeer, bool, error)
+    Save(ctx context.Context, peer domain.KnownPeer) error
+    DeleteByRef(ctx context.Context, role domain.PeerRole, ref string) error
 }
 ```
 
-`components/matching/adapters/secondary/persistence/sqlite.SqlitePeerRepository` implements it over `known_peer`; the app wires it into `telegram.Lookup`. `Lookup.Store` nil means no store (the tests that do not care, as today). Alternative: put the table and its code in `infra/sqlite`. Rejected: the migrations live in the matching component's adapter; two migration sets on one file would fight over `schema_migrations`.
+- `components/matching/adapters/secondary/persistence/sqlite.SqlitePeerRepository` implements it over `known_peer`, next to `SqliteMessageRepository` and its migrations.
+- `infra/telegram` cannot import the component, so `telegram.Lookup` takes a consumer-side interface `telegram.KnownPeers` with the same three methods over its own `telegram.KnownPeer`. It is not a repository: it names only what the lookup asks. `apps/cli` wires `SqlitePeerRepository` into it with a small converter between the two `KnownPeer` types. `Lookup.Known` nil means nothing is stored (the tests that do not care, as today).
+
+Alternatives: the port in `infra/telegram` with the SQLite adapter implementing it. Rejected: the kit puts a repository port in `core/application`. The table and its code in `infra/sqlite`. Rejected: the migrations live in the matching component's adapter; two migration sets on one file would fight over `schema_migrations`.
 
 ### D3. The client port gains peer data and two calls without network
 
@@ -55,11 +60,11 @@ The fake client of the E2E build implements the same calls (D7).
 
 ### D4. `Lookup.Find` uses the store first
 
-For each chat: a stored entry → `KeepChat`, counted as stored; else `ResolveChat` (with `Retry`), and a joined chat is saved. Missing and not-joined chats are reported as today and never saved. For the owner: a stored entry → `CheckOwner`; when it is not `OwnerReady`, `Forget` and fall back to `FindOwner` (the spec's «drop, find again, check once more»); a found owner is saved, an owner that is `OwnerMissing` is not. `Find` returns the found chats and `LookupCounts{Stored, LookedUp}`; `console.watching(chats, counts)` prints `watching 4 chats · 3 from the store, 1 looked up` (only the parts that are not zero; see the mock). A store error stops the start like a database error (`database …: …`).
+For each chat: a stored entry (`Known.FindByRef`) → `KeepChat`, counted as stored; else `ResolveChat` (with `Retry`), and a joined chat is saved. Missing and not-joined chats are reported as today and never saved. For the owner: a stored entry → `CheckOwner`; when it is not `OwnerReady`, `DeleteByRef` and fall back to `FindOwner` (the spec's «drop, find again, check once more»); a found owner is saved, an owner that is `OwnerMissing` is not. `Find` returns the found chats and `LookupCounts{Stored, LookedUp}`; `console.watching(chats, counts)` prints `watching 4 chats · 3 from the store, 1 looked up` (only the parts that are not zero; see the mock). A repository error stops the start like a database error (`database …: …`).
 
 ### D5. A stored chat that stops working
 
-`mapError` maps `CHANNEL_INVALID`, `CHANNEL_PRIVATE`, `CHAT_ID_INVALID` and `PEER_ID_INVALID` to a new `ErrChatGone`. `Lookup.Refresh(ctx, ref string, id int64) (ChatInfo, error)` forgets the stored chat, resolves it by name (with `Retry`), and saves and returns it when it is joined under the same ID; otherwise it returns `ErrChatGone`. `HistoryCollector` gets a `Refresher` (the `Lookup`; nil keeps today's behavior): on `ErrChatGone` from `ReadHistory` it calls `Refresh` once, reports `OnRefreshed(chat)`, and reads again; a second failure fails the read as any failed read does (the cursor stays, `next start reads it again`). The chat is already gone from the store then, so the next start looks it up by name and reports «not joined» or «no such chat» through the normal lookup. Console: `⚠ catch-up: <name> · Telegram no longer knows the stored chat · looked it up again` (gap read: `gap read: …`).
+`mapError` maps `CHANNEL_INVALID`, `CHANNEL_PRIVATE`, `CHAT_ID_INVALID` and `PEER_ID_INVALID` to a new `ErrChatGone`. `Lookup.Refresh(ctx, ref string, id int64) (ChatInfo, error)` deletes the stored chat (`DeleteByRef`), resolves it by name (with `Retry`), and saves and returns it when it is joined under the same ID; otherwise it returns `ErrChatGone`. `HistoryCollector` gets a `Refresher` (the `Lookup`; nil keeps today's behavior): on `ErrChatGone` from `ReadHistory` it calls `Refresh` once, reports `OnRefreshed(chat)`, and reads again; a second failure fails the read as any failed read does (the cursor stays, `next start reads it again`). The chat is already gone from the store then, so the next start looks it up by name and reports «not joined» or «no such chat» through the normal lookup. Console: `⚠ catch-up: <name> · Telegram no longer knows the stored chat · looked it up again` (gap read: `gap read: …`).
 
 Alternative: forget the chat and leave the lookup to the next start. Rejected: the chat would stay unread for the whole run.
 
@@ -100,9 +105,13 @@ Alternative: pace in `HistoryCollector` per chat. Rejected: a chat of 500 messag
 | a message processed during the drop is not judged twice | E2E (existing) |
 | defaults fill what the file leaves out | unit (YAML parser) |
 | every form of chat reference is accepted | unit (existing) |
+| an invalid config stops the start | E2E (existing outline) |
+| every problem is listed at once | E2E (existing) |
+| a retry cap that is not a duration is refused | unit (existing) |
+| a status interval below 10 seconds is refused | unit (existing) |
 | a negative history pause is an error | unit (YAML parser) |
 
-The SQLite repository gets an integration test (save, load, forget, the migration to version 2).
+The SQLite repository gets an integration test (save, find by ref, delete by ref, the migration to version 2).
 
 ## Risks / Trade-offs
 
