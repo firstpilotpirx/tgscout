@@ -11,12 +11,13 @@ Needs: none
 
 ## 2. E2E of a basic group match
 
-Files: `e2e/features/owner_notification.feature`, `e2e/` steps
+Files: `e2e/features/owner_notification.feature`, `e2e/features/message_matching.feature`, `e2e/` steps
 Needs: 1
 
 - [ ] 2.1 Red: scenario "a basic group has no link line" under `Rule: Link to the message` in `owner_notification.feature`, with a made-up basic group ID; the rule's comment still names the unit test of "a chat without a username"
-- [ ] 2.2 Green: the steps it needs; fix what it finds
-- [ ] 2.3 Commit the group (`kit ship`)
+- [ ] 2.2 Align the THEN lines of "a match reaches the owner" (`owner_notification.feature`) and "a matching message is shown on the console" (`message_matching.feature`) to "the link to the message when the chat has one", steps included
+- [ ] 2.3 Green: the steps it needs; fix what it finds
+- [ ] 2.4 Commit the group (`kit ship`)
 
 ## 3. Release
 

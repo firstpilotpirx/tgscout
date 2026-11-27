@@ -24,6 +24,10 @@ See proposal.md — Why. The collector builds the link from the chat's username:
 | a chat without a username | unit (collector) | as before |
 | a basic group has no link line | E2E (`owner_notification.feature`) plus unit tests of the collector and of `NotificationText` | the owner sees the whole message; the E2E drives the built binary with the fake client |
 | a long message text is cut | unit, as before | unchanged |
+| a match reaches the owner | E2E, as before | only the THEN wording changes |
+| two requests match one message | E2E, as before | unchanged |
+| a matching message is shown on the console | E2E, as before | only the THEN wording changes |
+| a message that does not match | E2E, as before | unchanged |
 
 ## Interface mock
 
