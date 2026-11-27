@@ -5,7 +5,7 @@ Needs: none
 
 - [ ] 1.1 Red: parser test for "defaults fill what the file leaves out" (adds the 1 s `history_pause` default) and keeps "every form of chat reference is accepted" green
 - [ ] 1.2 Green: root key `history_pause` (duration, default `1s`), `domain.Settings.HistoryPause` (D7)
-- [ ] 1.3 Red: parser test for "a negative history pause is an error"
+- [ ] 1.3 Red: parser test for "a negative history pause is an error"; "an invalid config stops the start", "every problem is listed at once", "a retry cap that is not a duration is refused" and "a status interval below 10 seconds is refused" stay green
 - [ ] 1.4 Green: field error `must be 0s or more` on `history_pause`
 - [ ] 1.5 Text: `history_pause` in `tgscout.yaml.example` with a one-line comment
 - [ ] 1.6 Commit the group
@@ -28,19 +28,19 @@ Needs: 1
 
 ## 3. Stored chats and owner
 
-Files: `tgscout/components/matching/adapters/secondary/persistence/sqlite/` (migration `000002_known_peer`, `sqlite_peer_repository.go`), `tgscout/infra/telegram/` (`client.go`, `lookup.go`, `gotd_client.go`, `fake_client.go`, `stub_client_test.go`), `tgscout/apps/cli/` (`connect.go`, `console_telegram.go`, `start.go`, `start_telegram.go`), `e2e/`
+Files: `tgscout/components/matching/core/domain/known_peer.go`, `tgscout/components/matching/core/application/peer_repository.go`, `tgscout/components/matching/adapters/secondary/persistence/sqlite/` (migration `000002_known_peer`, `sqlite_peer_repository.go`), `tgscout/infra/telegram/` (`client.go`, `lookup.go`, `gotd_client.go`, `fake_client.go`, `stub_client_test.go`), `tgscout/apps/cli/` (`connect.go`, `console_telegram.go`, `start.go`, `start_telegram.go`), `e2e/`
 Needs: 2
 
-- [ ] 3.1 Red: integration test of `SqlitePeerRepository`: save, load, forget per role and ref; the migration reaches version 2 with the `known_peer` table
-- [ ] 3.2 Green: migration `000002_known_peer` up and down (D1), `telegram.PeerStore` port and `SqlitePeerRepository` (D2)
+- [ ] 3.1 Red: integration test of `SqlitePeerRepository`: `Save`, `FindByRef`, `DeleteByRef` per role and ref; the migration reaches version 2 with the `known_peer` table
+- [ ] 3.2 Green: migration `000002_known_peer` up and down (D1), `domain.KnownPeer`, the `application.PeerRepository` port and `SqlitePeerRepository` (D2)
 - [ ] 3.3 Red: `Lookup` unit test for "a chat added to the config is looked up" (two stored chats kept with no `ResolveChat`, the third resolved and saved; counts 2 stored, 1 looked up)
-- [ ] 3.4 Green: `ChatInfo.Peer`, `Client.KeepChat`, `Lookup.Store`, `Lookup.Find` returns `LookupCounts` (D3, D4); the gotd client fills `Peer` and keeps stored peers
-- [ ] 3.5 Red: `Lookup` unit test for "a stored owner whose chat was closed" (stored owner not ready → forgotten → `FindOwner` → `OwnerChatClosedError`)
+- [ ] 3.4 Green: `ChatInfo.Peer`, `Client.KeepChat`, `telegram.KnownPeers` and `Lookup.Known`, `Lookup.Find` returns `LookupCounts` (D3, D4); the gotd client fills `Peer` and keeps stored peers
+- [ ] 3.5 Red: `Lookup` unit test for "a stored owner whose chat was closed" (stored owner not ready → deleted by ref → `FindOwner` → `OwnerChatClosedError`)
 - [ ] 3.6 Green: `FindOwner` returns `OwnerInfo`, `Client.CheckOwner`, the owner branch of `Lookup.Find` (D3, D4)
 - [ ] 3.7 Red: `Lookup` unit tests keep "every chat and the owner are found", "a chat the account has not joined", "Telegram asks to wait during the lookup", "the owner is not found" and "the owner never wrote to tgscout's account" with a store (missing and not-joined chats and a missing owner are never saved); their E2E scenarios stay green
 - [ ] 3.8 Green: whatever 3.7 shows missing
 - [ ] 3.9 Red: E2E scenario "a restart looks up no stored chat by name" in `telegram_session.feature` (two starts on one database, the second leaves no `resolve` line in `calls_file` and says every chat came from the store)
-- [ ] 3.10 Green: the app wires `SqlitePeerRepository` into the lookup; `console.watching(chats, counts)` prints the counts as the mock shows; the fake Telegram implements `KeepChat`, `CheckOwner` and `OwnerInfo`
+- [ ] 3.10 Green: the app wires `SqlitePeerRepository` into `Lookup.Known` through a converter; `console.watching(chats, counts)` prints the counts as the mock shows; the fake Telegram implements `KeepChat`, `CheckOwner` and `OwnerInfo`
 - [ ] 3.11 Commit the group
 
 ## 4. A stored chat that stops working
@@ -50,7 +50,7 @@ Needs: 3
 
 - [ ] 4.1 Red: `mapError` unit test: `CHANNEL_INVALID`, `CHANNEL_PRIVATE`, `CHAT_ID_INVALID`, `PEER_ID_INVALID` give `ErrChatGone`
 - [ ] 4.2 Green: `ErrChatGone` and its mapping (D5)
-- [ ] 4.3 Red: unit test of `HistoryCollector` with `Lookup.Refresh` for "the account left a stored chat" (refresh finds the chat not joined → the read fails, the cursor stays, the store no longer holds the chat)
+- [ ] 4.3 Red: unit test of `HistoryCollector` with `Lookup.Refresh` for "the account left a stored chat" (refresh finds the chat not joined → the read fails, the cursor stays, the repository no longer holds the chat)
 - [ ] 4.4 Green: `Lookup.Refresh`, the collector's `Refresher` and `OnRefreshed` report (D5)
 - [ ] 4.5 Red: E2E scenario "Telegram no longer knows a stored chat" in `telegram_session.feature` (fake `gone_chats`: the console shows the re-lookup line and the chat's history is judged)
 - [ ] 4.6 Green: fake `gone_chats`; console lines `catch-up: <name> · Telegram no longer knows the stored chat · looked it up again` and the `gap read:` twin (mock)
@@ -58,9 +58,10 @@ Needs: 3
 
 ## 5. Docs and release
 
-Files: `README.md`, `VERSION`
+Files: `README.md`, `docs/design-progress.md`, `docs/architecture/store.html` (and its page source when one exists), `VERSION`
 Needs: 1, 2, 3, 4
 
 - [ ] 5.1 Text: `README.md` names `history_pause` and that found chats and the owner are kept in the database
-- [ ] 5.2 Bump `VERSION` to 0.9.0
-- [ ] 5.3 Commit the group
+- [ ] 5.2 Text: a dated line in `docs/design-progress.md` that SQLite also keeps the found chats and the owner, replacing «SQLite keeps only processed IDs and decisions»; the `known_peer` table in `docs/architecture/store.html`
+- [ ] 5.3 Bump `VERSION` to 0.9.0
+- [ ] 5.4 Commit the group
