@@ -24,5 +24,5 @@ Needs: 1
 Files: `VERSION`
 Needs: 1, 2
 
-- [ ] 3.1 Bump `VERSION` to 0.8.1
-- [ ] 3.2 Commit the group (`kit ship`)
+- [x] 3.1 Bump `VERSION` to 0.8.1
+- [x] 3.2 Commit the group (`kit ship`)
