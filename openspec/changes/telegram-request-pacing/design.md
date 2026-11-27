@@ -58,6 +58,8 @@ Alternatives: the port in `infra/telegram` with the SQLite adapter implementing 
 
 The fake client of the E2E build implements the same calls (D7).
 
+Peer `fix-basic-group-link` adds `ChatInfo.Basic` (a basic group). A stored chat of kind `chat` is a basic group, so `KeepChat` and the stored `ChatInfo` set `Basic` from the stored kind; when this change lands second, it fills `Basic` that way, when it lands first, that change keeps it.
+
 ### D4. `Lookup.Find` uses the store first
 
 For each chat: a stored entry (`Known.FindByRef`) → `KeepChat`, counted as stored; else `ResolveChat` (with `Retry`), and a joined chat is saved. Missing and not-joined chats are reported as today and never saved. For the owner: a stored entry → `CheckOwner`; when it is not `OwnerReady`, `DeleteByRef` and fall back to `FindOwner` (the spec's «drop, find again, check once more»); a found owner is saved, an owner that is `OwnerMissing` is not. `Find` returns the found chats and `LookupCounts{Stored, LookedUp}`; `console.watching(chats, counts)` prints `watching 4 chats · 3 from the store, 1 looked up` (only the parts that are not zero; see the mock). A repository error stops the start like a database error (`database …: …`).
