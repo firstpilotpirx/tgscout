@@ -15,6 +15,15 @@ import (
 // The made-up stranger who writes to tgscout's account.
 const stranger = "@made_up_stranger"
 
+// The made-up basic group (an old-style group, not a supergroup) and its title.
+const (
+	basicGroup      = "-5400000000"
+	basicGroupTitle = "Made-up neighbours"
+)
+
+// basicGroupMatch is the text of a bike match from the basic group: no link line.
+const basicGroupMatch = "Match: kids-bike — " + bikeFind + "\nChat: " + basicGroupTitle + "\n" + bikeText
+
 // sendFailedLine is the start of the warning of a failed send, up to its pause.
 const sendFailedLine = "[warn] send failed: kids-bike on @made_up_market/4211 · cannot reach Telegram · retry in "
 
@@ -44,11 +53,32 @@ func ownerSteps(sc *godog.ScenarioContext, w *world) {
 		return w.runToIdle()
 	})
 	sc.Step(`^tgscout runs$`, w.runToIdle)
+	basicGroupSteps(sc, w)
 	ownerThenSteps(sc, w)
 }
 
+func basicGroupSteps(sc *godog.ScenarioContext, w *world) {
+	sc.Step(`^a request bound to a watched basic group, and the LLM answers yes$`, func() {
+		w.request("kids-bike", bikeFind)
+		w.lmStudio().answers[bikeFind] = "yes"
+		w.matching.chats = []string{basicGroup}
+		w.tg.fake.Titles[basicGroup] = basicGroupTitle
+	})
+	sc.Step(`^a new matching message appears in that group$`, func() error {
+		w.tg.fake.Updates = []fakeUpdate{{Chat: basicGroup, ID: 7, Text: bikeText}}
+		return w.runToIdle()
+	})
+	sc.Step(`^the private message holds the request, the chat and the message text, and no link line$`, func() error {
+		return w.ownerGot(basicGroupMatch)
+	})
+	sc.Step(`^the console shows the same text$`, func() error {
+		return w.allStdoutHas("  kids-bike · latency ", "s\n  Match: kids-bike — "+bikeFind+"\n  Chat: "+basicGroupTitle+
+			"\n  "+bikeText+"\n")
+	})
+}
+
 func ownerThenSteps(sc *godog.ScenarioContext, w *world) {
-	sc.Step(`^the owner gets one private message with the request, the chat and a link to the message$`, func() error {
+	sc.Step(`^the owner gets one private message with the request, the chat and the link to the message when the chat has one$`, func() error {
 		return w.ownerGot("Match: kids-bike — " + bikeFind + "\nChat: " + marketTitle +
 			"\nhttps://t.me/made_up_market/4211\n" + bikeText)
 	})

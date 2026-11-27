@@ -156,7 +156,7 @@ func consoleThenSteps(sc *godog.ScenarioContext, w *world) {
 		return w.allStderrHas("[warn] unclear LLM answer for kids-bike on @made_up_market/4211, saved as no",
 			`answer: "`+unclearReply+`"`)
 	})
-	sc.Step(`^the console shows a match line with the request, the chat and a link to the message$`, func() error {
+	sc.Step(`^the console shows a match line with the request, the chat and the link to the message when the chat has one$`, func() error {
 		return w.allStdoutHas("[ok] match sent  ", "  kids-bike · latency ", "s\n  Match: kids-bike — "+bikeFind+"\n  Chat: "+marketTitle+
 			"\n  https://t.me/made_up_market/4211\n  "+bikeText+"\n")
 	})

@@ -85,10 +85,12 @@ type fakeUpdate struct {
 }
 
 // info gives a chat its state and a made-up ID: a numeric reference keeps
-// its own, a username gets one from its name.
+// its own, a username gets one from its name. A numeric reference "-<id>",
+// not "-100<id>", is a basic group.
 func (s fakeScenario) info(ref string) ChatInfo {
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
-		return ChatInfo{State: s.state(ref), ID: bareChatID(ref), Title: s.Titles[ref]}
+		basic := strings.HasPrefix(ref, "-") && !strings.HasPrefix(ref, "-100")
+		return ChatInfo{State: s.state(ref), ID: bareChatID(ref), Title: s.Titles[ref], Basic: basic}
 	}
 	name := strings.ToLower(ref[strings.LastIndexAny(ref, "@/")+1:])
 	hash := fnv.New32a()

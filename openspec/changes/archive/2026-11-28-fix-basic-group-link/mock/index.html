@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Basic group match mock</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#6b6a66;--card:#fff;--line:#e4e1da}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--card:#1f1f1d;--line:#34332f}}
+:root[data-theme="dark"]{--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--card:#1f1f1d;--line:#34332f}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1500px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:28px 0 8px}
+p,li{color:var(--mut);font-size:14px}
+.tpair{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:900px){.tpair{grid-template-columns:1fr}}
+figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-x:auto}
+figcaption{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.term{font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px;border-radius:8px;white-space:pre;overflow-x:auto}
+.term.dark{background:#1e1e1e;color:#d4d4d4}.term.light{background:#fafafa;color:#1e1e1e;border:1px solid #ddd}
+.term .dim{color:#808080}.dark .cy{color:#4ec9b0}.light .cy{color:#0f7b8a}
+.dark .rd{color:#f14c4c;font-weight:bold}.light .rd{color:#c4262e;font-weight:bold}
+.dark .gr{color:#6ad26a}.light .gr{color:#1a7f37}.dark .yl{color:#e5c07b}.light .yl{color:#9a6700}
+code{font:14px ui-monospace,Menlo,monospace}
+</style></head>
+<body><main>
+<h1>Basic group match mock</h1>
+<p>Invented examples. A match from a basic group (an old-style group, not a supergroup). Only the link line goes away; supergroups, channels and public chats keep their links.</p>
+<h2>Telegram message to the owner</h2>
+<div class="tpair">
+<figure><figcaption>Before (dead link)</figcaption><div style="padding:8px 10px;font-size:14px">Match: desk-lamp — a desk lamp<br>Chat: Made-up neighbours<br><span style="color:#2a7ab0">https://t.me/c/5400000000/7</span><br>Desk lamp, clamp mount, 10 €</div></figure>
+<figure><figcaption>After</figcaption><div style="padding:8px 10px;font-size:14px">Match: desk-lamp — a desk lamp<br>Chat: Made-up neighbours<br>Desk lamp, clamp mount, 10 €</div></figure>
+</div>
+<h2>Console — dark terminal</h2>
+<div class="tpair">
+<figure><figcaption>Before</figcaption><div class="term dark"><span class="gr">✓</span> match sent  <span class="dim">14:07</span>  <b>desk-lamp</b> · latency 0.6s
+  Match: desk-lamp — a desk lamp
+  Chat: Made-up neighbours
+  <span class="cy">https://t.me/c/5400000000/7</span>
+  Desk lamp, clamp mount, 10 €</div></figure>
+<figure><figcaption>After</figcaption><div class="term dark"><span class="gr">✓</span> match sent  <span class="dim">14:07</span>  <b>desk-lamp</b> · latency 0.6s
+  Match: desk-lamp — a desk lamp
+  Chat: Made-up neighbours
+  Desk lamp, clamp mount, 10 €</div></figure>
+</div>
+<h2>Console — light terminal</h2>
+<div class="tpair">
+<figure><figcaption>Before</figcaption><div class="term light"><span class="gr">✓</span> match sent  <span class="dim">14:07</span>  <b>desk-lamp</b> · latency 0.6s
+  Match: desk-lamp — a desk lamp
+  Chat: Made-up neighbours
+  <span class="cy">https://t.me/c/5400000000/7</span>
+  Desk lamp, clamp mount, 10 €</div></figure>
+<figure><figcaption>After</figcaption><div class="term light"><span class="gr">✓</span> match sent  <span class="dim">14:07</span>  <b>desk-lamp</b> · latency 0.6s
+  Match: desk-lamp — a desk lamp
+  Chat: Made-up neighbours
+  Desk lamp, clamp mount, 10 €</div></figure>
+</div>
+</main></body></html>

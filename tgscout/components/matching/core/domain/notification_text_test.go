@@ -29,6 +29,17 @@ func TestNotificationTextHasFourParts(t *testing.T) {
 		"Selling a 16-inch kids' bike, 80 €", text)
 }
 
+func TestNotificationTextLeavesOutAnEmptyLink(t *testing.T) {
+	match := bikeMatch(t, "Made-up neighbours", "Desk lamp, clamp mount, 10 €")
+	match.Message.Link = ""
+
+	text := domain.NotificationText(match)
+
+	assert.Equal(t, "Match: kids-bike — a kids' bike, 16 inch, under 100 €\n"+
+		"Chat: Made-up neighbours\n"+
+		"Desk lamp, clamp mount, 10 €", text)
+}
+
 func TestNotificationTextNamesTheChatByConfigTextWithoutTitle(t *testing.T) {
 	text := domain.NotificationText(bikeMatch(t, "", "bike"))
 

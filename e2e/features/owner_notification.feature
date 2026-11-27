@@ -6,7 +6,7 @@ Feature: owner-notification — each match goes to the owner as a private Telegr
     Scenario: a match reaches the owner
       Given a request bound to a watched chat and the LLM answers yes
       When a new matching message appears in that chat
-      Then the owner gets one private message with the request, the chat and a link to the message
+      Then the owner gets one private message with the request, the chat and the link to the message when the chat has one
       And the console shows the same match
 
     Scenario: two requests match one message
@@ -20,6 +20,12 @@ Feature: owner-notification — each match goes to the owner as a private Telegr
 
   Rule: Link to the message
     # The link of a chat without a username runs as a unit test of the collector.
+
+    Scenario: a basic group has no link line
+      Given a request bound to a watched basic group, and the LLM answers yes
+      When a new matching message appears in that group
+      Then the private message holds the request, the chat and the message text, and no link line
+      And the console shows the same text
 
   Rule: Send before the processed mark
     # The stop during a send runs in the slice feature of the matcher: it cannot
