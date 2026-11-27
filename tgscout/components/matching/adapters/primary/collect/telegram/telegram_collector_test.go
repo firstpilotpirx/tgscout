@@ -27,9 +27,12 @@ func chats(t *testing.T) map[int64]collect.Chat {
 	require.NoError(t, err)
 	private, err := domain.NewChatRef("-1001234567890")
 	require.NoError(t, err)
+	basic, err := domain.NewChatRef("-5400000000")
+	require.NoError(t, err)
 	return map[int64]collect.Chat{
 		42:         {Ref: market, Username: "made_up_market", Title: "Made-up market"},
 		1234567890: {Ref: private},
+		5400000000: {Ref: basic, Basic: true, Title: "Made-up neighbours"},
 	}
 }
 
@@ -52,10 +55,18 @@ func TestLinkOfAPublicChatUsesItsUsername(t *testing.T) {
 	assert.Equal(t, domain.MessageKey{ChatID: 42, MessageID: 4211}, useCase.messages[0].Key)
 }
 
-func TestLinkOfAPrivateChatUsesItsID(t *testing.T) {
+func TestLinkOfASupergroupWithoutAUsernameUsesItsID(t *testing.T) {
 	useCase, _ := handle(t, telegram.Update{ChatID: 1234567890, MessageID: 98, Text: "Desk lamp"})
 
 	assert.Equal(t, "https://t.me/c/1234567890/98", useCase.messages[0].Link)
+}
+
+func TestABasicGroupHasNoLink(t *testing.T) {
+	useCase, _ := handle(t, telegram.Update{ChatID: 5400000000, MessageID: 7, Text: "Desk lamp, clamp mount, 10 €"})
+
+	require.Len(t, useCase.messages, 1)
+	assert.Empty(t, useCase.messages[0].Link)
+	assert.Equal(t, "Made-up neighbours", useCase.messages[0].ChatTitle)
 }
 
 func TestAnUpdateOfAnUnwatchedChatIsDropped(t *testing.T) {

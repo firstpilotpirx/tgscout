@@ -35,12 +35,14 @@ const (
 
 // ChatInfo is what the account knows about one chat of the config: its
 // state, its bare peer ID, its username, empty for a private chat, and its
-// title, empty when Telegram gives none.
+// title, empty when Telegram gives none. Basic marks a basic group (an
+// old-style group, not a supergroup), which Telegram gives no message link.
 type ChatInfo struct {
 	State    ChatState
 	ID       int64
 	Username string
 	Title    string
+	Basic    bool
 }
 
 // OwnerState is what the account knows about the owner.

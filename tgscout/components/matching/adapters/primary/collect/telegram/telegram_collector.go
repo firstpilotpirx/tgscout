@@ -12,12 +12,13 @@ import (
 
 // Chat is a watched chat as the start found it: its bare peer ID, the config
 // reference, its username, empty for a private chat, and its title, empty
-// when none.
+// when none. Basic marks a basic group, whose messages get no link.
 type Chat struct {
 	ID       int64
 	Ref      domain.ChatRef
 	Username string
 	Title    string
+	Basic    bool
 }
 
 // MessageCollector is the collect use case.
@@ -69,7 +70,12 @@ func toMessage(chat Chat, update telegram.Update) domain.Message {
 	}
 }
 
+// link is the message link; a basic group has none, since Telegram opens no
+// message link for it.
 func link(chat Chat, update telegram.Update) string {
+	if chat.Basic {
+		return ""
+	}
 	if chat.Username != "" {
 		return fmt.Sprintf("https://t.me/%s/%d", chat.Username, update.MessageID)
 	}
