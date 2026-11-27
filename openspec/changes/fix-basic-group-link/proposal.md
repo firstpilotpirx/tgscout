@@ -19,11 +19,12 @@ Interface: CLI (the console match line) and the Telegram message to the owner.
 ### Modified Capabilities
 
 - `owner-notification`: the link line of a match from a basic group.
+- `message-matching`: the console match scenario promises the link only when the chat has one.
 
 ## Impact
 
 - The code that builds the match message text and its link.
-- The owner-notification spec, its tests and the `.feature` scenario.
+- The owner-notification and message-matching specs, their tests and `.feature` scenarios.
 
 ## Open points
 

@@ -1,5 +1,22 @@
 ## MODIFIED Requirements
 
+### Requirement: A match goes to the owner
+
+For every «yes» of a request on a message, tgscout SHALL send one private Telegram message from its own account to the owner, and SHALL show the same text on the console under one match line once Telegram confirmed the send. A message that matches several requests SHALL give one private message per request.
+
+#### Scenario: a match reaches the owner
+
+- **GIVEN** a request bound to a watched chat and the LLM answers yes
+- **WHEN** a new matching message appears in that chat
+- **THEN** the owner gets one private message with the request, the chat and the link to the message when the chat has one
+- **AND** the console shows the same match
+
+#### Scenario: two requests match one message
+
+- **GIVEN** two requests of one chat and the LLM answers yes to both
+- **WHEN** a new message appears in that chat
+- **THEN** the owner gets two private messages, one per request
+
 ### Requirement: Text of the private message
 
 The private message SHALL be plain text with no buttons, one part per line: `Match: <request id> — <request text>`, `Chat: <chat title>` (the config text when Telegram gives no title), the link to the message when the chat has one, then the message text. A text longer than 1,000 characters SHALL be cut to 1,000 characters and «…»; the other parts SHALL always stay whole.
