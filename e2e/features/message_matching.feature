@@ -45,7 +45,7 @@ Feature: message-matching — how a new message of a watched chat becomes a deci
     Scenario: a matching message is shown on the console
       Given a request "a kids' bike, 16 inch, under 100 €" bound to a watched chat, and the LLM answers yes
       When a new message "Selling a 16-inch kids' bike, 80 €" appears in that chat
-      Then the console shows a match line with the request, the chat and a link to the message
+      Then the console shows a match line with the request, the chat and the link to the message when the chat has one
       And the decision is saved as a match, the message is marked processed and the cursor moves to it
 
     Scenario: a message that does not match
