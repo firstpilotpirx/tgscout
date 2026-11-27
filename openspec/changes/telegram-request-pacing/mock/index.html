@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Telegram request pacing mock</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mut:#6b6a66;--new:#1f7a4d;--newbg:#e3f3ea}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--fg:#ecebe7;--mut:#a09e98;--new:#6fd19c;--newbg:#17332a}}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1800px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:28px 0 8px}
+p{color:var(--mut);font-size:14px}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:1100px){.pair{grid-template-columns:1fr}}
+figure{margin:0}figcaption{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.new{background:var(--newbg);color:var(--new);font-weight:600;padding:0 4px;border-radius:4px;font-size:13px}
+.term{font:13px/1.5 ui-monospace,Menlo,monospace;padding:14px;border-radius:8px;white-space:pre;overflow-x:auto}
+.term.dark{background:#1e1e1e;color:#d4d4d4}
+.term.dark .cy{color:#4ec9b0}.term.dark .ye{color:#e5c07b}.term.dark .rd{color:#f14c4c;font-weight:bold}.term.dark .gr{color:#9e9e9e}.term.dark .ok{color:#89d185}
+.term.dark mark{background:#17332a;color:inherit}
+.term.light{background:#ffffff;color:#1f1f1f;border:1px solid #ddd}
+.term.light .cy{color:#0b7d8c}.term.light .ye{color:#9a6700}.term.light .rd{color:#c4242b;font-weight:bold}.term.light .gr{color:#6e6e6e}.term.light .ok{color:#1a7f37}
+.term.light mark{background:#e3f3ea;color:inherit}
+</style></head>
+<body><main>
+<h1>Telegram request pacing mock</h1>
+<p>Invented examples. Each block in a light and a dark terminal. The <mark style="background:var(--newbg);color:inherit">highlighted</mark> part is what this change adds; the rest is today's output.</p>
+
+<template id="t-first"><span class="ok">✓</span> signed in as Scout Bot
+<span class="ok">✓</span> owner found: @example_owner
+<span class="ok">✓</span> watching 3 chats<mark> · 3 looked up</mark>
+<span class="cy">→</span> catch-up started · 3 chats · live listening is on<mark> · 1s between history reads</mark>
+<span class="ok">✓</span> catch-up: Riverside flea market · 240 messages · first start, last 3 days
+</template>
+
+<template id="t-restart"><span class="ok">✓</span> signed in as Scout Bot
+<span class="ok">✓</span> owner found: @example_owner
+<span class="ok">✓</span> watching 4 chats<mark> · 3 from the store, 1 looked up</mark>
+<span class="cy">→</span> catch-up started · 4 chats · live listening is on<mark> · 1s between history reads</mark>
+<span class="ok">✓</span> catch-up: Riverside flea market · 12 messages from the cursor
+</template>
+
+<template id="t-relookup"><mark><span class="ye">⚠</span> catch-up: Kids' things swap · Telegram no longer knows the stored chat · looked it up again</mark>
+<span class="ok">✓</span> catch-up: Kids' things swap · 31 messages from the cursor
+</template>
+
+<template id="t-off"><span class="ok">✓</span> watching 3 chats<mark> · 3 from the store</mark>
+<span class="cy">→</span> catch-up started · 3 chats · live listening is on
+</template>
+
+<h2>First start: every chat looked up</h2>
+<div class="pair" data-t="t-first"></div>
+<h2>Restart with one new chat in the config</h2>
+<div class="pair" data-t="t-restart"></div>
+<h2>A stored chat Telegram no longer knows</h2>
+<div class="pair" data-t="t-relookup"></div>
+<h2>Pause off (<code>history_pause: 0s</code>): the start line names no pause</h2>
+<div class="pair" data-t="t-off"></div>
+<script>
+for (const box of document.querySelectorAll('.pair')) {
+  const html = document.getElementById(box.dataset.t).innerHTML;
+  for (const look of ['light','dark']) {
+    const f = document.createElement('figure');
+    f.innerHTML = '<figcaption>' + look + '</figcaption><div class="term ' + look + '">' + html + '</div>';
+    box.appendChild(f);
+  }
+}
+</script>
+</main></body></html>
