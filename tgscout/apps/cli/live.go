@@ -185,7 +185,8 @@ func watchedByID(found map[string]telegram.ChatInfo) map[int64]collect.Chat {
 		if err != nil {
 			continue // the config check let only valid references through
 		}
-		chats[info.ID] = collect.Chat{ID: info.ID, Ref: ref, Username: info.Username, Title: info.Title}
+		chats[info.ID] = collect.Chat{ID: info.ID, Ref: ref, Username: info.Username, Title: info.Title,
+			Basic: info.Basic}
 	}
 	return chats
 }

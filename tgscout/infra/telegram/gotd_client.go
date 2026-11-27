@@ -124,7 +124,8 @@ func (c *gotdClient) ResolveChat(ctx context.Context, ref string) (ChatInfo, err
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
 		state, title, peer, err := c.dialogState(ctx, ref)
 		c.keepPeer(bareChatID(ref), peer)
-		return ChatInfo{State: state, ID: bareChatID(ref), Title: title}, err
+		_, basic := peer.(*tg.InputPeerChat)
+		return ChatInfo{State: state, ID: bareChatID(ref), Title: title, Basic: basic}, err
 	}
 	resolved, err := c.resolve(ctx, ref)
 	if err != nil || resolved == nil {
@@ -153,7 +154,7 @@ func chatInfo(resolved *tg.ContactsResolvedPeer) (ChatInfo, tg.InputPeerClass) {
 			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Username: chat.Username, Title: chat.Title},
 				&tg.InputPeerChannel{ChannelID: chat.ID, AccessHash: chat.AccessHash}
 		case *tg.Chat:
-			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Title: chat.Title},
+			return ChatInfo{State: joinedState(chat.Left), ID: chat.ID, Title: chat.Title, Basic: true},
 				&tg.InputPeerChat{ChatID: chat.ID}
 		}
 	}

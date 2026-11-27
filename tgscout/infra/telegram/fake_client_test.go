@@ -73,6 +73,18 @@ func TestFakeChatInfoGivesEachChatItsOwnMadeUpID(t *testing.T) {
 	assert.Equal(t, market.ID, scenario.info("@made_up_market").ID)
 }
 
+func TestFakeChatInfoMarksABasicGroup(t *testing.T) {
+	scenario, err := parseFakeScenario([]byte(`{"chats": {"*": "joined"}}`))
+	require.NoError(t, err)
+
+	basic := scenario.info("-5400000000")
+
+	assert.True(t, basic.Basic)
+	assert.Equal(t, int64(5400000000), basic.ID)
+	assert.False(t, scenario.info("-1001234567890").Basic, "a supergroup")
+	assert.False(t, scenario.info("@made_up_market").Basic, "a public chat")
+}
+
 func newTestFake(t *testing.T, scenario string) (*fakeClient, string) {
 	t.Helper()
 	sent := filepath.Join(t.TempDir(), "sent.jsonl")
