@@ -81,7 +81,7 @@ For each request asked, tgscout SHALL save a decision with whether it matched an
 
 - **GIVEN** a request "a kids' bike, 16 inch, under 100 €" bound to a watched chat, and the LLM answers yes
 - **WHEN** a new message "Selling a 16-inch kids' bike, 80 €" appears in that chat
-- **THEN** the console shows a match line with the request, the chat and a link to the message
+- **THEN** the console shows a match line with the request, the chat and the link to the message when the chat has one
 - **AND** the decision is saved as a match, the message is marked processed and the cursor moves to it
 
 #### Scenario: a message that does not match
