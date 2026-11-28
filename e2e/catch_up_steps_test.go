@@ -60,6 +60,11 @@ func catchUpGivenSteps(sc *godog.ScenarioContext, w *world) {
 		w.tg.fake.HistoryDelayMs = 600 // the live message arrives while the history is read
 		w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 1}}
 	})
+	sc.Step(`^a watched chat with history and LM Studio that does not answer$`, func() {
+		w.request("kids-bike", bikeFind)
+		w.lmStudio().down = true
+		w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 30}}
+	})
 }
 
 // catchUpChatsGivenSteps: the waits and the scenarios of more than one chat.
@@ -100,11 +105,6 @@ func catchUpChatsGivenSteps(sc *godog.ScenarioContext, w *world) {
 			{Chat: swap, ID: 1, Text: "Swap 1", AgeMinutes: hour},
 		}
 		w.untilCatchUpDone()
-	})
-	sc.Step(`^a watched chat with history and LM Studio that does not answer$`, func() {
-		w.request("kids-bike", bikeFind)
-		w.lmStudio().down = true
-		w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 30}}
 	})
 }
 
