@@ -59,6 +59,14 @@ Feature: telegram-session — how tgscout signs in to its Telegram account and f
       Then tgscout prints an error that tells the owner to sign in again
       And it exits with a non-zero code
 
+  Rule: Stored chats and owner
+
+    Scenario: a restart looks up no stored chat by name
+      Given tgscout found every chat of the config and the owner at an earlier start
+      When the owner starts tgscout again with the same config
+      Then tgscout asks Telegram for no chat and no owner by name
+      And it says that every watched chat came from the store
+
   Rule: Watched chats lookup
 
     Scenario: every chat and the owner are found

@@ -57,7 +57,7 @@ func TestFirstStartCreatesTheDatabaseAndStops(t *testing.T) {
 	assert.Equal(t, 0, code, errOut)
 	assert.FileExists(t, filepath.Join(dir, "tgscout.db"))
 	assert.Contains(t, out, "[ok] "+config+": 1 request, 1 chat, model example-model")
-	assert.Contains(t, out, "[ok] database "+filepath.Join(dir, "tgscout.db")+" created · migration 1 · 3 tables")
+	assert.Contains(t, out, "[ok] database "+filepath.Join(dir, "tgscout.db")+" created · migration 2 · 4 tables")
 	assert.Contains(t, out, "[run] running — press Ctrl+C to stop")
 	assert.Contains(t, out, "-> stopping · finishing 0 messages in work · up to 10s · Ctrl+C again to stop now")
 	assert.Contains(t, out, "[ok] stopped")
@@ -73,7 +73,7 @@ func TestSecondStartSaysSchemaUpToDate(t *testing.T) {
 	code, out, _ := runTgscout(stopped(), "--config", config, "--db", db)
 
 	assert.Equal(t, 0, code)
-	assert.Contains(t, out, "[ok] database "+db+" schema up to date · migration 1")
+	assert.Contains(t, out, "[ok] database "+db+" schema up to date · migration 2")
 }
 
 func TestDatabaseInMissingFolderGivesCode1(t *testing.T) {

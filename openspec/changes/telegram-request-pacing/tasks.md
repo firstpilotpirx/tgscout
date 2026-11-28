@@ -31,17 +31,17 @@ Needs: 1
 Files: `tgscout/components/matching/core/domain/known_peer.go`, `tgscout/components/matching/core/application/peer_repository.go`, `tgscout/components/matching/adapters/secondary/persistence/sqlite/` (migration `000002_known_peer`, `sqlite_peer_repository.go`), `tgscout/infra/telegram/` (`client.go`, `lookup.go`, `gotd_client.go`, `fake_client.go`, `stub_client_test.go`), `tgscout/apps/cli/` (`connect.go`, `console_telegram.go`, `start.go`, `start_telegram.go`), `e2e/`
 Needs: 2
 
-- [ ] 3.1 Red: integration test of `SqlitePeerRepository`: `Save`, `FindByRef`, `DeleteByRef` per role and ref; the migration reaches version 2 with the `known_peer` table
-- [ ] 3.2 Green: migration `000002_known_peer` up and down (D1), `domain.KnownPeer`, the `application.PeerRepository` port and `SqlitePeerRepository` (D2)
-- [ ] 3.3 Red: `Lookup` unit test for "a chat added to the config is looked up" (two stored chats kept with no `ResolveChat`, the third resolved and saved; counts 2 stored, 1 looked up)
-- [ ] 3.4 Green: `ChatInfo.Peer`, `Client.KeepChat`, `telegram.KnownPeers` and `Lookup.Known`, `Lookup.Find` returns `LookupCounts` (D3, D4); the gotd client fills `Peer` and keeps stored peers
-- [ ] 3.5 Red: `Lookup` unit test for "a stored owner whose chat was closed" (stored owner not ready → deleted by ref → `FindOwner` → `OwnerChatClosedError`)
-- [ ] 3.6 Green: `FindOwner` returns `OwnerInfo`, `Client.CheckOwner`, the owner branch of `Lookup.Find` (D3, D4)
-- [ ] 3.7 Red: `Lookup` unit tests keep "every chat and the owner are found", "a chat the account has not joined", "Telegram asks to wait during the lookup", "the owner is not found" and "the owner never wrote to tgscout's account" with a store (missing and not-joined chats and a missing owner are never saved); their E2E scenarios stay green
-- [ ] 3.8 Green: whatever 3.7 shows missing
-- [ ] 3.9 Red: E2E scenario "a restart looks up no stored chat by name" in `telegram_session.feature` (two starts on one database, the second leaves no `resolve` line in `calls_file` and says every chat came from the store)
-- [ ] 3.10 Green: the app wires `SqlitePeerRepository` into `Lookup.Known` through a converter; `console.watching(chats, counts)` prints the counts as the mock shows; the fake Telegram implements `KeepChat`, `CheckOwner` and `OwnerInfo`
-- [ ] 3.11 Commit the group
+- [x] 3.1 Red: integration test of `SqlitePeerRepository`: `Save`, `FindByRef`, `DeleteByRef` per role and ref; the migration reaches version 2 with the `known_peer` table
+- [x] 3.2 Green: migration `000002_known_peer` up and down (D1), `domain.KnownPeer`, the `application.PeerRepository` port and `SqlitePeerRepository` (D2)
+- [x] 3.3 Red: `Lookup` unit test for "a chat added to the config is looked up" (two stored chats kept with no `ResolveChat`, the third resolved and saved; counts 2 stored, 1 looked up)
+- [x] 3.4 Green: `ChatInfo.Peer`, `Client.KeepChat`, `telegram.KnownPeers` and `Lookup.Known`, `Lookup.Find` returns `LookupCounts` (D3, D4); the gotd client fills `Peer` and keeps stored peers
+- [x] 3.5 Red: `Lookup` unit test for "a stored owner whose chat was closed" (stored owner not ready → deleted by ref → `FindOwner` → `OwnerChatClosedError`)
+- [x] 3.6 Green: `FindOwner` returns `OwnerInfo`, `Client.CheckOwner`, the owner branch of `Lookup.Find` (D3, D4)
+- [x] 3.7 Red: `Lookup` unit tests keep "every chat and the owner are found", "a chat the account has not joined", "Telegram asks to wait during the lookup", "the owner is not found" and "the owner never wrote to tgscout's account" with a store (missing and not-joined chats and a missing owner are never saved); their E2E scenarios stay green
+- [x] 3.8 Green: whatever 3.7 shows missing
+- [x] 3.9 Red: E2E scenario "a restart looks up no stored chat by name" in `telegram_session.feature` (two starts on one database, the second leaves no `resolve` line in `calls_file` and says every chat came from the store)
+- [x] 3.10 Green: the app wires `SqlitePeerRepository` into `Lookup.Known` through a converter; `console.watching(chats, counts)` prints the counts as the mock shows; the fake Telegram implements `KeepChat`, `CheckOwner` and `OwnerInfo`
+- [x] 3.11 Commit the group
 
 ## 4. A stored chat that stops working
 

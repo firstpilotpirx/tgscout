@@ -10,6 +10,7 @@ import (
 	"hash/fnv"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -100,14 +101,22 @@ type fakeUpdate struct {
 func (s fakeScenario) info(ref string) ChatInfo {
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
 		basic := strings.HasPrefix(ref, "-") && !strings.HasPrefix(ref, "-100")
-		return ChatInfo{State: s.state(ref), ID: bareChatID(ref), Title: s.Titles[ref], Basic: basic}
+		peer := Peer{Kind: PeerChannel, ID: bareChatID(ref), AccessHash: fakeAccessHash}
+		if basic {
+			peer = Peer{Kind: PeerBasicGroup, ID: bareChatID(ref)}
+		}
+		return ChatInfo{State: s.state(ref), ID: bareChatID(ref), Title: s.Titles[ref], Basic: basic, Peer: peer}
 	}
 	name := strings.ToLower(ref[strings.LastIndexAny(ref, "@/")+1:])
 	hash := fnv.New32a()
 	_, _ = hash.Write([]byte(name))
-	return ChatInfo{State: s.state(ref), ID: 9_000_000_000 + int64(hash.Sum32()), Username: name,
-		Title: s.Titles[ref]}
+	id := 9_000_000_000 + int64(hash.Sum32())
+	return ChatInfo{State: s.state(ref), ID: id, Username: name, Title: s.Titles[ref],
+		Peer: Peer{Kind: PeerChannel, ID: id, AccessHash: fakeAccessHash}}
 }
+
+// fakeAccessHash is the made-up access hash of every fake channel and user.
+const fakeAccessHash = 424242
 
 func parseFakeScenario(data []byte) (fakeScenario, error) {
 	var scenario fakeScenario
@@ -219,12 +228,7 @@ func (c *fakeClient) Self(context.Context) (Account, error) {
 
 func (c *fakeClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error) {
 	info := c.scenario.info(ref)
-	c.historyMu.Lock()
-	if c.refs == nil {
-		c.refs = map[int64]string{}
-	}
-	c.refs[info.ID] = ref
-	c.historyMu.Unlock()
+	c.rememberRef(info.ID, ref)
 	if err := c.called("resolve", ref); err != nil {
 		return ChatInfo{}, err
 	}
@@ -233,6 +237,28 @@ func (c *fakeClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error
 		return ChatInfo{}, &FloodWait{Wait: wait}
 	}
 	return info, nil
+}
+
+// KeepChat takes a stored chat with no call; its config text is rebuilt from
+// the stored data for the calls file: "@name", "-<id>" or "-100<id>".
+func (c *fakeClient) KeepChat(info ChatInfo) {
+	ref := "-100" + strconv.FormatInt(info.ID, 10)
+	switch {
+	case info.Username != "":
+		ref = "@" + info.Username
+	case info.Peer.Kind == PeerBasicGroup:
+		ref = "-" + strconv.FormatInt(info.ID, 10)
+	}
+	c.rememberRef(info.ID, ref)
+}
+
+func (c *fakeClient) rememberRef(id int64, ref string) {
+	c.historyMu.Lock()
+	defer c.historyMu.Unlock()
+	if c.refs == nil {
+		c.refs = map[int64]string{}
+	}
+	c.refs[id] = ref
 }
 
 // called appends the call to the scenario's calls file, when it names one.
@@ -298,17 +324,30 @@ func appendLine(path string, value any) error {
 	return errors.Join(err, file.Close())
 }
 
-func (c *fakeClient) FindOwner(_ context.Context, owner string) (OwnerState, error) {
+func (c *fakeClient) FindOwner(_ context.Context, owner string) (OwnerInfo, error) {
 	if err := c.called("resolve", owner); err != nil {
-		return OwnerMissing, err
+		return OwnerInfo{}, err
 	}
+	state := c.ownerState(owner)
+	if state == OwnerMissing {
+		return OwnerInfo{}, nil
+	}
+	return OwnerInfo{State: state, Peer: Peer{Kind: PeerUser, ID: 4_000_000_001, AccessHash: fakeAccessHash}}, nil
+}
+
+// CheckOwner gives the state FindOwner gives, with no name lookup.
+func (c *fakeClient) CheckOwner(_ context.Context, owner string, _ Peer) (OwnerState, error) {
+	return c.ownerState(owner), nil
+}
+
+func (c *fakeClient) ownerState(owner string) OwnerState {
 	switch {
 	case !slices.Contains(c.scenario.Contacts, owner):
-		return OwnerMissing, nil
+		return OwnerMissing
 	case c.scenario.OwnerChatClosed:
-		return OwnerNoChat, nil
+		return OwnerNoChat
 	}
-	return OwnerReady, nil
+	return OwnerReady
 }
 
 // SendToOwner appends the send to the scenario's sent file; the workers send

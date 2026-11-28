@@ -129,16 +129,46 @@ func (c *gotdClient) ResolveChat(ctx context.Context, ref string) (ChatInfo, err
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
 		state, title, peer, err := c.dialogState(ctx, ref)
 		c.keepPeer(bareChatID(ref), peer)
-		_, basic := peer.(*tg.InputPeerChat)
-		return ChatInfo{State: state, ID: bareChatID(ref), Title: title, Basic: basic}, err
+		data := peerData(peer)
+		return ChatInfo{State: state, ID: bareChatID(ref), Title: title, Basic: data.Kind == PeerBasicGroup,
+			Peer: data}, err
 	}
 	resolved, err := c.resolve(ctx, ref)
 	if err != nil || resolved == nil {
 		return ChatInfo{}, err
 	}
 	info, peer := chatInfo(resolved)
+	info.Peer = peerData(peer)
 	c.keepPeer(info.ID, peer)
 	return info, nil
+}
+
+// KeepChat keeps a stored chat's input peer for ReadHistory; no call to Telegram.
+func (c *gotdClient) KeepChat(info ChatInfo) {
+	c.keepPeer(info.ID, inputPeer(info.Peer))
+}
+
+// peerData is the stored form of a chat's input peer.
+func peerData(peer tg.InputPeerClass) Peer {
+	switch peer := peer.(type) {
+	case *tg.InputPeerChannel:
+		return Peer{Kind: PeerChannel, ID: peer.ChannelID, AccessHash: peer.AccessHash}
+	case *tg.InputPeerChat:
+		return Peer{Kind: PeerBasicGroup, ID: peer.ChatID}
+	}
+	return Peer{}
+}
+
+// inputPeer is the chat's input peer of a stored peer; nil for an unknown kind.
+func inputPeer(peer Peer) tg.InputPeerClass {
+	switch peer.Kind {
+	case PeerChannel:
+		return &tg.InputPeerChannel{ChannelID: peer.ID, AccessHash: peer.AccessHash}
+	case PeerBasicGroup:
+		return &tg.InputPeerChat{ChatID: peer.ID}
+	case PeerUser:
+	}
+	return nil
 }
 
 // keepPeer keeps a found chat's input peer for ReadHistory.
@@ -174,11 +204,24 @@ func bareChatID(ref string) int64 {
 
 // FindOwner finds the owner's user and keeps its peer for SendToOwner, then
 // asks whether the account has a private chat with the owner.
-func (c *gotdClient) FindOwner(ctx context.Context, owner string) (OwnerState, error) {
+func (c *gotdClient) FindOwner(ctx context.Context, owner string) (OwnerInfo, error) {
 	peer, err := c.ownerPeer(ctx, owner)
 	if err != nil || peer == nil {
-		return OwnerMissing, err
+		return OwnerInfo{}, err
 	}
+	data := Peer{Kind: PeerUser, ID: peer.UserID, AccessHash: peer.AccessHash}
+	state, err := c.keepOwner(ctx, owner, peer)
+	return OwnerInfo{State: state, Peer: data}, err
+}
+
+// CheckOwner keeps a stored owner's peer for SendToOwner and asks only
+// whether the private chat is open; it looks up no name.
+func (c *gotdClient) CheckOwner(ctx context.Context, owner string, peer Peer) (OwnerState, error) {
+	return c.keepOwner(ctx, owner, &tg.InputPeerUser{UserID: peer.ID, AccessHash: peer.AccessHash})
+}
+
+// keepOwner keeps the owner's peer, then asks whether its private chat is open.
+func (c *gotdClient) keepOwner(ctx context.Context, owner string, peer *tg.InputPeerUser) (OwnerState, error) {
 	c.mu.Lock()
 	c.owners[owner] = peer
 	c.mu.Unlock()
@@ -195,11 +238,11 @@ func (c *gotdClient) SendToOwner(ctx context.Context, owner, text string) error 
 	peer := c.owners[owner]
 	c.mu.Unlock()
 	if peer == nil {
-		state, err := c.FindOwner(ctx, owner)
+		info, err := c.FindOwner(ctx, owner)
 		if err != nil {
 			return err
 		}
-		if state == OwnerMissing {
+		if info.State == OwnerMissing {
 			return &OwnerNotFoundError{Owner: owner}
 		}
 		c.mu.Lock()

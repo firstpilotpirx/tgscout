@@ -70,7 +70,14 @@ func (f *fakeTelegram) Listen(ctx context.Context, fn func(context.Context, tele
 	return ctx.Err()
 }
 
-func (f *fakeTelegram) FindOwner(_ context.Context, owner string) (telegram.OwnerState, error) {
+func (f *fakeTelegram) KeepChat(telegram.ChatInfo) {}
+
+func (f *fakeTelegram) FindOwner(ctx context.Context, owner string) (telegram.OwnerInfo, error) {
+	state, err := f.CheckOwner(ctx, owner, telegram.Peer{})
+	return telegram.OwnerInfo{State: state}, err
+}
+
+func (f *fakeTelegram) CheckOwner(_ context.Context, owner string, _ telegram.Peer) (telegram.OwnerState, error) {
 	for _, each := range f.owners {
 		if each == owner && f.closed {
 			return telegram.OwnerNoChat, nil
@@ -156,7 +163,7 @@ func TestConnectFirstRunPrintsTheSignInLinesInOrder(t *testing.T) {
 		"[ok] signed in as Made Up Reader\n"+
 		"[ok] session saved /made/up/tgscout.session (mode 600)\n"+
 		"[ok] owner found: @made_up_owner\n"+
-		"[ok] watching 2 chats\n", r.out.String())
+		"[ok] watching 2 chats · 2 looked up\n", r.out.String())
 }
 
 func TestConnectWrongCodeAsksAgain(t *testing.T) {
@@ -176,7 +183,7 @@ func TestConnectSavedSessionAsksNothing(t *testing.T) {
 	require.NoError(t, r.err)
 	assert.False(t, r.session.committed)
 	assert.Equal(t, "[ok] signed in as Made Up Reader (saved session)\n"+
-		"[ok] owner found: @made_up_owner\n[ok] watching 1 chat\n", r.out.String())
+		"[ok] owner found: @made_up_owner\n[ok] watching 1 chat · 1 looked up\n", r.out.String())
 }
 
 func TestConnectRevokedSessionSaysToSignInAgain(t *testing.T) {

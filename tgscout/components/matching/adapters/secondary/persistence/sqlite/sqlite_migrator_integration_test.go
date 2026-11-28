@@ -29,8 +29,8 @@ func TestMigrateNewFileGetsTheSchema(t *testing.T) {
 	result, err := sqlite.Migrate(db)
 
 	require.NoError(t, err)
-	assert.Equal(t, sqlite.MigrationResult{Version: 1, Tables: 3, Applied: true}, result)
-	for _, table := range []string{"chat_cursor", "processed_message", "decision"} {
+	assert.Equal(t, sqlite.MigrationResult{Version: 2, Tables: 4, Applied: true}, result)
+	for _, table := range []string{"chat_cursor", "processed_message", "decision", "known_peer"} {
 		var name string
 		require.NoError(t, db.QueryRow("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", table).Scan(&name))
 	}
@@ -46,7 +46,7 @@ func TestMigrateSecondRunKeepsRows(t *testing.T) {
 	result, err := sqlite.Migrate(db)
 
 	require.NoError(t, err)
-	assert.Equal(t, sqlite.MigrationResult{Version: 1, Tables: 3, Applied: false}, result)
+	assert.Equal(t, sqlite.MigrationResult{Version: 2, Tables: 4, Applied: false}, result)
 	var last int64
 	require.NoError(t, db.QueryRow("SELECT last_message_id FROM chat_cursor WHERE chat_id = 7").Scan(&last))
 	assert.Equal(t, int64(42), last)
