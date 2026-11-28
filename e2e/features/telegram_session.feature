@@ -67,6 +67,15 @@ Feature: telegram-session — how tgscout signs in to its Telegram account and f
       Then tgscout asks Telegram for no chat and no owner by name
       And it says that every watched chat came from the store
 
+  Rule: A stored chat that stops working
+    # The account leaving a stored chat runs as a unit test of the collector and the lookup.
+
+    Scenario: Telegram no longer knows a stored chat
+      Given a stored chat that Telegram no longer knows under its stored data, though the account is still in it
+      When catch-up reads that chat
+      Then the console shows one line that tgscout looked the chat up again
+      And the chat's history is read and judged
+
   Rule: Watched chats lookup
 
     Scenario: every chat and the owner are found

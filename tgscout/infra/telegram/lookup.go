@@ -171,6 +171,29 @@ func (l *Lookup) owner(ctx context.Context, owner string) (OwnerState, error) {
 	return info.State, err
 }
 
+// Refresh drops a stored chat Telegram no longer knows and looks it up by
+// name once; it saves and returns the chat when it is joined under the same
+// ID, else it gives ErrChatGone and the next start looks the chat up by name.
+func (l *Lookup) Refresh(ctx context.Context, ref string, id int64) (ChatInfo, error) {
+	if l.Known != nil {
+		if err := l.Known.DeleteByRef(ctx, RoleChat, ref); err != nil {
+			return ChatInfo{}, fmt.Errorf("stored chat %s: %w", ref, err)
+		}
+	}
+	info, err := Retry(ctx, l.Waiting, l.Sleep, func() (ChatInfo, error) { return l.Client.ResolveChat(ctx, ref) })
+	if err != nil {
+		return ChatInfo{}, err
+	}
+	if info.State != ChatJoined || info.ID != id {
+		return ChatInfo{}, ErrChatGone
+	}
+	if err := l.save(ctx, KnownPeer{Role: RoleChat, Ref: ref, Peer: info.Peer, Username: info.Username,
+		Title: info.Title}); err != nil {
+		return ChatInfo{}, err
+	}
+	return info, nil
+}
+
 func (l *Lookup) find(ctx context.Context, role PeerRole, ref string) (KnownPeer, bool, error) {
 	if l.Known == nil {
 		return KnownPeer{}, false, nil

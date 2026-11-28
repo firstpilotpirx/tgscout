@@ -48,13 +48,13 @@ Needs: 2
 Files: `tgscout/infra/telegram/` (`gotd_errors.go`, `lookup.go`, `fake_client.go`), `tgscout/components/matching/adapters/primary/collect/telegram/history_collector.go`, `tgscout/apps/cli/` (`console_catch_up.go`, `console_delivery.go`, `live.go`), `e2e/`
 Needs: 3
 
-- [ ] 4.1 Red: `mapError` unit test: `CHANNEL_INVALID`, `CHANNEL_PRIVATE`, `CHAT_ID_INVALID`, `PEER_ID_INVALID` give `ErrChatGone`
-- [ ] 4.2 Green: `ErrChatGone` and its mapping (D5)
-- [ ] 4.3 Red: unit test of `HistoryCollector` with `Lookup.Refresh` for "the account left a stored chat" (refresh finds the chat not joined → the read fails, the cursor stays, the repository no longer holds the chat)
-- [ ] 4.4 Green: `Lookup.Refresh`, the collector's `Refresher` and `OnRefreshed` report (D5)
-- [ ] 4.5 Red: E2E scenario "Telegram no longer knows a stored chat" in `telegram_session.feature` (fake `gone_chats`: the console shows the re-lookup line and the chat's history is judged)
-- [ ] 4.6 Green: fake `gone_chats`; console lines `catch-up: <name> · Telegram no longer knows the stored chat · looked it up again` and the `gap read:` twin (mock)
-- [ ] 4.7 Commit the group
+- [x] 4.1 Red: `mapError` unit test: `CHANNEL_INVALID`, `CHANNEL_PRIVATE`, `CHAT_ID_INVALID`, `PEER_ID_INVALID` give `ErrChatGone`
+- [x] 4.2 Green: `ErrChatGone` and its mapping (D5)
+- [x] 4.3 Red: unit test of `HistoryCollector` with `Lookup.Refresh` for "the account left a stored chat" (refresh finds the chat not joined → the read fails, the cursor stays, the repository no longer holds the chat)
+- [x] 4.4 Green: `Lookup.Refresh`, the collector's `Refresher` and `OnRefreshed` report (D5)
+- [x] 4.5 Red: E2E scenario "Telegram no longer knows a stored chat" in `telegram_session.feature` (fake `gone_chats`: the console shows the re-lookup line and the chat's history is judged)
+- [x] 4.6 Green: fake `gone_chats`; console lines `catch-up: <name> · Telegram no longer knows the stored chat · looked it up again` and the `gap read:` twin (mock)
+- [x] 4.7 Commit the group
 
 ## 5. Docs and release
 

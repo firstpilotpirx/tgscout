@@ -53,6 +53,7 @@ func watch(ctx context.Context, con *console, deps startDeps, config string, mat
 		return exitError
 	}
 	link.known = known
+	matcher.refresher = &telegram.Lookup{Client: link.client, Waiting: con.floodWait, Sleep: link.sleep, Known: known}
 	err := runDetached(ctx, link.client, func(ctx context.Context) error {
 		found, err := connect(ctx, link, con, watchedChats(settings), settings.Owner.String())
 		if err != nil {

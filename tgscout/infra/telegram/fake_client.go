@@ -38,8 +38,10 @@ type fakeScenario struct {
 	CallsFile        string            `json:"calls_file"`
 	History          []fakeHistory     `json:"history"`
 	HistoryFlood     int               `json:"history_flood_wait_seconds"`
-	HistoryDelayMs   int               `json:"history_delay_ms"`
-	SendHangMs       int               `json:"send_hang_ms"`
+	// GoneChats are config texts whose first history read answers ErrChatGone.
+	GoneChats      []string `json:"gone_chats"`
+	HistoryDelayMs int      `json:"history_delay_ms"`
+	SendHangMs     int      `json:"send_hang_ms"`
 }
 
 // fakeHistory is a made-up message posted before the start; Chat is the
@@ -147,19 +149,20 @@ func (s fakeScenario) floodWait() time.Duration {
 
 // fakeClient plays the scenario; it stores a made-up session after a sign-in.
 type fakeClient struct {
-	scenario    fakeScenario
-	storage     *FileStorage
-	flooded     bool
-	sendFlooded bool
-	sendMu      sync.Mutex
-	historyMu   sync.Mutex
-	histFlooded bool
-	lostHistory []fakeHistory
-	byChat      map[int64][]fakeHistory // the scenario's history by chat, built at the first read
-	refs        map[int64]string        // the config text of each resolved chat, by ID
-	pacer       *Pacer
-	watchMu     sync.Mutex
-	watcher     func(ConnectionEvent)
+	scenario     fakeScenario
+	storage      *FileStorage
+	flooded      bool
+	sendFlooded  bool
+	sendMu       sync.Mutex
+	historyMu    sync.Mutex
+	histFlooded  bool
+	goneAnswered map[string]bool // the gone chats that already answered ErrChatGone
+	lostHistory  []fakeHistory
+	byChat       map[int64][]fakeHistory // the scenario's history by chat, built at the first read
+	refs         map[int64]string        // the config text of each resolved chat, by ID
+	pacer        *Pacer
+	watchMu      sync.Mutex
+	watcher      func(ConnectionEvent)
 }
 
 // WatchConnection keeps f for the drops and returns the scenario plays.
@@ -394,6 +397,13 @@ func (c *fakeClient) ReadHistory(ctx context.Context, chatID int64, window Histo
 	if wait := time.Duration(c.scenario.HistoryFlood) * time.Second; wait > 0 && !c.histFlooded {
 		c.histFlooded = true
 		return History{}, &FloodWait{Wait: wait}
+	}
+	if slices.Contains(c.scenario.GoneChats, ref) && !c.goneAnswered[ref] {
+		if c.goneAnswered == nil {
+			c.goneAnswered = map[string]bool{}
+		}
+		c.goneAnswered[ref] = true
+		return History{}, ErrChatGone
 	}
 	if c.byChat == nil {
 		c.byChat = map[int64][]fakeHistory{}

@@ -54,6 +54,27 @@ func (c *console) catchUpChat(report collect.ChatReport) {
 	}
 }
 
+// chatRefreshed prints that a stored chat Telegram no longer knew was looked
+// up again, at catch-up or, with gapRead, at the gap read after a reconnect.
+func (c *console) chatRefreshed(chat collect.Chat, gapRead bool) {
+	if gapRead {
+		c.gapChatRefreshed(chat)
+		return
+	}
+	c.refreshedLine("catch-up", chat)
+}
+
+// refreshedLine is the warning line of a chat looked up again; name is the
+// chat's title, or its config reference when it has none.
+func (c *console) refreshedLine(read string, chat collect.Chat) {
+	name := chat.Title
+	if name == "" {
+		name = chat.Ref.String()
+	}
+	c.println(c.out, fmt.Sprintf("%s %s: %s · Telegram no longer knows the stored chat · looked it up again",
+		c.yellow.Sprint(c.marks.warn), read, name))
+}
+
 // catchUpDone prints the summary once every caught-up message is settled.
 func (c *console) catchUpDone(summary collect.Summary) {
 	ok, counts := c.green.Sprint(c.marks.ok), summary.Counts

@@ -60,7 +60,7 @@ type Settings struct {
 	// calls to Telegram; 0 turns the pause off.
 	HistoryPause time.Duration
 	LmStudio     LmStudio
-	Requests       []Request
+	Requests     []Request
 }
 
 // RequestsOf gives every request that watches the chat, in config order.

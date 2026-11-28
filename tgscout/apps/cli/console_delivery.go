@@ -61,6 +61,9 @@ func (c *console) gapRead(handed int, failed []collect.ChatReport) {
 	}
 }
 
+// gapChatRefreshed says the gap read looked up again a stored chat Telegram no longer knew.
+func (c *console) gapChatRefreshed(chat collect.Chat) { c.refreshedLine("gap read", chat) }
+
 // stopping says the stop began, how many messages are still judged and how long it waits for them.
 func (c *console) stopping(busy int, grace time.Duration) {
 	c.step(fmt.Sprintf("stopping · finishing %s in work · up to %s · Ctrl+C again to stop now",
