@@ -44,10 +44,9 @@ func defaultDeps() startDeps {
 
 // watch signs in, finds the chats and the owner, then matches their new
 // messages until ctx ends; the workers and the listener stop before it returns.
-// known keeps the found chats and the owner for the next start.
-func watch(ctx context.Context, con *console, deps startDeps, config string, matcher live,
-	known telegram.KnownPeers) int {
-	settings := matcher.settings
+// matcher.known keeps the found chats and the owner for the next start.
+func watch(ctx context.Context, con *console, deps startDeps, config string, matcher live) int {
+	settings, known := matcher.settings, matcher.known
 	link, ok := openTelegram(con, deps, config, settings.HistoryPause)
 	if !ok {
 		return exitError

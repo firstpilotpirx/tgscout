@@ -32,6 +32,8 @@ type live struct {
 	stats    *domain.RunStats
 	// refresher looks a stored chat Telegram no longer knows up again; nil fails its read.
 	refresher collect.Refresher
+	// known keeps the found chats and the owner for the next start; nil keeps nothing.
+	known telegram.KnownPeers
 }
 
 // newLive wires the matching adapters over the database and LM Studio.

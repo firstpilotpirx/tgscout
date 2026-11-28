@@ -77,27 +77,9 @@ type Lookup struct {
 // Find finds every chat and the owner and returns the found chats by their
 // config text; it returns every problem at once.
 func (l *Lookup) Find(ctx context.Context, chats []string, owner string) (map[string]ChatInfo, LookupCounts, error) {
-	var missing []MissingChat
-	var counts LookupCounts
-	found := map[string]ChatInfo{}
-	for _, chat := range chats {
-		info, stored, err := l.chat(ctx, chat)
-		if err != nil {
-			return nil, LookupCounts{}, err
-		}
-		switch info.State {
-		case ChatMissing:
-			missing = append(missing, MissingChat{Chat: chat, Reason: "no such chat"})
-		case ChatNotJoined:
-			missing = append(missing, MissingChat{Chat: chat, Reason: "the account has not joined it"})
-		case ChatJoined:
-			found[chat] = info
-			if stored {
-				counts.Stored++
-			} else {
-				counts.LookedUp++
-			}
-		}
+	found, missing, counts, err := l.chats(ctx, chats)
+	if err != nil {
+		return nil, LookupCounts{}, err
 	}
 	var chatsErr, ownerErr error
 	if len(missing) > 0 {
@@ -118,6 +100,34 @@ func (l *Lookup) Find(ctx context.Context, chats []string, owner string) (map[st
 		return nil, LookupCounts{}, err
 	}
 	return found, counts, nil
+}
+
+// chats finds every chat: the found ones by their config text, the missing
+// ones with their reason, and how many came from the store.
+func (l *Lookup) chats(ctx context.Context, chats []string) (map[string]ChatInfo, []MissingChat, LookupCounts, error) {
+	var missing []MissingChat
+	var counts LookupCounts
+	found := map[string]ChatInfo{}
+	for _, chat := range chats {
+		info, stored, err := l.chat(ctx, chat)
+		if err != nil {
+			return nil, nil, LookupCounts{}, err
+		}
+		switch info.State {
+		case ChatMissing:
+			missing = append(missing, MissingChat{Chat: chat, Reason: "no such chat"})
+		case ChatNotJoined:
+			missing = append(missing, MissingChat{Chat: chat, Reason: "the account has not joined it"})
+		case ChatJoined:
+			found[chat] = info
+			if stored {
+				counts.Stored++
+			} else {
+				counts.LookedUp++
+			}
+		}
+	}
+	return found, missing, counts, nil
 }
 
 // chat takes a stored chat, or looks it up by name and saves it when joined;

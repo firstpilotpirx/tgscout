@@ -45,7 +45,7 @@ type fakeTelegram struct {
 	PlayedFile       string            `json:"played_file"`
 	CallsFile        string            `json:"calls_file"`
 	GoneChats        []string          `json:"gone_chats,omitempty"`
-	History         []fakeHistory     `json:"history"`
+	History          []fakeHistory     `json:"history"`
 	HistoryFlood     int               `json:"history_flood_wait_seconds"`
 	HistoryDelayMs   int               `json:"history_delay_ms"`
 	SendHangMs       int               `json:"send_hang_ms"`

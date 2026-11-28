@@ -155,19 +155,7 @@ func (h *HistoryCollector) readChat(ctx context.Context, client telegram.Client,
 		report.Err = err
 		return report, 0
 	}
-	read := func() (telegram.History, error) {
-		return telegram.Retry(ctx, h.waiting, h.sleep, func() (telegram.History, error) {
-			return client.ReadHistory(ctx, chat.ID, telegram.HistoryWindow{After: window.After,
-				Limit: window.Depth.Messages, Since: window.Since()})
-		})
-	}
-	history, err := read()
-	if errors.Is(err, telegram.ErrChatGone) && h.refresher != nil {
-		if _, refreshErr := h.refresher.Refresh(ctx, chat.Ref.String(), chat.ID); refreshErr == nil {
-			h.reports.OnRefreshed(chat, gapRead)
-			history, err = read()
-		}
-	}
+	history, err := h.readWindow(ctx, client, chat, window, gapRead)
 	if err != nil {
 		report.Err = err
 		return report, 0
@@ -192,6 +180,26 @@ func (h *HistoryCollector) readChat(ctx context.Context, client telegram.Client,
 		report.Err = err
 	}
 	return report, handed
+}
+
+// readWindow reads the chat's window; when Telegram no longer knows a stored
+// chat, it looks the chat up again once and reads once more.
+func (h *HistoryCollector) readWindow(ctx context.Context, client telegram.Client, chat Chat,
+	window domain.CatchUpChat, gapRead bool) (telegram.History, error) {
+	read := func() (telegram.History, error) {
+		return telegram.Retry(ctx, h.waiting, h.sleep, func() (telegram.History, error) {
+			return client.ReadHistory(ctx, chat.ID, telegram.HistoryWindow{After: window.After,
+				Limit: window.Depth.Messages, Since: window.Since()})
+		})
+	}
+	history, err := read()
+	if errors.Is(err, telegram.ErrChatGone) && h.refresher != nil {
+		if _, refreshErr := h.refresher.Refresh(ctx, chat.Ref.String(), chat.ID); refreshErr == nil {
+			h.reports.OnRefreshed(chat, gapRead)
+			history, err = read()
+		}
+	}
+	return history, err
 }
 
 func (h *HistoryCollector) waiting(wait time.Duration) { h.reports.OnWait(wait) }

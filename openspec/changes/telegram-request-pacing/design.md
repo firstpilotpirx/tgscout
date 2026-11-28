@@ -104,7 +104,7 @@ Alternative: pace in `HistoryCollector` per chat. Rejected: a chat of 500 messag
 | the start line names the pause | unit (console) |
 | the gap read keeps the pause | unit (`Pacer` shared by two readers; the gap read uses the same client) |
 | the connection to Telegram drops | E2E (existing) |
-| a message processed during the drop is not judged twice | E2E (existing) |
+| a message processed during the drop is not judged twice | slice (existing, `components/matching/tests/features/slice/catch_up.feature`) |
 | defaults fill what the file leaves out | unit (YAML parser) |
 | every form of chat reference is accepted | unit (existing) |
 | an invalid config stops the start | E2E (existing outline) |

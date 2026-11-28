@@ -85,12 +85,7 @@ func (w *walker) root(body ast.Node) domain.Settings {
 		HistoryPause:   DefaultHistoryPause,
 		LmStudio:       w.lmStudio(found["lm_studio"], lineOf(body)),
 	}
-	if interval := found["status_interval"]; interval != nil {
-		settings.StatusInterval = w.statusInterval(interval.Value)
-	}
-	if pause := found["history_pause"]; pause != nil {
-		settings.HistoryPause = w.historyPause(pause.Value)
-	}
+	w.timing(found, &settings)
 	if queueSize := found["queue_size"]; queueSize != nil {
 		settings.QueueSize, _ = w.number(queueSize.Value, "queue_size", 1)
 	}
@@ -109,6 +104,16 @@ func (w *walker) root(body ast.Node) domain.Settings {
 	}
 	settings.Requests = w.requests(found["requests"], lineOf(body), rootDepth)
 	return settings
+}
+
+// timing reads the root keys of the status line and the history pace.
+func (w *walker) timing(found map[string]*ast.MappingValueNode, settings *domain.Settings) {
+	if interval := found["status_interval"]; interval != nil {
+		settings.StatusInterval = w.statusInterval(interval.Value)
+	}
+	if pause := found["history_pause"]; pause != nil {
+		settings.HistoryPause = w.historyPause(pause.Value)
+	}
 }
 
 // statusInterval reads a duration of at least MinStatusInterval.
