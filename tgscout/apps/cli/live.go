@@ -156,7 +156,7 @@ func (l live) stopInTwoSteps(ctx context.Context, con *console, busy *match.Busy
 func (l live) readHistory(stop context.Context, con *console, client telegram.Client,
 	config *matching.MatchingConfig, chats []collect.Chat) *sync.WaitGroup {
 	history := collect.NewHistoryCollector(config.CatchUp, collect.HistoryReports{
-		OnStart: con.catchUpStarted, OnChat: con.catchUpChat, OnWait: con.floodWait,
+		OnStart: func(chats int) { con.catchUpStarted(chats, l.settings.HistoryPause) }, OnChat: con.catchUpChat, OnWait: con.floodWait,
 		OnDone: con.catchUpDone, OnFailed: con.collectFailed,
 	}, l.sleep)
 	reconnector := collect.NewReconnector(config.CatchUp, history, client, chats, collect.ReconnectReports{

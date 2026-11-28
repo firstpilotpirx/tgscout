@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
@@ -23,6 +24,8 @@ type Config struct {
 	APIID   int
 	APIHash string
 	Storage *FileStorage
+	// HistoryPause is the least time between the starts of two history calls.
+	HistoryPause time.Duration
 }
 
 // gotdClient is the Client over gotd; its logger stays gotd's no-op default.
@@ -32,6 +35,7 @@ type gotdClient struct {
 	gaps    *updates.Manager
 	updates *updateSink
 	watch   *connectionWatch
+	pacer   *Pacer // spaces every messages.getHistory call of the process
 	mu      sync.Mutex
 	owners  map[string]*tg.InputPeerUser // the found owner's peer, by config text
 	peers   map[int64]tg.InputPeerClass  // the found chats' peers, by bare ID
@@ -49,6 +53,7 @@ func newGotdClient(cfg Config) *gotdClient {
 		gaps:    gaps,
 		updates: sink,
 		watch:   watch,
+		pacer:   NewPacer(cfg.HistoryPause),
 		owners:  map[string]*tg.InputPeerUser{},
 		peers:   map[int64]tg.InputPeerClass{},
 	}

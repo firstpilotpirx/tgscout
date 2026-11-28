@@ -2,10 +2,12 @@ package e2e_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // The made-up secrets of every scenario; the secrets scenario looks for each in the output.
@@ -21,6 +23,7 @@ const (
 	fakeScenarioFile = "fake-telegram.json"
 	sentFileName     = "fake-telegram-sent.jsonl"
 	playedFileName   = "fake-telegram-played.jsonl"
+	callsFileName    = "fake-telegram-calls.jsonl"
 	marketTitle      = "Made-up market"
 	sessionFileName  = "tgscout.session"
 )
@@ -40,7 +43,8 @@ type fakeTelegram struct {
 	SendFails        bool              `json:"send_fails"`
 	SentFile         string            `json:"sent_file"`
 	PlayedFile       string            `json:"played_file"`
-	History          []fakeHistory     `json:"history"`
+	CallsFile        string            `json:"calls_file"`
+	History         []fakeHistory     `json:"history"`
 	HistoryFlood     int               `json:"history_flood_wait_seconds"`
 	HistoryDelayMs   int               `json:"history_delay_ms"`
 	SendHangMs       int               `json:"send_hang_ms"`
@@ -93,6 +97,7 @@ func defaultTelegram() telegramWorld {
 func (t telegramWorld) write(dir string) ([]string, error) {
 	t.fake.SentFile = filepath.Join(dir, sentFileName)
 	t.fake.PlayedFile = filepath.Join(dir, playedFileName)
+	t.fake.CallsFile = filepath.Join(dir, callsFileName)
 	data, err := json.Marshal(t.fake) //nolint:gosec // G117: a made-up password of the fake Telegram
 	if err != nil {
 		return nil, fmt.Errorf("fake scenario: %w", err)
@@ -112,6 +117,34 @@ func (t telegramWorld) write(dir string) ([]string, error) {
 		env = append(env, "TG_API_HASH="+madeUpAPIHash)
 	}
 	return env, nil
+}
+
+// fakeCall is one line of the fake Telegram's calls file: a resolve or a
+// history call, its chat, and when it started (Unix nanoseconds).
+type fakeCall struct {
+	Kind string `json:"kind"`
+	Chat string `json:"chat"`
+	At   int64  `json:"at"`
+}
+
+// calls reads the calls file the fake wrote into dir; no file is no call.
+func (t telegramWorld) calls(dir string) ([]fakeCall, error) {
+	data, err := os.ReadFile(filepath.Join(dir, callsFileName)) //nolint:gosec // G304: the scenario's own temp folder
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("calls file: %w", err)
+	}
+	var calls []fakeCall
+	for line := range strings.Lines(string(data)) {
+		var call fakeCall
+		if err := json.Unmarshal([]byte(line), &call); err != nil {
+			return nil, fmt.Errorf("calls file line %q: %w", line, err)
+		}
+		calls = append(calls, call)
+	}
+	return calls, nil
 }
 
 func writeWithMode(path, text string, mode fs.FileMode) error {

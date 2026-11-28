@@ -46,7 +46,7 @@ func defaultDeps() startDeps {
 // messages until ctx ends; the workers and the listener stop before it returns.
 func watch(ctx context.Context, con *console, deps startDeps, config string, matcher live) int {
 	settings := matcher.settings
-	link, ok := openTelegram(con, deps, config)
+	link, ok := openTelegram(con, deps, config, settings.HistoryPause)
 	if !ok {
 		return exitError
 	}
@@ -67,8 +67,9 @@ func watch(ctx context.Context, con *console, deps startDeps, config string, mat
 	return exitOK
 }
 
-// openTelegram reads the credentials, checks the session file and makes the client.
-func openTelegram(con *console, deps startDeps, config string) (telegramLink, bool) {
+// openTelegram reads the credentials, checks the session file and makes the
+// client, whose history calls keep historyPause between them.
+func openTelegram(con *console, deps startDeps, config string, historyPause time.Duration) (telegramLink, bool) {
 	creds, err := loadCredentials(deps.getenv, parseDotEnv(deps.readDotEnv()), config)
 	if err != nil {
 		con.fail(err.Error(), "fill it in .env (see .env.example)")
@@ -83,7 +84,8 @@ func openTelegram(con *console, deps startDeps, config string) (telegramLink, bo
 		return telegramLink{}, false
 	}
 	storage := telegram.NewFileStorage(creds.sessionFile, !exists)
-	client, err := deps.newClient(telegram.Config{APIID: creds.apiID, APIHash: creds.apiHash, Storage: storage})
+	client, err := deps.newClient(telegram.Config{APIID: creds.apiID, APIHash: creds.apiHash, Storage: storage,
+		HistoryPause: historyPause})
 	if err != nil {
 		con.fail("cannot start the Telegram client: "+err.Error(), "")
 		return telegramLink{}, false

@@ -34,6 +34,7 @@ type fakeScenario struct {
 	SendFloodSeconds int               `json:"send_flood_wait_seconds"`
 	SentFile         string            `json:"sent_file"`
 	PlayedFile       string            `json:"played_file"`
+	CallsFile        string            `json:"calls_file"`
 	History          []fakeHistory     `json:"history"`
 	HistoryFlood     int               `json:"history_flood_wait_seconds"`
 	HistoryDelayMs   int               `json:"history_delay_ms"`
@@ -63,6 +64,15 @@ type fakeSend struct {
 type fakePlay struct {
 	Chat string `json:"chat"`
 	ID   int    `json:"id"`
+	At   int64  `json:"at"`
+}
+
+// fakeCall is one line of the calls file: a name lookup ("resolve") or a
+// history call ("history"), its chat or owner as the config writes it, and
+// when it started (Unix nanoseconds).
+type fakeCall struct {
+	Kind string `json:"kind"`
+	Chat string `json:"chat"`
 	At   int64  `json:"at"`
 }
 
@@ -137,6 +147,8 @@ type fakeClient struct {
 	histFlooded bool
 	lostHistory []fakeHistory
 	byChat      map[int64][]fakeHistory // the scenario's history by chat, built at the first read
+	refs        map[int64]string        // the config text of each resolved chat, by ID
+	pacer       *Pacer
 	watchMu     sync.Mutex
 	watcher     func(ConnectionEvent)
 }
@@ -164,7 +176,7 @@ func NewClient(cfg Config) (Client, error) {
 		return nil, fmt.Errorf("fake Telegram scenario: %w", err)
 	}
 	scenario, err := parseFakeScenario(data)
-	return &fakeClient{scenario: scenario, storage: cfg.Storage}, err
+	return &fakeClient{scenario: scenario, storage: cfg.Storage, pacer: NewPacer(cfg.HistoryPause)}, err
 }
 
 func (c *fakeClient) Run(ctx context.Context, f func(context.Context) error) error { return f(ctx) }
@@ -206,11 +218,29 @@ func (c *fakeClient) Self(context.Context) (Account, error) {
 }
 
 func (c *fakeClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error) {
+	info := c.scenario.info(ref)
+	c.historyMu.Lock()
+	if c.refs == nil {
+		c.refs = map[int64]string{}
+	}
+	c.refs[info.ID] = ref
+	c.historyMu.Unlock()
+	if err := c.called("resolve", ref); err != nil {
+		return ChatInfo{}, err
+	}
 	if wait := c.scenario.floodWait(); wait > 0 && !c.flooded {
 		c.flooded = true
 		return ChatInfo{}, &FloodWait{Wait: wait}
 	}
-	return c.scenario.info(ref), nil
+	return info, nil
+}
+
+// called appends the call to the scenario's calls file, when it names one.
+func (c *fakeClient) called(kind, chat string) error {
+	if c.scenario.CallsFile == "" {
+		return nil
+	}
+	return appendLine(c.scenario.CallsFile, fakeCall{Kind: kind, Chat: chat, At: time.Now().UnixNano()})
 }
 
 // Listen plays the scenario's updates in order, then waits for the stop.
@@ -269,6 +299,9 @@ func appendLine(path string, value any) error {
 }
 
 func (c *fakeClient) FindOwner(_ context.Context, owner string) (OwnerState, error) {
+	if err := c.called("resolve", owner); err != nil {
+		return OwnerMissing, err
+	}
 	switch {
 	case !slices.Contains(c.scenario.Contacts, owner):
 		return OwnerMissing, nil
@@ -301,9 +334,19 @@ func (c *fakeClient) send(owner, text string) error {
 	return appendLine(c.scenario.SentFile, fakeSend{To: owner, Text: text, At: time.Now().UnixNano()})
 }
 
-// ReadHistory pauses history_delay_ms, asks to wait once when the scenario
-// says so, then gives the window of the chat's made-up history.
+// ReadHistory waits on the client's pacer and records the call, pauses
+// history_delay_ms, asks to wait once when the scenario says so, then gives
+// the window of the chat's made-up history.
 func (c *fakeClient) ReadHistory(ctx context.Context, chatID int64, window HistoryWindow) (History, error) {
+	if err := c.pacer.Wait(ctx); err != nil {
+		return History{}, err
+	}
+	c.historyMu.Lock()
+	ref := c.refs[chatID]
+	c.historyMu.Unlock()
+	if err := c.called("history", ref); err != nil {
+		return History{}, err
+	}
 	if err := SleepContext(ctx, time.Duration(c.scenario.HistoryDelayMs)*time.Millisecond); err != nil {
 		return History{}, err
 	}

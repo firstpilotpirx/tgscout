@@ -7,7 +7,8 @@ import (
 	"github.com/gotd/td/tg"
 )
 
-// ReadHistory pages messages.getHistory of a chat ResolveChat found.
+// ReadHistory pages messages.getHistory of a chat ResolveChat found; each
+// call waits on the client's pacer first, so every reader shares the pause.
 func (c *gotdClient) ReadHistory(ctx context.Context, chatID int64, window HistoryWindow) (History, error) {
 	c.mu.Lock()
 	peer := c.peers[chatID]
@@ -16,6 +17,9 @@ func (c *gotdClient) ReadHistory(ctx context.Context, chatID int64, window Histo
 		return History{}, fmt.Errorf("chat %d was not found at start", chatID)
 	}
 	return pageHistory(ctx, func(ctx context.Context, offsetID int) ([]Update, error) {
+		if err := c.pacer.Wait(ctx); err != nil {
+			return nil, err
+		}
 		answer, err := c.client.API().MessagesGetHistory(ctx, &tg.MessagesGetHistoryRequest{
 			Peer: peer, OffsetID: offsetID, Limit: historyPage, MinID: window.After})
 		if err != nil {

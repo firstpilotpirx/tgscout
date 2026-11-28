@@ -47,6 +47,14 @@ Feature: catch-up — at start tgscout reads what the watched chats posted while
       Then the console shows the history wait
       And the chat's history is read and judged after it
 
+  Rule: Pace of history reads
+    # No pause when it is off runs as a unit test of the pacer.
+
+    Scenario: history calls keep the pause
+      Given a history_pause of 1 second and two watched chats with missed messages
+      When the owner starts tgscout and it catches up
+      Then every history call to Telegram starts at least 1 second after the one before
+
   Rule: Catch-up console lines
 
     Scenario: one line per chat

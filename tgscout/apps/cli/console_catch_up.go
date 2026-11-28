@@ -12,8 +12,22 @@ import (
 
 const day = 24 * time.Hour
 
-func (c *console) catchUpStarted(chats int) {
-	c.step(fmt.Sprintf("catch-up started · %s · live listening is on", count(chats, "chat")))
+// catchUpStarted prints the start line; it names the pause between history
+// reads when the pause is on.
+func (c *console) catchUpStarted(chats int, pause time.Duration) {
+	line := fmt.Sprintf("catch-up started · %s · live listening is on", count(chats, "chat"))
+	if pause > 0 {
+		line += fmt.Sprintf(" · %s between history reads", pauseText(pause))
+	}
+	c.step(line)
+}
+
+// pauseText writes a pause as short does, keeping a pause under a second exact.
+func pauseText(pause time.Duration) string {
+	if pause < time.Second {
+		return pause.String()
+	}
+	return short(pause)
 }
 
 // catchUpChat prints the line of one chat once its history is read.

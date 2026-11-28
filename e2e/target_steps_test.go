@@ -187,6 +187,7 @@ func readLines[T any](path string) ([]T, error) {
 // 3-day default depth, and an LLM that answers no at once (design D10).
 func (w *world) missedHistory() {
 	w.targetConfig("no", 0)
+	w.matching.extra += "history_pause: 17ms\n" // the default 1s, scaled 60 times (design D6)
 	for n := range targetChats {
 		for i := range historyPerChat {
 			w.tg.fake.History = append(w.tg.fake.History, fakeHistory{Chat: targetChat(n), ID: firstID + i,

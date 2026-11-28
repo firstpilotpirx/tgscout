@@ -8,23 +8,23 @@ Needs: none
 - [x] 1.3 Red: parser test for "a negative history pause is an error"; "an invalid config stops the start", "every problem is listed at once", "a retry cap that is not a duration is refused" and "a status interval below 10 seconds is refused" stay green
 - [x] 1.4 Green: field error `must be 0s or more` on `history_pause`
 - [x] 1.5 Text: `history_pause` in `tgscout.yaml.example` with a one-line comment
-- [ ] 1.6 Commit the group
+- [x] 1.6 Commit the group
 
 ## 2. Pace of history reads
 
 Files: `tgscout/infra/telegram/` (`history.go`, `gotd_history.go`, `gotd_client.go`, `fake_client.go`, `new_client.go` config), `tgscout/apps/cli/start_telegram.go`, `tgscout/apps/cli/console_catch_up.go`, `tgscout/apps/cli/live.go`, `e2e/`
 Needs: 1
 
-- [ ] 2.1 Red: unit test of `telegram.Pacer` with a made-up clock for "history calls keep the pause" (two calls start ≥ the pause apart, a slow call uses up part of it) and "the gap read keeps the pause" (two readers share one pacer)
-- [ ] 2.2 Green: `telegram.Pacer` (D6); `Config.HistoryPause`; the gotd `ReadHistory` waits on the client's pacer before each `messages.getHistory`; `openTelegram` passes `settings.HistoryPause`
-- [ ] 2.3 Red: unit test of `telegram.Pacer` for "no pause when it is off"
-- [ ] 2.4 Green: a pause of 0 returns at once
-- [ ] 2.5 Red: E2E scenario "history calls keep the pause" in `catch_up.feature` over the fake's `calls_file`
-- [ ] 2.6 Green: fake Telegram `calls_file` (each `resolve` and `history` call as a JSON line with kind, chat and time) and the fake's `ReadHistory` waits on the same pacer (D7)
-- [ ] 2.7 Red: console unit test for "the start line names the pause"; "one line per chat", "the connection to Telegram drops" and "a message processed during the drop is not judged twice" stay green
-- [ ] 2.8 Green: `catchUpStarted(chats, pause)` appends ` · 1s between history reads` when the pause is not 0 (mock)
-- [ ] 2.9 Text: the scaled catch-up target test sets `history_pause: 17ms` (1 s scaled 60×) and still passes (D6)
-- [ ] 2.10 Commit the group
+- [x] 2.1 Red: unit test of `telegram.Pacer` with a made-up clock for "history calls keep the pause" (two calls start ≥ the pause apart, a slow call uses up part of it) and "the gap read keeps the pause" (two readers share one pacer)
+- [x] 2.2 Green: `telegram.Pacer` (D6); `Config.HistoryPause`; the gotd `ReadHistory` waits on the client's pacer before each `messages.getHistory`; `openTelegram` passes `settings.HistoryPause`
+- [x] 2.3 Red: unit test of `telegram.Pacer` for "no pause when it is off"
+- [x] 2.4 Green: a pause of 0 returns at once
+- [x] 2.5 Red: E2E scenario "history calls keep the pause" in `catch_up.feature` over the fake's `calls_file`
+- [x] 2.6 Green: fake Telegram `calls_file` (each `resolve` and `history` call as a JSON line with kind, chat and time) and the fake's `ReadHistory` waits on the same pacer (D7)
+- [x] 2.7 Red: console unit test for "the start line names the pause"; "one line per chat", "the connection to Telegram drops" and "a message processed during the drop is not judged twice" stay green
+- [x] 2.8 Green: `catchUpStarted(chats, pause)` appends ` · 1s between history reads` when the pause is not 0 (mock)
+- [x] 2.9 Text: the scaled catch-up target test sets `history_pause: 17ms` (1 s scaled 60×) and still passes (D6)
+- [x] 2.10 Commit the group
 
 ## 3. Stored chats and owner
 
