@@ -53,6 +53,7 @@ Each element: `- [ ]` open, `- [ ] … — dialogue` items in progress, `- [ ] �
 2026-11-16 — Owner approved every diagram; L1 System Context, L2 Container and L3 Component — tgscout accepted
 2026-11-16 — Version 1 plan: 8 slices filed as OpenSpec changes, run in order; the «Later, not now» items (photos, owner feedback) stay out as non-goals (Plan)
 2026-11-16 — L4 Code · component overview of matching accepted: use cases CollectMessage and MatchMessage, five driven ports (L4 Code — matching)
+2026-11-28 — SQLite also keeps the found chats and the owner (table known_peer: config text, kind, peer ID, access hash, username, title), so a restart looks none of them up by name; replaces «SQLite keeps only processed IDs and decisions» of 2026-11-15 (L2 Container)
 
 ## Review
 

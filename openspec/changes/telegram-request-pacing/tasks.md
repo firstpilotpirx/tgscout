@@ -61,7 +61,7 @@ Needs: 3
 Files: `README.md`, `docs/design-progress.md`, `docs/architecture/store.html` (and its page source when one exists), `VERSION`
 Needs: 1, 2, 3, 4
 
-- [ ] 5.1 Text: `README.md` names `history_pause` and that found chats and the owner are kept in the database
-- [ ] 5.2 Text: a dated line in `docs/design-progress.md` that SQLite also keeps the found chats and the owner, replacing «SQLite keeps only processed IDs and decisions»; the `known_peer` table in `docs/architecture/store.html`
-- [ ] 5.3 Bump `VERSION` to 0.9.0
-- [ ] 5.4 Commit the group
+- [x] 5.1 Text: `README.md` names `history_pause` and that found chats and the owner are kept in the database
+- [x] 5.2 Text: a dated line in `docs/design-progress.md` that SQLite also keeps the found chats and the owner, replacing «SQLite keeps only processed IDs and decisions»; the `known_peer` table in `docs/architecture/store.html`
+- [x] 5.3 Bump `VERSION` to 0.9.0
+- [x] 5.4 Commit the group
