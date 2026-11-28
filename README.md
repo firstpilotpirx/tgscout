@@ -57,12 +57,20 @@ cp tgscout.yaml.example tgscout.yaml
 
 `tgscout --help` lists the options. The database `tgscout.db` is created next to the config; `--db <path>` puts it elsewhere. Press Ctrl+C to stop (see [Stop and crash](#stop-and-crash)).
 
+### Chats and owner at start
+
+tgscout keeps every chat and the owner it found in its database (no message text). At the next start it takes them from there and looks up by name only a chat or owner new to the config, or a stored chat Telegram no longer knows. The start line says where the chats came from (made-up example):
+
+```text
+✓ watching 4 chats · 3 from the store, 1 looked up
+```
+
 ### Catch-up at start
 
 While live listening is already on, tgscout reads what each watched chat posted while it was off, chat by chat in config order. It reads from the chat's cursor (the last processed message); on a first start, or after a pause longer than the depth, it reads only the depth (`catch_up` in the config). Each history match goes to you as its own private message; the summary goes only to the console (made-up example):
 
 ```text
-→ catch-up started · 3 chats · live listening is on
+→ catch-up started · 3 chats · live listening is on · 1s between history reads
 ✓ catch-up: Riverside flea market · 214 messages from the cursor
 ✓ catch-up: Kids' things swap · 500 messages · first start, last 3 days
 ⚠ catch-up: Bikes for sale · 500 messages · off for 12 days, read only the last 3 days
@@ -173,6 +181,7 @@ The tests use a fast made-up LLM. With a real model, p95 ≤ 10 s needs a model 
 - `owner` (required): the Telegram user tgscout writes to, `@username` or a numeric ID.
 - `workers` (default 2): how many messages the LLM judges at once; `queue_size` (default 1000): how many messages wait for the LLM; when the queue is full, tgscout waits before it takes more from Telegram and drops none.
 - `status_interval` (default `5m`, at least `10s`): how often the status line comes (§ Targets).
+- `history_pause` (default `1s`, `0s` turns it off): the least time between two history reads from Telegram, at catch-up and at the gap read after a reconnect, so tgscout never sends them in a burst.
 - `retry_max_pause` (default `60s`): the longest pause between two tries of LM Studio or of a send; `stop_grace` (default `10s`): how long a stop waits for the messages in work.
 - `lm_studio.url` (default `http://localhost:1234/v1`), `lm_studio.model` (required), `lm_studio.timeout` (default `60s`).
 - `catch_up.messages` and `catch_up.days` (defaults 500 and 3): how far back each chat is read at start.

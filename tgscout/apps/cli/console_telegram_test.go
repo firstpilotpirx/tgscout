@@ -18,8 +18,8 @@ func TestConsoleSignInLines(t *testing.T) {
 	c.sessionSaved("./tgscout.session")
 	c.signedIn("Made Up Scout", true)
 	c.ownerFound("@made_up_owner")
-	c.watching(5)
-	c.watching(1)
+	c.watching(5, telegram.LookupCounts{})
+	c.watching(1, telegram.LookupCounts{})
 	c.wrongCode()
 	c.wrongPassword()
 	c.floodWait(12 * time.Second)
@@ -37,6 +37,18 @@ func TestConsoleSignInLines(t *testing.T) {
 		"[fail] the password is wrong — try again\n"+
 		"[warn] Telegram asks to wait 12s (FLOOD_WAIT), then goes on\n"+
 		"[warn] Telegram asks to wait 5s (FLOOD_WAIT), then sends again\n", errOut.String())
+}
+
+func TestConsoleWatchingNamesTheLookupCounts(t *testing.T) {
+	c, out, _ := newTestConsole(true)
+
+	c.watching(3, telegram.LookupCounts{LookedUp: 3})
+	c.watching(4, telegram.LookupCounts{Stored: 3, LookedUp: 1})
+	c.watching(3, telegram.LookupCounts{Stored: 3})
+
+	assert.Equal(t, "[ok] watching 3 chats · 3 looked up\n"+
+		"[ok] watching 4 chats · 3 from the store, 1 looked up\n"+
+		"[ok] watching 3 chats · 3 from the store\n", out.String())
 }
 
 func TestConsoleChatsNotFoundListsEveryChat(t *testing.T) {

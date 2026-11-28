@@ -23,6 +23,7 @@ func telegramSteps(sc *godog.ScenarioContext, w *world) {
 	telegramWhenSteps(sc, w)
 	telegramThenSteps(sc, w)
 	lookupThenSteps(sc, w)
+	peerStoreSteps(sc, w)
 }
 
 func telegramGivenSteps(sc *godog.ScenarioContext, w *world) {

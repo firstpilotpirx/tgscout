@@ -28,9 +28,32 @@ func chatReport(t *testing.T, ref, title string, read int) collect.ChatReport {
 func TestCatchUpStartedLine(t *testing.T) {
 	c, out, _ := newTestConsole(false)
 
-	c.catchUpStarted(3)
+	c.catchUpStarted(3, 0)
 
 	assert.Equal(t, "→ catch-up started · 3 chats · live listening is on\n", uncolored(out.String()))
+}
+
+// TestCatchUpStartedLineNamesThePause: the start line names the pause.
+func TestCatchUpStartedLineNamesThePause(t *testing.T) {
+	c, out, _ := newTestConsole(false)
+
+	c.catchUpStarted(3, time.Second)
+
+	assert.Equal(t, "→ catch-up started · 3 chats · live listening is on · 1s between history reads\n",
+		uncolored(out.String()))
+}
+
+// TestChatRefreshedLines: one line when a stored chat was looked up again,
+// at catch-up and at the gap read; a chat with no title shows its reference.
+func TestChatRefreshedLines(t *testing.T) {
+	c, out, _ := newTestConsole(false)
+
+	c.chatRefreshed(collect.Chat{Ref: chatRef(t, "@made_up_swap"), Title: "Kids' things swap"}, false)
+	c.chatRefreshed(collect.Chat{Ref: chatRef(t, "@made_up_swap")}, true)
+
+	assert.Equal(t, "⚠ catch-up: Kids' things swap · Telegram no longer knows the stored chat · looked it up again\n"+
+		"⚠ gap read: @made_up_swap · Telegram no longer knows the stored chat · looked it up again\n",
+		uncolored(out.String()))
 }
 
 func TestCatchUpChatLineFromTheCursor(t *testing.T) {

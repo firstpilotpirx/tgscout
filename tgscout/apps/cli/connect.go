@@ -19,6 +19,7 @@ type telegramLink struct {
 	session     telegram.Session
 	sessionPath string
 	sleep       func(context.Context, time.Duration) error
+	known       telegram.KnownPeers // the found chats and owner of earlier starts; nil keeps none
 }
 
 // connect signs in and finds the watched chats and the owner, printing each
@@ -35,13 +36,13 @@ func connect(ctx context.Context, link telegramLink, con *console, chats []strin
 	if firstRun {
 		con.sessionSaved(link.sessionPath)
 	}
-	lookup := telegram.Lookup{Client: link.client, Waiting: con.floodWait, Sleep: link.sleep}
-	found, err := lookup.Find(ctx, chats, owner)
+	lookup := telegram.Lookup{Client: link.client, Waiting: con.floodWait, Sleep: link.sleep, Known: link.known}
+	found, counts, err := lookup.Find(ctx, chats, owner)
 	if err != nil {
 		return nil, reportLookup(con, err)
 	}
 	con.ownerFound(owner)
-	con.watching(len(chats))
+	con.watching(len(chats), counts)
 	return found, nil
 }
 
@@ -60,6 +61,11 @@ func reportSignIn(con *console, err error, path string) error {
 func reportLookup(con *console, err error) error {
 	if isStop(err) {
 		return err
+	}
+	var store *storeError
+	if errors.As(err, &store) {
+		con.fail(store.Error(), "", store.path)
+		return errReported
 	}
 	var chatsErr *telegram.ChatsNotFoundError
 	var ownerErr *telegram.OwnerNotFoundError

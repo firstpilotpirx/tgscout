@@ -30,6 +30,10 @@ type live struct {
 	sleep    func(context.Context, time.Duration) error
 	stopping *atomic.Bool // serve printed the stopping line
 	stats    *domain.RunStats
+	// refresher looks a stored chat Telegram no longer knows up again; nil fails its read.
+	refresher collect.Refresher
+	// known keeps the found chats and the owner for the next start; nil keeps nothing.
+	known telegram.KnownPeers
 }
 
 // newLive wires the matching adapters over the database and LM Studio.
@@ -156,9 +160,12 @@ func (l live) stopInTwoSteps(ctx context.Context, con *console, busy *match.Busy
 func (l live) readHistory(stop context.Context, con *console, client telegram.Client,
 	config *matching.MatchingConfig, chats []collect.Chat) *sync.WaitGroup {
 	history := collect.NewHistoryCollector(config.CatchUp, collect.HistoryReports{
-		OnStart: con.catchUpStarted, OnChat: con.catchUpChat, OnWait: con.floodWait,
-		OnDone: con.catchUpDone, OnFailed: con.collectFailed,
+		OnStart: func(chats int) { con.catchUpStarted(chats, l.settings.HistoryPause) }, OnChat: con.catchUpChat, OnWait: con.floodWait,
+		OnDone: con.catchUpDone, OnFailed: con.collectFailed, OnRefreshed: con.chatRefreshed,
 	}, l.sleep)
+	if l.refresher != nil {
+		history.WithRefresher(l.refresher)
+	}
 	reconnector := collect.NewReconnector(config.CatchUp, history, client, chats, collect.ReconnectReports{
 		OnLost: con.connectionLost, OnBack: con.connectionBack, OnGapDone: con.gapRead,
 	})

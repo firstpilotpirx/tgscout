@@ -20,6 +20,12 @@ type stubClient struct {
 	floods     map[string]time.Duration
 	calls      []string
 	updates    []Update
+	// resolved and ownersFound list the name lookups; kept the stored chats
+	// handed back; ownerChecks the state CheckOwner gives per owner.
+	resolved    []string
+	ownersFound []string
+	kept        []ChatInfo
+	ownerChecks map[string]OwnerState
 }
 
 func (c *stubClient) Run(ctx context.Context, f func(context.Context) error) error { return f(ctx) }
@@ -55,6 +61,7 @@ func (c *stubClient) Self(context.Context) (Account, error) {
 }
 
 func (c *stubClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error) {
+	c.resolved = append(c.resolved, ref)
 	if wait, ok := c.floods[ref]; ok {
 		delete(c.floods, ref)
 		return ChatInfo{}, &FloodWait{Wait: wait}
@@ -64,9 +71,16 @@ func (c *stubClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error
 		return ChatInfo{}, nil
 	}
 	if strings.HasPrefix(ref, "@") {
-		return ChatInfo{State: state, ID: 7, Username: ref[1:], Title: "Made-up title of " + ref[1:]}, nil
+		return ChatInfo{State: state, ID: 7, Username: ref[1:], Title: "Made-up title of " + ref[1:],
+			Peer: Peer{Kind: PeerChannel, ID: 7, AccessHash: 70}}, nil
 	}
-	return ChatInfo{State: state, ID: bareChatID(ref)}, nil
+	return ChatInfo{State: state, ID: bareChatID(ref), Peer: Peer{Kind: PeerChannel, ID: bareChatID(ref), AccessHash: 71}}, nil
+}
+
+func (c *stubClient) KeepChat(info ChatInfo) { c.kept = append(c.kept, info) }
+
+func (c *stubClient) CheckOwner(_ context.Context, owner string, _ Peer) (OwnerState, error) {
+	return c.ownerChecks[owner], nil
 }
 
 func (c *stubClient) Listen(ctx context.Context, f func(context.Context, Update)) error {
@@ -81,8 +95,13 @@ func (c *stubClient) ReadHistory(context.Context, int64, HistoryWindow) (History
 	return History{}, nil
 }
 
-func (c *stubClient) FindOwner(_ context.Context, owner string) (OwnerState, error) {
-	return c.owners[owner], nil
+func (c *stubClient) FindOwner(_ context.Context, owner string) (OwnerInfo, error) {
+	c.ownersFound = append(c.ownersFound, owner)
+	state := c.owners[owner]
+	if state == OwnerMissing {
+		return OwnerInfo{}, nil
+	}
+	return OwnerInfo{State: state, Peer: Peer{Kind: PeerUser, ID: 42, AccessHash: 4242}}, nil
 }
 
 func (c *stubClient) SendToOwner(_ context.Context, owner, text string) error {

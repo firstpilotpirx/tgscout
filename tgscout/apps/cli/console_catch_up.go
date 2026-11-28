@@ -12,8 +12,22 @@ import (
 
 const day = 24 * time.Hour
 
-func (c *console) catchUpStarted(chats int) {
-	c.step(fmt.Sprintf("catch-up started · %s · live listening is on", count(chats, "chat")))
+// catchUpStarted prints the start line; it names the pause between history
+// reads when the pause is on.
+func (c *console) catchUpStarted(chats int, pause time.Duration) {
+	line := fmt.Sprintf("catch-up started · %s · live listening is on", count(chats, "chat"))
+	if pause > 0 {
+		line += fmt.Sprintf(" · %s between history reads", pauseText(pause))
+	}
+	c.step(line)
+}
+
+// pauseText writes a pause as short does, keeping a pause under a second exact.
+func pauseText(pause time.Duration) string {
+	if pause < time.Second {
+		return pause.String()
+	}
+	return short(pause)
 }
 
 // catchUpChat prints the line of one chat once its history is read.
@@ -38,6 +52,27 @@ func (c *console) catchUpChat(report collect.ChatReport) {
 	default:
 		c.done(fmt.Sprintf("catch-up: %s · %s · first start, last %s", name, read, count(days, "day")))
 	}
+}
+
+// chatRefreshed prints that a stored chat Telegram no longer knew was looked
+// up again, at catch-up or, with gapRead, at the gap read after a reconnect.
+func (c *console) chatRefreshed(chat collect.Chat, gapRead bool) {
+	if gapRead {
+		c.gapChatRefreshed(chat)
+		return
+	}
+	c.refreshedLine("catch-up", chat)
+}
+
+// refreshedLine is the warning line of a chat looked up again; name is the
+// chat's title, or its config reference when it has none.
+func (c *console) refreshedLine(read string, chat collect.Chat) {
+	name := chat.Title
+	if name == "" {
+		name = chat.Ref.String()
+	}
+	c.println(c.out, fmt.Sprintf("%s %s: %s · Telegram no longer knows the stored chat · looked it up again",
+		c.yellow.Sprint(c.marks.warn), read, name))
 }
 
 // catchUpDone prints the summary once every caught-up message is settled.

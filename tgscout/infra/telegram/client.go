@@ -13,6 +13,9 @@ var (
 	ErrWrongPassword  = errors.New("the two-step password is wrong")
 	ErrPasswordNeeded = errors.New("the account has a two-step password")
 	ErrSessionRevoked = errors.New("the session is no longer accepted by Telegram")
+	// ErrChatGone means Telegram no longer knows a chat under the data tgscout
+	// holds for it, or the account cannot read it.
+	ErrChatGone = errors.New("the chat is no longer known to Telegram")
 )
 
 // FloodWait means Telegram asks to wait before the same call again.
@@ -43,6 +46,26 @@ type ChatInfo struct {
 	Username string
 	Title    string
 	Basic    bool
+	// Peer is what a later start needs to read the chat without a lookup.
+	Peer Peer
+}
+
+// PeerKind is the kind of a Telegram peer.
+type PeerKind string
+
+// The kinds of a peer: a channel or supergroup, a basic group, a user.
+const (
+	PeerChannel    PeerKind = "channel"
+	PeerBasicGroup PeerKind = "chat"
+	PeerUser       PeerKind = "user"
+)
+
+// Peer is a found chat's or user's peer data: its kind, its bare ID and the
+// per-account access hash Telegram gave for it (0 for a basic group).
+type Peer struct {
+	Kind       PeerKind
+	ID         int64
+	AccessHash int64
 }
 
 // OwnerState is what the account knows about the owner.
@@ -55,6 +78,13 @@ const (
 	OwnerNoChat
 	OwnerReady
 )
+
+// OwnerInfo is the found owner's state and peer; the peer is empty when the
+// owner is missing.
+type OwnerInfo struct {
+	State OwnerState
+	Peer  Peer
+}
 
 // Update is a new or edited message of a chat, a group or a channel.
 // ChatID is the bare peer ID; Text is the text or the caption.
@@ -80,7 +110,12 @@ type Client interface {
 	CheckPassword(ctx context.Context, password string) error
 	Self(ctx context.Context) (Account, error)
 	ResolveChat(ctx context.Context, ref string) (ChatInfo, error)
-	FindOwner(ctx context.Context, owner string) (OwnerState, error)
+	// KeepChat keeps a stored chat's peer for ReadHistory; it calls no one.
+	KeepChat(info ChatInfo)
+	FindOwner(ctx context.Context, owner string) (OwnerInfo, error)
+	// CheckOwner keeps a stored owner's peer for SendToOwner and asks only
+	// whether the owner's private chat with the account is open.
+	CheckOwner(ctx context.Context, owner string, peer Peer) (OwnerState, error)
 	// SendToOwner sends one plain text message to the owner; it returns once
 	// Telegram confirmed the send. It is the only call that writes.
 	SendToOwner(ctx context.Context, owner, text string) error

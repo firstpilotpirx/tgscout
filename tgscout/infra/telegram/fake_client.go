@@ -10,6 +10,7 @@ import (
 	"hash/fnv"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -34,10 +35,13 @@ type fakeScenario struct {
 	SendFloodSeconds int               `json:"send_flood_wait_seconds"`
 	SentFile         string            `json:"sent_file"`
 	PlayedFile       string            `json:"played_file"`
+	CallsFile        string            `json:"calls_file"`
 	History          []fakeHistory     `json:"history"`
 	HistoryFlood     int               `json:"history_flood_wait_seconds"`
-	HistoryDelayMs   int               `json:"history_delay_ms"`
-	SendHangMs       int               `json:"send_hang_ms"`
+	// GoneChats are config texts whose first history read answers ErrChatGone.
+	GoneChats      []string `json:"gone_chats"`
+	HistoryDelayMs int      `json:"history_delay_ms"`
+	SendHangMs     int      `json:"send_hang_ms"`
 }
 
 // fakeHistory is a made-up message posted before the start; Chat is the
@@ -66,6 +70,15 @@ type fakePlay struct {
 	At   int64  `json:"at"`
 }
 
+// fakeCall is one line of the calls file: a name lookup ("resolve") or a
+// history call ("history"), its chat or owner as the config writes it, and
+// when it started (Unix nanoseconds).
+type fakeCall struct {
+	Kind string `json:"kind"`
+	Chat string `json:"chat"`
+	At   int64  `json:"at"`
+}
+
 // fakeUpdate is a made-up message the fake plays after Listen starts; Chat
 // is the config text of a watched chat.
 type fakeUpdate struct {
@@ -90,14 +103,22 @@ type fakeUpdate struct {
 func (s fakeScenario) info(ref string) ChatInfo {
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
 		basic := strings.HasPrefix(ref, "-") && !strings.HasPrefix(ref, "-100")
-		return ChatInfo{State: s.state(ref), ID: bareChatID(ref), Title: s.Titles[ref], Basic: basic}
+		peer := Peer{Kind: PeerChannel, ID: bareChatID(ref), AccessHash: fakeAccessHash}
+		if basic {
+			peer = Peer{Kind: PeerBasicGroup, ID: bareChatID(ref)}
+		}
+		return ChatInfo{State: s.state(ref), ID: bareChatID(ref), Title: s.Titles[ref], Basic: basic, Peer: peer}
 	}
 	name := strings.ToLower(ref[strings.LastIndexAny(ref, "@/")+1:])
 	hash := fnv.New32a()
 	_, _ = hash.Write([]byte(name))
-	return ChatInfo{State: s.state(ref), ID: 9_000_000_000 + int64(hash.Sum32()), Username: name,
-		Title: s.Titles[ref]}
+	id := 9_000_000_000 + int64(hash.Sum32())
+	return ChatInfo{State: s.state(ref), ID: id, Username: name, Title: s.Titles[ref],
+		Peer: Peer{Kind: PeerChannel, ID: id, AccessHash: fakeAccessHash}}
 }
+
+// fakeAccessHash is the made-up access hash of every fake channel and user.
+const fakeAccessHash = 424242
 
 func parseFakeScenario(data []byte) (fakeScenario, error) {
 	var scenario fakeScenario
@@ -128,17 +149,20 @@ func (s fakeScenario) floodWait() time.Duration {
 
 // fakeClient plays the scenario; it stores a made-up session after a sign-in.
 type fakeClient struct {
-	scenario    fakeScenario
-	storage     *FileStorage
-	flooded     bool
-	sendFlooded bool
-	sendMu      sync.Mutex
-	historyMu   sync.Mutex
-	histFlooded bool
-	lostHistory []fakeHistory
-	byChat      map[int64][]fakeHistory // the scenario's history by chat, built at the first read
-	watchMu     sync.Mutex
-	watcher     func(ConnectionEvent)
+	scenario     fakeScenario
+	storage      *FileStorage
+	flooded      bool
+	sendFlooded  bool
+	sendMu       sync.Mutex
+	historyMu    sync.Mutex
+	histFlooded  bool
+	goneAnswered map[string]bool // the gone chats that already answered ErrChatGone
+	lostHistory  []fakeHistory
+	byChat       map[int64][]fakeHistory // the scenario's history by chat, built at the first read
+	refs         map[int64]string        // the config text of each resolved chat, by ID
+	pacer        *Pacer
+	watchMu      sync.Mutex
+	watcher      func(ConnectionEvent)
 }
 
 // WatchConnection keeps f for the drops and returns the scenario plays.
@@ -164,7 +188,7 @@ func NewClient(cfg Config) (Client, error) {
 		return nil, fmt.Errorf("fake Telegram scenario: %w", err)
 	}
 	scenario, err := parseFakeScenario(data)
-	return &fakeClient{scenario: scenario, storage: cfg.Storage}, err
+	return &fakeClient{scenario: scenario, storage: cfg.Storage, pacer: NewPacer(cfg.HistoryPause)}, err
 }
 
 func (c *fakeClient) Run(ctx context.Context, f func(context.Context) error) error { return f(ctx) }
@@ -206,11 +230,46 @@ func (c *fakeClient) Self(context.Context) (Account, error) {
 }
 
 func (c *fakeClient) ResolveChat(_ context.Context, ref string) (ChatInfo, error) {
+	info := c.scenario.info(ref)
+	c.rememberRef(info.ID, ref)
+	if err := c.called("resolve", ref); err != nil {
+		return ChatInfo{}, err
+	}
 	if wait := c.scenario.floodWait(); wait > 0 && !c.flooded {
 		c.flooded = true
 		return ChatInfo{}, &FloodWait{Wait: wait}
 	}
-	return c.scenario.info(ref), nil
+	return info, nil
+}
+
+// KeepChat takes a stored chat with no call; its config text is rebuilt from
+// the stored data for the calls file: "@name", "-<id>" or "-100<id>".
+func (c *fakeClient) KeepChat(info ChatInfo) {
+	ref := "-100" + strconv.FormatInt(info.ID, 10)
+	switch {
+	case info.Username != "":
+		ref = "@" + info.Username
+	case info.Peer.Kind == PeerBasicGroup:
+		ref = "-" + strconv.FormatInt(info.ID, 10)
+	}
+	c.rememberRef(info.ID, ref)
+}
+
+func (c *fakeClient) rememberRef(id int64, ref string) {
+	c.historyMu.Lock()
+	defer c.historyMu.Unlock()
+	if c.refs == nil {
+		c.refs = map[int64]string{}
+	}
+	c.refs[id] = ref
+}
+
+// called appends the call to the scenario's calls file, when it names one.
+func (c *fakeClient) called(kind, chat string) error {
+	if c.scenario.CallsFile == "" {
+		return nil
+	}
+	return appendLine(c.scenario.CallsFile, fakeCall{Kind: kind, Chat: chat, At: time.Now().UnixNano()})
 }
 
 // Listen plays the scenario's updates in order, then waits for the stop.
@@ -268,14 +327,30 @@ func appendLine(path string, value any) error {
 	return errors.Join(err, file.Close())
 }
 
-func (c *fakeClient) FindOwner(_ context.Context, owner string) (OwnerState, error) {
+func (c *fakeClient) FindOwner(_ context.Context, owner string) (OwnerInfo, error) {
+	if err := c.called("resolve", owner); err != nil {
+		return OwnerInfo{}, err
+	}
+	state := c.ownerState(owner)
+	if state == OwnerMissing {
+		return OwnerInfo{}, nil
+	}
+	return OwnerInfo{State: state, Peer: Peer{Kind: PeerUser, ID: 4_000_000_001, AccessHash: fakeAccessHash}}, nil
+}
+
+// CheckOwner gives the state FindOwner gives, with no name lookup.
+func (c *fakeClient) CheckOwner(_ context.Context, owner string, _ Peer) (OwnerState, error) {
+	return c.ownerState(owner), nil
+}
+
+func (c *fakeClient) ownerState(owner string) OwnerState {
 	switch {
 	case !slices.Contains(c.scenario.Contacts, owner):
-		return OwnerMissing, nil
+		return OwnerMissing
 	case c.scenario.OwnerChatClosed:
-		return OwnerNoChat, nil
+		return OwnerNoChat
 	}
-	return OwnerReady, nil
+	return OwnerReady
 }
 
 // SendToOwner appends the send to the scenario's sent file; the workers send
@@ -301,9 +376,19 @@ func (c *fakeClient) send(owner, text string) error {
 	return appendLine(c.scenario.SentFile, fakeSend{To: owner, Text: text, At: time.Now().UnixNano()})
 }
 
-// ReadHistory pauses history_delay_ms, asks to wait once when the scenario
-// says so, then gives the window of the chat's made-up history.
+// ReadHistory waits on the client's pacer and records the call, pauses
+// history_delay_ms, asks to wait once when the scenario says so, then gives
+// the window of the chat's made-up history.
 func (c *fakeClient) ReadHistory(ctx context.Context, chatID int64, window HistoryWindow) (History, error) {
+	if err := c.pacer.Wait(ctx); err != nil {
+		return History{}, err
+	}
+	c.historyMu.Lock()
+	ref := c.refs[chatID]
+	c.historyMu.Unlock()
+	if err := c.called("history", ref); err != nil {
+		return History{}, err
+	}
 	if err := SleepContext(ctx, time.Duration(c.scenario.HistoryDelayMs)*time.Millisecond); err != nil {
 		return History{}, err
 	}
@@ -312,6 +397,13 @@ func (c *fakeClient) ReadHistory(ctx context.Context, chatID int64, window Histo
 	if wait := time.Duration(c.scenario.HistoryFlood) * time.Second; wait > 0 && !c.histFlooded {
 		c.histFlooded = true
 		return History{}, &FloodWait{Wait: wait}
+	}
+	if slices.Contains(c.scenario.GoneChats, ref) && !c.goneAnswered[ref] {
+		if c.goneAnswered == nil {
+			c.goneAnswered = map[string]bool{}
+		}
+		c.goneAnswered[ref] = true
+		return History{}, ErrChatGone
 	}
 	if c.byChat == nil {
 		c.byChat = map[int64][]fakeHistory{}

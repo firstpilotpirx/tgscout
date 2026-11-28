@@ -33,6 +33,7 @@ func start(ctx context.Context, opts options, con *console, deps startDeps) int 
 		return exitError
 	}
 	matcher := newLive(repository, db, deps.sleep)
+	matcher.known = knownPeers{repository: sqlite.NewSqlitePeerRepository(db), path: path}
 	if watch(ctx, con, deps, opts.config, matcher) != exitOK {
 		_ = db.Close() // the Telegram error is the one to report
 		return exitError

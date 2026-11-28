@@ -144,7 +144,18 @@ func TestFakeFindOwnerTellsTheOwnerState(t *testing.T) {
 	noChat, err := closed.FindOwner(context.Background(), "@made_up_owner")
 	require.NoError(t, err)
 
-	assert.Equal(t, []OwnerState{OwnerReady, OwnerMissing, OwnerNoChat}, []OwnerState{ready, missing, noChat})
+	assert.Equal(t, []OwnerState{OwnerReady, OwnerMissing, OwnerNoChat}, []OwnerState{ready.State, missing.State, noChat.State})
+	assert.Equal(t, PeerUser, ready.Peer.Kind)
+	assert.Equal(t, Peer{}, missing.Peer)
+}
+
+func TestFakeCheckOwnerGivesTheStateWithNoNameLookup(t *testing.T) {
+	closed, _ := newTestFake(t, `{"contacts": ["@made_up_owner"], "owner_chat_closed": true}`)
+
+	state, err := closed.CheckOwner(context.Background(), "@made_up_owner", Peer{Kind: PeerUser, ID: 1})
+
+	require.NoError(t, err)
+	assert.Equal(t, OwnerNoChat, state)
 }
 
 func TestFakeChatInfoGivesTheScenarioTitle(t *testing.T) {

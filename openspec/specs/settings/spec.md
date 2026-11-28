@@ -7,7 +7,7 @@ What the owner writes into the config file: the requests to look for, the chats 
 
 ### Requirement: Config file fields
 
-The config file SHALL hold at the root `owner` (required), `workers` (default 2), `queue_size` (default 1000), `retry_max_pause` (default 60 seconds), `stop_grace` (default 10 seconds), `status_interval` (default 5 minutes), `lm_studio` (`url`, `model` required, `timeout`), `catch_up` (`messages`, `days`) and one or more `requests`. `retry_max_pause` and `stop_grace` SHALL be positive durations; `status_interval` SHALL be a duration of at least 10 seconds. A request SHALL hold a unique `id`, the `find` text, one or more `chats` and an optional `catch_up`. A chat SHALL be a chat reference (`@username`, a public `t.me` link or a numeric ID) or an object with `ref` and an optional `catch_up`.
+The config file SHALL hold at the root `owner` (required), `workers` (default 2), `queue_size` (default 1000), `retry_max_pause` (default 60 seconds), `stop_grace` (default 10 seconds), `status_interval` (default 5 minutes), `history_pause` (default 1 second), `lm_studio` (`url`, `model` required, `timeout`), `catch_up` (`messages`, `days`) and one or more `requests`. `retry_max_pause` and `stop_grace` SHALL be positive durations; `status_interval` SHALL be a duration of at least 10 seconds; `history_pause` SHALL be a duration of 0 seconds or more, where 0 turns the pause off. A request SHALL hold a unique `id`, the `find` text, one or more `chats` and an optional `catch_up`. A chat SHALL be a chat reference (`@username`, a public `t.me` link or a numeric ID) or an object with `ref` and an optional `catch_up`.
 
 #### Scenario: defaults fill what the file leaves out
 
@@ -17,6 +17,7 @@ The config file SHALL hold at the root `owner` (required), `workers` (default 2)
 - **AND** it calls LM Studio at the local default address with a 60 second timeout
 - **AND** it pauses at most 60 seconds between retries and gives messages in work 10 seconds at a stop
 - **AND** it prints a status line every 5 minutes
+- **AND** it keeps 1 second between two history calls
 
 #### Scenario: every form of chat reference is accepted
 
@@ -61,7 +62,7 @@ For every pair of a request and one of its chats, tgscout SHALL resolve the catc
 
 ### Requirement: Config validation
 
-tgscout SHALL check the whole config before it opens the database, list every problem at once, one line each with its line and field, and exit with code 1. A problem is: no requests; a request without `id`, `find` or chats; a duplicate `id`; an unknown key; a wrong kind of value; a depth below 1; an `lm_studio.url` that is not http or https; no `lm_studio.model`; `workers` below 1; `queue_size` below 1; a `retry_max_pause` or `stop_grace` that is not a positive duration; a `status_interval` that is not a duration or is below 10 seconds; a missing or malformed owner or chat reference; a secret key (`api_id`, `api_hash`, `session`) anywhere.
+tgscout SHALL check the whole config before it opens the database, list every problem at once, one line each with its line and field, and exit with code 1. A problem is: no requests; a request without `id`, `find` or chats; a duplicate `id`; an unknown key; a wrong kind of value; a depth below 1; an `lm_studio.url` that is not http or https; no `lm_studio.model`; `workers` below 1; `queue_size` below 1; a `retry_max_pause` or `stop_grace` that is not a positive duration; a `status_interval` that is not a duration or is below 10 seconds; a `history_pause` that is not a duration or is below 0 seconds; a missing or malformed owner or chat reference; a secret key (`api_id`, `api_hash`, `session`) anywhere.
 
 #### Scenario Outline: an invalid config stops the start
 
@@ -92,6 +93,12 @@ Examples: no requests / `requests`; a request without chats / `chats`; two reque
 - **WHEN** tgscout loads the config
 - **THEN** it names the status interval field and its line, and says it must be at least 10 seconds
 - **AND** it does not start
+
+#### Scenario: a negative history pause is an error
+
+- **GIVEN** a config with `history_pause: -1s`
+- **WHEN** tgscout loads the config
+- **THEN** it stops with an error on the field `history_pause`
 
 ### Requirement: Chat count warning
 

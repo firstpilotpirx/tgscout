@@ -2,13 +2,11 @@ package telegram
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/binary"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
@@ -23,6 +21,8 @@ type Config struct {
 	APIID   int
 	APIHash string
 	Storage *FileStorage
+	// HistoryPause is the least time between the starts of two history calls.
+	HistoryPause time.Duration
 }
 
 // gotdClient is the Client over gotd; its logger stays gotd's no-op default.
@@ -32,6 +32,7 @@ type gotdClient struct {
 	gaps    *updates.Manager
 	updates *updateSink
 	watch   *connectionWatch
+	pacer   *Pacer // spaces every messages.getHistory call of the process
 	mu      sync.Mutex
 	owners  map[string]*tg.InputPeerUser // the found owner's peer, by config text
 	peers   map[int64]tg.InputPeerClass  // the found chats' peers, by bare ID
@@ -49,6 +50,7 @@ func newGotdClient(cfg Config) *gotdClient {
 		gaps:    gaps,
 		updates: sink,
 		watch:   watch,
+		pacer:   NewPacer(cfg.HistoryPause),
 		owners:  map[string]*tg.InputPeerUser{},
 		peers:   map[int64]tg.InputPeerClass{},
 	}
@@ -124,16 +126,46 @@ func (c *gotdClient) ResolveChat(ctx context.Context, ref string) (ChatInfo, err
 	if !strings.HasPrefix(ref, "@") && !strings.Contains(ref, "t.me/") {
 		state, title, peer, err := c.dialogState(ctx, ref)
 		c.keepPeer(bareChatID(ref), peer)
-		_, basic := peer.(*tg.InputPeerChat)
-		return ChatInfo{State: state, ID: bareChatID(ref), Title: title, Basic: basic}, err
+		data := peerData(peer)
+		return ChatInfo{State: state, ID: bareChatID(ref), Title: title, Basic: data.Kind == PeerBasicGroup,
+			Peer: data}, err
 	}
 	resolved, err := c.resolve(ctx, ref)
 	if err != nil || resolved == nil {
 		return ChatInfo{}, err
 	}
 	info, peer := chatInfo(resolved)
+	info.Peer = peerData(peer)
 	c.keepPeer(info.ID, peer)
 	return info, nil
+}
+
+// KeepChat keeps a stored chat's input peer for ReadHistory; no call to Telegram.
+func (c *gotdClient) KeepChat(info ChatInfo) {
+	c.keepPeer(info.ID, inputPeer(info.Peer))
+}
+
+// peerData is the stored form of a chat's input peer.
+func peerData(peer tg.InputPeerClass) Peer {
+	switch peer := peer.(type) {
+	case *tg.InputPeerChannel:
+		return Peer{Kind: PeerChannel, ID: peer.ChannelID, AccessHash: peer.AccessHash}
+	case *tg.InputPeerChat:
+		return Peer{Kind: PeerBasicGroup, ID: peer.ChatID}
+	}
+	return Peer{}
+}
+
+// inputPeer is the chat's input peer of a stored peer; nil for an unknown kind.
+func inputPeer(peer Peer) tg.InputPeerClass {
+	switch peer.Kind {
+	case PeerChannel:
+		return &tg.InputPeerChannel{ChannelID: peer.ID, AccessHash: peer.AccessHash}
+	case PeerBasicGroup:
+		return &tg.InputPeerChat{ChatID: peer.ID}
+	case PeerUser:
+	}
+	return nil
 }
 
 // keepPeer keeps a found chat's input peer for ReadHistory.
@@ -165,107 +197,6 @@ func chatInfo(resolved *tg.ContactsResolvedPeer) (ChatInfo, tg.InputPeerClass) {
 func bareChatID(ref string) int64 {
 	id, _ := strconv.ParseInt(strings.TrimPrefix(strings.TrimPrefix(ref, "-100"), "-"), 10, 64)
 	return id
-}
-
-// FindOwner finds the owner's user and keeps its peer for SendToOwner, then
-// asks whether the account has a private chat with the owner.
-func (c *gotdClient) FindOwner(ctx context.Context, owner string) (OwnerState, error) {
-	peer, err := c.ownerPeer(ctx, owner)
-	if err != nil || peer == nil {
-		return OwnerMissing, err
-	}
-	c.mu.Lock()
-	c.owners[owner] = peer
-	c.mu.Unlock()
-	open, err := c.chatOpen(ctx, peer)
-	if err != nil || !open {
-		return OwnerNoChat, err
-	}
-	return OwnerReady, nil
-}
-
-// SendToOwner sends one plain message, link previews off, to the kept owner peer.
-func (c *gotdClient) SendToOwner(ctx context.Context, owner, text string) error {
-	c.mu.Lock()
-	peer := c.owners[owner]
-	c.mu.Unlock()
-	if peer == nil {
-		state, err := c.FindOwner(ctx, owner)
-		if err != nil {
-			return err
-		}
-		if state == OwnerMissing {
-			return &OwnerNotFoundError{Owner: owner}
-		}
-		c.mu.Lock()
-		peer = c.owners[owner]
-		c.mu.Unlock()
-	}
-	var random [8]byte
-	if _, err := rand.Read(random[:]); err != nil {
-		return fmt.Errorf("random message ID: %w", err)
-	}
-	_, err := c.client.API().MessagesSendMessage(ctx, &tg.MessagesSendMessageRequest{
-		Peer: peer, Message: text, NoWebpage: true, RandomID: int64(binary.LittleEndian.Uint64(random[:])), //nolint:gosec // G115: any 64 bits make a random ID
-	})
-	return mapError(err)
-}
-
-// ownerPeer finds the owner's user: a username through Telegram, a numeric ID
-// among the contacts; nil when not found.
-func (c *gotdClient) ownerPeer(ctx context.Context, owner string) (*tg.InputPeerUser, error) {
-	if strings.HasPrefix(owner, "@") {
-		resolved, err := c.resolve(ctx, owner)
-		if err != nil || resolved == nil {
-			return nil, err
-		}
-		return firstUserPeer(resolved.Users, 0), nil
-	}
-	id, err := strconv.ParseInt(owner, 10, 64)
-	if err != nil {
-		return nil, nil
-	}
-	contacts, err := c.client.API().ContactsGetContacts(ctx, 0)
-	if err != nil {
-		return nil, mapError(err)
-	}
-	list, ok := contacts.(*tg.ContactsContacts)
-	if !ok {
-		return nil, nil
-	}
-	return firstUserPeer(list.Users, id), nil
-}
-
-// firstUserPeer is the peer of the user with the ID, or of the first user when id is 0.
-func firstUserPeer(users []tg.UserClass, id int64) *tg.InputPeerUser {
-	for _, user := range users {
-		if user, ok := user.(*tg.User); ok && (id == 0 || user.ID == id) {
-			return &tg.InputPeerUser{UserID: user.ID, AccessHash: user.AccessHash}
-		}
-	}
-	return nil
-}
-
-// chatOpen tells whether the account has a private chat with the user that
-// holds a message: a user who never wrote has none.
-func (c *gotdClient) chatOpen(ctx context.Context, peer *tg.InputPeerUser) (bool, error) {
-	dialogs, err := c.client.API().MessagesGetPeerDialogs(ctx, []tg.InputDialogPeerClass{&tg.InputDialogPeer{Peer: peer}})
-	if tgerr.Is(err, "PEER_ID_INVALID") {
-		return false, nil
-	}
-	if err != nil {
-		return false, mapError(err)
-	}
-	return hasTopMessage(dialogs.Dialogs), nil
-}
-
-func hasTopMessage(dialogs []tg.DialogClass) bool {
-	for _, dialog := range dialogs {
-		if dialog, ok := dialog.(*tg.Dialog); ok && dialog.TopMessage != 0 {
-			return true
-		}
-	}
-	return false
 }
 
 // resolve finds a username; a name nobody holds gives nil.

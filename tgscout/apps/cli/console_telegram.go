@@ -49,7 +49,22 @@ func (c *console) sendFloodWait(wait time.Duration) {
 
 func (c *console) ownerFound(owner string) { c.done("owner found: " + owner) }
 
-func (c *console) watching(chats int) { c.done("watching " + count(chats, "chat")) }
+// watching prints how many chats tgscout watches and how many of them came
+// from the store or were looked up by name; a part that is 0 is left out.
+func (c *console) watching(chats int, counts telegram.LookupCounts) {
+	var parts []string
+	if counts.Stored > 0 {
+		parts = append(parts, fmt.Sprintf("%d from the store", counts.Stored))
+	}
+	if counts.LookedUp > 0 {
+		parts = append(parts, fmt.Sprintf("%d looked up", counts.LookedUp))
+	}
+	line := "watching " + count(chats, "chat")
+	if len(parts) > 0 {
+		line += " · " + strings.Join(parts, ", ")
+	}
+	c.done(line)
+}
 
 // chatsNotFound prints every chat the account cannot watch, aligned, and the fix.
 func (c *console) chatsNotFound(chats []telegram.MissingChat) {

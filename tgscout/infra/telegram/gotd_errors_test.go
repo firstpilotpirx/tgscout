@@ -44,6 +44,14 @@ func TestMapErrorKeepsNoServerText(t *testing.T) {
 	assert.Equal(t, "the call was refused by Telegram", mapError(tgerr.New(400, "PHONE_NUMBER_INVALID")).Error())
 }
 
+func TestMapErrorNamesAChatTelegramNoLongerKnows(t *testing.T) {
+	for _, kind := range []string{"CHANNEL_INVALID", "CHANNEL_PRIVATE", "CHAT_ID_INVALID", "PEER_ID_INVALID"} {
+		err := mapError(fmt.Errorf("get history: %w", tgerr.New(400, kind)))
+
+		assert.True(t, errors.Is(err, ErrChatGone), kind)
+	}
+}
+
 func TestMapErrorKeepsNilAndCancel(t *testing.T) {
 	assert.NoError(t, mapError(nil))
 	assert.True(t, errors.Is(mapError(context.Canceled), context.Canceled))

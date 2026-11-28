@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 )
@@ -59,6 +60,11 @@ func catchUpGivenSteps(sc *godog.ScenarioContext, w *world) {
 		w.tg.fake.HistoryDelayMs = 600 // the live message arrives while the history is read
 		w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 1}}
 	})
+	sc.Step(`^a watched chat with history and LM Studio that does not answer$`, func() {
+		w.request("kids-bike", bikeFind)
+		w.lmStudio().down = true
+		w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 30}}
+	})
 }
 
 // catchUpChatsGivenSteps: the waits and the scenarios of more than one chat.
@@ -77,6 +83,7 @@ func catchUpChatsGivenSteps(sc *godog.ScenarioContext, w *world) {
 		}
 		w.tg.fake.Updates = nil
 		w.tg.fake.History = append(numbered(market, 9, 12), fakeHistory{Chat: swap, ID: 5, Text: "Swap 5", AgeMinutes: hour})
+		w.untilCatchUpDone()
 		return nil
 	})
 	sc.Step(`^three watched chats with history$`, func() {
@@ -87,11 +94,17 @@ func catchUpChatsGivenSteps(sc *godog.ScenarioContext, w *world) {
 			{Chat: swap, ID: 1, Text: "Swap 1", AgeMinutes: hour},
 			{Chat: street, ID: 1, Text: "Street 1", AgeMinutes: hour},
 		}
+		w.untilCatchUpDone()
 	})
-	sc.Step(`^a watched chat with history and LM Studio that does not answer$`, func() {
+	sc.Step(`^a history_pause of 1 second and two watched chats with missed messages$`, func() {
 		w.request("kids-bike", bikeFind)
-		w.lmStudio().down = true
-		w.tg.fake.History = []fakeHistory{{Chat: market, ID: firstID, Text: bikeText, AgeMinutes: 30}}
+		w.matching.chats = []string{market, swap}
+		w.matching.extra = "history_pause: 1s\n"
+		w.tg.fake.History = []fakeHistory{
+			{Chat: market, ID: 1, Text: "Market 1", AgeMinutes: hour},
+			{Chat: swap, ID: 1, Text: "Swap 1", AgeMinutes: hour},
+		}
+		w.untilCatchUpDone()
 	})
 }
 
@@ -120,12 +133,45 @@ func catchUpThenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^the chat's history is read and judged after it$`, func() error {
 		return errors.Join(w.askedTimes(bikeFind, 1), w.allStdoutHas("[ok] catch-up: "+marketTitle+" · 1 message · first start"))
 	})
+	sc.Step(`^every history call to Telegram starts at least 1 second after the one before$`, func() error {
+		return w.historyCallsApart(time.Second, 2)
+	})
+}
+
+// untilCatchUpDone makes the next run wait for the catch-up summary: with
+// the default history_pause each chat after the first waits its turn.
+func (w *world) untilCatchUpDone() {
+	w.matching.until = func() bool { return strings.Contains(w.run.stdout.String(), "catch-up done") }
+}
+
+// historyCallsApart checks the fake's history calls: at least least of them,
+// each started at least pause after the one before.
+func (w *world) historyCallsApart(pause time.Duration, least int) error {
+	calls, err := w.tg.calls(w.dir)
+	if err != nil {
+		return err
+	}
+	var starts []time.Time
+	for _, call := range calls {
+		if call.Kind == "history" {
+			starts = append(starts, time.Unix(0, call.At))
+		}
+	}
+	if len(starts) < least {
+		return fmt.Errorf("%d history calls, want at least %d", len(starts), least)
+	}
+	for i := 1; i < len(starts); i++ {
+		if gap := starts[i].Sub(starts[i-1]); gap < pause {
+			return fmt.Errorf("history call %d started %s after the one before, want at least %s", i+1, gap, pause)
+		}
+	}
+	return nil
 }
 
 func catchUpConsoleThenSteps(sc *godog.ScenarioContext, w *world) {
 	sc.Step(`^the console shows a start line and one line per chat, in config order$`, func() error {
 		out := w.run.stdout.String()
-		start := strings.Index(out, "-> catch-up started · 2 chats · live listening is on\n")
+		start := strings.Index(out, "-> catch-up started · 2 chats · live listening is on")
 		first := strings.Index(out, "[ok] catch-up: "+marketTitle+" · 2 messages from the cursor\n")
 		second := strings.Index(out, "[ok] catch-up: "+swap+" · 1 message")
 		if start < 0 || first < start || second < first {

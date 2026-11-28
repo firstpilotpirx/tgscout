@@ -30,6 +30,8 @@ func mapError(err error) error {
 		return ErrWrongCode
 	case auth.IsUnauthorized(err):
 		return ErrSessionRevoked
+	case tgerr.Is(err, "CHANNEL_INVALID", "CHANNEL_PRIVATE", "CHAT_ID_INVALID", "PEER_ID_INVALID"):
+		return ErrChatGone
 	}
 	if wait, ok := tgerr.AsFloodWait(err); ok {
 		return &FloodWait{Wait: wait}
