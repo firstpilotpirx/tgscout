@@ -59,6 +59,8 @@ var problemCases = []struct {
 	{"zero stop grace", header + "stop_grace: 0s\n" + oneRequest, wantError{4, "stop_grace", "duration"}},
 	{"short status interval", header + "status_interval: 5s\n" + oneRequest, wantError{4, "status_interval", "at least 10s"}},
 	{"bad status interval", header + "status_interval: often\n" + oneRequest, wantError{4, "status_interval", "at least 10s"}},
+	{"negative history pause", header + "history_pause: -1s\n" + oneRequest, wantError{4, "history_pause", "0s or more"}},
+	{"bad history pause", header + "history_pause: often\n" + oneRequest, wantError{4, "history_pause", "0s or more"}},
 	{"zero workers", header + "workers: 0\n" + oneRequest, wantError{4, "workers", "at least 1"}},
 	{"no owner", "lm_studio: {model: m}\n" + oneRequest, wantError{1, "owner", "is required"}},
 	{"bad owner", "owner: 'https://t.me/made_up_owner'\nlm_studio: {model: m}\n" + oneRequest, wantError{1, "owner", "not an owner"}},

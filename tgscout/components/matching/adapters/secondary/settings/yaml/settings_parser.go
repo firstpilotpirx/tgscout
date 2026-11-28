@@ -28,6 +28,8 @@ const (
 	DefaultStatusInterval = 5 * time.Minute
 	// MinStatusInterval is the shortest status interval.
 	MinStatusInterval = 10 * time.Second
+	// DefaultHistoryPause is the least time between two history calls.
+	DefaultHistoryPause = time.Second
 	// MaxChats is the design maximum of distinct chats; more gives a warning.
 	MaxChats = 100
 )
@@ -69,7 +71,7 @@ func (w *walker) root(body ast.Node) domain.Settings {
 	if isNull(body) {
 		body = &ast.MappingNode{BaseNode: &ast.BaseNode{}}
 	}
-	found, ok := w.fields(body, "", "owner", "workers", "queue_size", "retry_max_pause", "stop_grace", "status_interval", "lm_studio", "catch_up", "requests")
+	found, ok := w.fields(body, "", "owner", "workers", "queue_size", "retry_max_pause", "stop_grace", "status_interval", "history_pause", "lm_studio", "catch_up", "requests")
 	if !ok {
 		return domain.Settings{}
 	}
@@ -80,10 +82,14 @@ func (w *walker) root(body ast.Node) domain.Settings {
 		RetryMaxPause:  DefaultRetryMaxPause,
 		StopGrace:      DefaultStopGrace,
 		StatusInterval: DefaultStatusInterval,
+		HistoryPause:   DefaultHistoryPause,
 		LmStudio:       w.lmStudio(found["lm_studio"], lineOf(body)),
 	}
 	if interval := found["status_interval"]; interval != nil {
 		settings.StatusInterval = w.statusInterval(interval.Value)
+	}
+	if pause := found["history_pause"]; pause != nil {
+		settings.HistoryPause = w.historyPause(pause.Value)
 	}
 	if queueSize := found["queue_size"]; queueSize != nil {
 		settings.QueueSize, _ = w.number(queueSize.Value, "queue_size", 1)
@@ -115,6 +121,18 @@ func (w *walker) statusInterval(node ast.Node) time.Duration {
 	}
 	w.fail(lineOf(node), "status_interval", "must be a duration of at least 10s such as 5m")
 	return DefaultStatusInterval
+}
+
+// historyPause reads the pause between two history calls: a duration of 0s
+// or more, where 0s turns the pause off.
+func (w *walker) historyPause(node ast.Node) time.Duration {
+	if value, ok := node.(*ast.StringNode); ok {
+		if parsed, err := time.ParseDuration(value.Value); err == nil && parsed >= 0 {
+			return parsed
+		}
+	}
+	w.fail(lineOf(node), "history_pause", "must be 0s or more, a duration such as 1s")
+	return DefaultHistoryPause
 }
 
 func (w *walker) owner(entry *ast.MappingValueNode, parentLine int) domain.Owner {

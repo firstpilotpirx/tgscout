@@ -106,6 +106,7 @@ func TestParseDefaultsFillWhatTheFileLeavesOut(t *testing.T) {
 	assert.Equal(t, 60*time.Second, settings.RetryMaxPause)
 	assert.Equal(t, 10*time.Second, settings.StopGrace)
 	assert.Equal(t, 5*time.Minute, settings.StatusInterval)
+	assert.Equal(t, time.Second, settings.HistoryPause)
 	assert.Equal(t, "bike", settings.Requests[0].ID)
 	assert.Equal(t, "a kids bike", settings.Requests[0].Find)
 }
@@ -117,6 +118,7 @@ queue_size: 50
 retry_max_pause: 30s
 stop_grace: 2s
 status_interval: 10s
+history_pause: 3s
 lm_studio: {url: 'http://127.0.0.1:9000/v1', model: other-model, timeout: 90s}
 requests:
   - id: bike
@@ -130,6 +132,7 @@ requests:
 	assert.Equal(t, 30*time.Second, settings.RetryMaxPause)
 	assert.Equal(t, 2*time.Second, settings.StopGrace)
 	assert.Equal(t, 10*time.Second, settings.StatusInterval)
+	assert.Equal(t, 3*time.Second, settings.HistoryPause)
 	assert.Equal(t, domain.LmStudio{URL: "http://127.0.0.1:9000/v1", Model: "other-model", Timeout: 90 * time.Second},
 		settings.LmStudio)
 }

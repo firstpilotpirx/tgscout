@@ -3,11 +3,11 @@
 Files: `tgscout/components/matching/core/domain/settings.go`, `tgscout/components/matching/adapters/secondary/settings/yaml/`, `tgscout.yaml.example`
 Needs: none
 
-- [ ] 1.1 Red: parser test for "defaults fill what the file leaves out" (adds the 1 s `history_pause` default) and keeps "every form of chat reference is accepted" green
-- [ ] 1.2 Green: root key `history_pause` (duration, default `1s`), `domain.Settings.HistoryPause` (D7)
-- [ ] 1.3 Red: parser test for "a negative history pause is an error"; "an invalid config stops the start", "every problem is listed at once", "a retry cap that is not a duration is refused" and "a status interval below 10 seconds is refused" stay green
-- [ ] 1.4 Green: field error `must be 0s or more` on `history_pause`
-- [ ] 1.5 Text: `history_pause` in `tgscout.yaml.example` with a one-line comment
+- [x] 1.1 Red: parser test for "defaults fill what the file leaves out" (adds the 1 s `history_pause` default) and keeps "every form of chat reference is accepted" green
+- [x] 1.2 Green: root key `history_pause` (duration, default `1s`), `domain.Settings.HistoryPause` (D7)
+- [x] 1.3 Red: parser test for "a negative history pause is an error"; "an invalid config stops the start", "every problem is listed at once", "a retry cap that is not a duration is refused" and "a status interval below 10 seconds is refused" stay green
+- [x] 1.4 Green: field error `must be 0s or more` on `history_pause`
+- [x] 1.5 Text: `history_pause` in `tgscout.yaml.example` with a one-line comment
 - [ ] 1.6 Commit the group
 
 ## 2. Pace of history reads

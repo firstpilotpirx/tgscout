@@ -56,7 +56,10 @@ type Settings struct {
 	StopGrace time.Duration
 	// StatusInterval is how often the status line is printed.
 	StatusInterval time.Duration
-	LmStudio       LmStudio
+	// HistoryPause is the least time between the starts of two history
+	// calls to Telegram; 0 turns the pause off.
+	HistoryPause time.Duration
+	LmStudio     LmStudio
 	Requests       []Request
 }
 

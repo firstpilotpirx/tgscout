@@ -25,6 +25,10 @@ stop_grace: 10s
 # status since start once more at the stop.
 status_interval: 5m
 
+# Pause between two history reads from Telegram at catch-up and after a
+# reconnect (default 1s, 0s turns it off).
+history_pause: 1s
+
 # LM Studio, through its OpenAI-compatible API.
 lm_studio:
   url: http://localhost:1234/v1   # default
